@@ -1,6 +1,9 @@
+import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 
 export function AuthLayout() {
+  const [logoVisible, setLogoVisible] = useState(true)
+
   return (
     <div className="auth-layout">
       <div className="auth-layout__panel">
@@ -8,17 +11,28 @@ export function AuthLayout() {
           <span className="brand-lockup__eyebrow">Sistema de pronosticos</span>
           <h1>pronostidamus</h1>
           <p>
-            Accede a tus salas, registra pronosticos y revisa la tabla de posiciones desde
-            una base de frontend lista para integrar con el backend.
+            Accede a tus salas, registra pronosticos y revisa la tabla de posiciones desde una
+            interfaz protegida conectada al backend.
           </p>
           <div className="brand-lockup__assets">
+            {logoVisible ? (
+              <div className="asset-slot asset-slot--logo">
+                <img
+                  alt="Logo de pronostidamus"
+                  className="brand-logo"
+                  onError={() => setLogoVisible(false)}
+                  src="/logo.svg"
+                />
+              </div>
+            ) : (
+              <div className="asset-slot">
+                <span>Logo principal</span>
+                <small>Coloca `logo.svg` en `frontend/public` para mostrarlo aqui.</small>
+              </div>
+            )}
             <div className="asset-slot">
-              <span>Logo completo</span>
-              <small>Reservado para asset futuro</small>
-            </div>
-            <div className="asset-slot">
-              <span>Favicon</span>
-              <small>Reservado para asset futuro</small>
+              <span>Marca del sistema</span>
+              <small>Nombre visible: pronostidamus</small>
             </div>
           </div>
         </div>

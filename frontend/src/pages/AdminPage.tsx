@@ -26,10 +26,10 @@ export function AdminPage() {
 
       <SectionCard
         title="Alcance actual"
-        description="No se implementa logica admin real todavia, solo la base de navegacion y proteccion."
+        description="No se implementa logica admin real todavia, solo la base de navegacion y proteccion por rol."
       >
         <ul className="feature-list">
-          <li>Ruta protegida por rol admin desde la sesion local del frontend.</li>
+          <li>Ruta protegida por rol admin usando la sesion autenticada.</li>
           <li>Espacio listo para formularios y tablas administrativas.</li>
           <li>Sin consumo de endpoints que aun no existen.</li>
         </ul>

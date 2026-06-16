@@ -1,9 +1,9 @@
 import { SectionCard } from '../components/SectionCard'
 import { StatusBadge } from '../components/StatusBadge'
-import { getSession } from '../types/session'
+import { useAuth } from '../context/useAuth'
 
 export function DashboardPage() {
-  const session = getSession()
+  const { user } = useAuth()
 
   return (
     <div className="page-grid">
@@ -18,11 +18,11 @@ export function DashboardPage() {
           </article>
           <article className="stat-card">
             <span>Rol actual</span>
-            <strong>{session?.roles.join(', ') ?? 'sin sesion'}</strong>
+            <strong>{user?.roles.join(', ') ?? 'sin sesion'}</strong>
           </article>
           <article className="stat-card">
             <span>Estado</span>
-            <StatusBadge tone="success">Base lista para integrar</StatusBadge>
+            <StatusBadge tone="success">Sesion protegida activa</StatusBadge>
           </article>
         </div>
       </SectionCard>
@@ -32,9 +32,9 @@ export function DashboardPage() {
         description="Esta pantalla queda lista para conectar datos reales del backend cuando existan."
       >
         <ul className="feature-list">
-          <li>Conectar login JWT real y persistencia de usuario.</li>
           <li>Consumir salas, partidos y leaderboard desde la API.</li>
           <li>Mostrar cierres de pronosticos y resumen de puntos.</li>
+          <li>Completar panel admin con formularios y tablas reales.</li>
         </ul>
       </SectionCard>
     </div>

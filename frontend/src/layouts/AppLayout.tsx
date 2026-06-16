@@ -1,26 +1,29 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { clearSession, getSession } from '../types/session'
+import { useAuth } from '../context/useAuth'
 
 const navigationItems = [
   { label: 'Dashboard', to: '/' },
   { label: 'Partidos', to: '/matches' },
   { label: 'Tabla', to: '/leaderboard' },
-  { label: 'Admin', to: '/admin' },
 ]
 
 export function AppLayout() {
-  const session = getSession()
+  const { logout, user } = useAuth()
+  const isAdmin = user?.roles.includes('admin') ?? false
+  const visibleNavigationItems = isAdmin
+    ? [...navigationItems, { label: 'Admin', to: '/admin' }]
+    : navigationItems
 
   return (
     <div className="app-shell">
       <aside className="sidebar">
         <div className="sidebar__brand">
-          <span className="sidebar__eyebrow">pronostidamus</span>
-          <strong>Panel principal</strong>
+          <span className="sidebar__eyebrow">Sistema</span>
+          <strong>pronostidamus</strong>
         </div>
 
         <nav className="sidebar__nav" aria-label="Principal">
-          {navigationItems.map((item) => (
+          {visibleNavigationItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -32,9 +35,9 @@ export function AppLayout() {
         </nav>
 
         <div className="sidebar__footer">
-          <p>Usuario actual: {session?.username ?? 'sin sesion'}</p>
-          <button className="button button--ghost" onClick={clearSession} type="button">
-            Cerrar sesion local
+          <p>Usuario actual: {user?.username ?? 'sin sesion'}</p>
+          <button className="button button--ghost" onClick={logout} type="button">
+            Cerrar sesion
           </button>
         </div>
       </aside>
@@ -42,12 +45,10 @@ export function AppLayout() {
       <main className="app-content">
         <header className="page-header">
           <div>
-            <span className="page-header__eyebrow">MVP base</span>
-            <h1>Frontend listo para integrar</h1>
+            <span className="page-header__eyebrow">Panel principal</span>
+            <h1>pronostidamus</h1>
           </div>
-          <p>
-            Estructura preparada para autenticacion, vistas privadas y seccion administrativa.
-          </p>
+          <p>Navegacion protegida, sesion persistente y acceso administrativo por rol.</p>
         </header>
 
         <Outlet />

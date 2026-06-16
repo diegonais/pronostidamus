@@ -124,7 +124,8 @@ code {
 .stat-card,
 .match-row,
 .leaderboard-table,
-.inline-note {
+.inline-note,
+.route-state {
   border: 1px solid var(--border-color);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.84);
@@ -134,6 +135,17 @@ code {
   padding: 16px;
   display: grid;
   gap: 4px;
+}
+
+.asset-slot--logo {
+  place-items: center;
+  min-height: 132px;
+}
+
+.brand-logo {
+  max-width: 100%;
+  max-height: 84px;
+  object-fit: contain;
 }
 
 .asset-slot span,
@@ -195,6 +207,7 @@ code {
 
 .form-error {
   margin: 0;
+  color: #b42318;
 }
 
 .app-shell {
@@ -241,6 +254,7 @@ code {
 }
 
 .page-grid {
+  display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -299,6 +313,14 @@ code {
 }
 
 .leaderboard-table__empty {
+  color: var(--text-muted);
+}
+
+.route-state {
+  width: min(420px, calc(100% - 32px));
+  margin: 24px auto;
+  padding: 18px;
+  text-align: center;
   color: var(--text-muted);
 }
 

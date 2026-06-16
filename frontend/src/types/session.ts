@@ -1,9 +1,15 @@
 export type UserRole = 'user' | 'admin'
 
-export type Session = {
-  token: string
+export type AuthUser = {
+  id: string
   username: string
   roles: UserRole[]
+  isActive: boolean
+}
+
+export type Session = {
+  accessToken: string
+  user: AuthUser
 }
 
 const SESSION_STORAGE_KEY = 'pronostidamus.session'
@@ -26,11 +32,10 @@ export function getSession(): Session | null {
 
 export function createSession(session: Session) {
   window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session))
-  window.localStorage.setItem(TOKEN_STORAGE_KEY, session.token)
+  window.localStorage.setItem(TOKEN_STORAGE_KEY, session.accessToken)
 }
 
 export function clearSession() {
   window.localStorage.removeItem(SESSION_STORAGE_KEY)
   window.localStorage.removeItem(TOKEN_STORAGE_KEY)
-  window.location.href = '/login'
 }

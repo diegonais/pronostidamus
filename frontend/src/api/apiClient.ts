@@ -14,6 +14,38 @@ type RequestOptions = Omit<RequestInit, 'body'> & {
 
 const getToken = () => window.localStorage.getItem('pronostidamus.token')
 
+type ErrorPayload = {
+  message?: string | string[]
+}
+
+export class ApiError extends Error {
+  status: number
+
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+  }
+}
+
+async function buildApiError(response: Response) {
+  let message = `API request failed with status ${response.status}`
+
+  try {
+    const payload = (await response.json()) as ErrorPayload
+
+    if (Array.isArray(payload.message)) {
+      message = payload.message.join(', ')
+    } else if (payload.message) {
+      message = payload.message
+    }
+  } catch {
+    message = response.statusText || message
+  }
+
+  return new ApiError(message, response.status)
+}
+
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { body, headers, requiresAuth = true, ...rest } = options
   const token = getToken()
@@ -29,7 +61,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   })
 
   if (!response.ok) {
-    throw new Error(`API request failed with status ${response.status}`)
+    throw await buildApiError(response)
   }
 
   if (response.status === 204) {

@@ -1,39 +1,51 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { SectionCard } from '../components/SectionCard'
 import { apiClient } from '../api/apiClient'
-import { createSession } from '../types/session'
+import { SectionCard } from '../components/SectionCard'
+import { getApiErrorMessage } from '../context/authErrors'
+import { useAuth } from '../context/useAuth'
 
 export function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { login } = useAuth()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    setErrorMessage('')
 
     if (!username.trim() || !password.trim()) {
       setErrorMessage('Ingresa usuario y password para continuar.')
       return
     }
 
-    createSession({
-      token: 'frontend-base-token',
-      username: username.trim(),
-      roles: username.trim().toLowerCase() === 'diego' ? ['user', 'admin'] : ['user'],
-    })
+    try {
+      setIsSubmitting(true)
 
-    const nextPath = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname
-    navigate(nextPath || '/', { replace: true })
+      await login({
+        username: username.trim(),
+        password,
+      })
+
+      const nextPath = (location.state as { from?: { pathname?: string } } | null)?.from
+        ?.pathname
+      navigate(nextPath || '/', { replace: true })
+    } catch (error) {
+      setErrorMessage(getApiErrorMessage(error))
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
     <SectionCard
       title="Iniciar sesion"
-      description="La integracion con el endpoint real de auth queda preparada para el siguiente paso."
+      description="Usa tus credenciales del MVP para obtener un JWT y entrar a las rutas privadas."
     >
       <form className="form-grid" onSubmit={handleSubmit}>
         <label className="field">
@@ -42,6 +54,7 @@ export function LoginPage() {
             autoComplete="username"
             onChange={(event) => setUsername(event.target.value)}
             placeholder="Ej. diego"
+            disabled={isSubmitting}
             type="text"
             value={username}
           />
@@ -52,7 +65,8 @@ export function LoginPage() {
           <input
             autoComplete="current-password"
             onChange={(event) => setPassword(event.target.value)}
-            placeholder="Password del MVP"
+            disabled={isSubmitting}
+            placeholder="Password"
             type="password"
             value={password}
           />
@@ -65,7 +79,7 @@ export function LoginPage() {
         </div>
 
         <button className="button" type="submit">
-          Entrar
+          {isSubmitting ? 'Ingresando...' : 'Entrar'}
         </button>
       </form>
     </SectionCard>

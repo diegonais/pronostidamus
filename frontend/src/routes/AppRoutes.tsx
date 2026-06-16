@@ -1,4 +1,5 @@
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
+import { useAuth } from '../context/useAuth'
 import { AppLayout } from '../layouts/AppLayout'
 import { AuthLayout } from '../layouts/AuthLayout'
 import { AdminPage } from '../pages/AdminPage'
@@ -6,13 +7,16 @@ import { DashboardPage } from '../pages/DashboardPage'
 import { LeaderboardPage } from '../pages/LeaderboardPage'
 import { LoginPage } from '../pages/LoginPage'
 import { MatchesPage } from '../pages/MatchesPage'
-import { getSession } from '../types/session'
 
 function RequireAuth() {
   const location = useLocation()
-  const session = getSession()
+  const { isAuthenticated, isLoading } = useAuth()
 
-  if (!session) {
+  if (isLoading) {
+    return <div className="route-state">Validando sesion...</div>
+  }
+
+  if (!isAuthenticated) {
     return <Navigate replace state={{ from: location }} to="/login" />
   }
 
@@ -20,9 +24,27 @@ function RequireAuth() {
 }
 
 function RequireAdmin() {
-  const session = getSession()
+  const { isLoading, user } = useAuth()
 
-  if (!session?.roles.includes('admin')) {
+  if (isLoading) {
+    return <div className="route-state">Cargando permisos...</div>
+  }
+
+  if (!user?.roles.includes('admin')) {
+    return <Navigate replace to="/" />
+  }
+
+  return <Outlet />
+}
+
+function RedirectAuthenticatedUser() {
+  const { isAuthenticated, isLoading } = useAuth()
+
+  if (isLoading) {
+    return <div className="route-state">Cargando acceso...</div>
+  }
+
+  if (isAuthenticated) {
     return <Navigate replace to="/" />
   }
 
@@ -32,8 +54,10 @@ function RequireAdmin() {
 export function AppRoutes() {
   return (
     <Routes>
-      <Route element={<AuthLayout />}>
-        <Route path="/login" element={<LoginPage />} />
+      <Route element={<RedirectAuthenticatedUser />}>
+        <Route element={<AuthLayout />}>
+          <Route path="/login" element={<LoginPage />} />
+        </Route>
       </Route>
 
       <Route element={<RequireAuth />}>
