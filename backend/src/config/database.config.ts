@@ -1,5 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { join } from 'path';
 
 function parseBoolean(value?: string): boolean {
   return value === 'true';
@@ -16,7 +17,7 @@ export function getDatabaseConfig(
 
   const baseConfig: TypeOrmModuleOptions = {
     type: 'postgres',
-    autoLoadEntities: true,
+    entities: [join(__dirname, '..', '**', '*.entity.{js,ts}')],
     synchronize,
     ssl: databaseSsl ? { rejectUnauthorized: false } : false,
   };
