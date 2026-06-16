@@ -91,7 +91,53 @@ Uso recomendado durante desarrollo:
 
 Para desarrollo local, el backend debe conectarse usando `DATABASE_HOST=localhost` y `DATABASE_PORT=5432`.
 
+En el estado actual del proyecto, el ejemplo de backend deja `DATABASE_SYNCHRONIZE=true` para facilitar la creación de tablas en desarrollo local mientras todavía no existen migraciones.
+
 Para producción, la aplicación debe quedar preparada para usar Supabase PostgreSQL mediante `DATABASE_URL` y `DATABASE_SSL=true` según la configuración del entorno desplegado.
+
+### Seed inicial del backend
+
+El backend incluye un seed idempotente para cargar los datos iniciales del MVP sin exponer endpoints públicos.
+
+Antes de ejecutar el seed, verificar que `backend/.env` exista y que incluya al menos un `JWT_SECRET` de desarrollo.
+
+Ejecutar el seed:
+
+```bash
+cd backend
+yarn seed
+```
+
+El seed crea o actualiza estos usuarios de desarrollo:
+
+- `diego` con roles `user` y `admin`, password temporal `diego123`
+- `salva` con rol `user`, password temporal `salva123`
+- `josue` con rol `user`, password temporal `josue123`
+- `paolo` con rol `user`, password temporal `paolo123`
+
+También crea o actualiza la sala inicial:
+
+- Nombre: `pronostidamus mundialcillo`
+- Código: `PRONOSTIDAMUS-MUNDIALCILLO`
+- Creada por: `diego`
+
+Además, asegura que los cuatro usuarios pertenezcan a esa sala.
+
+Las passwords anteriores son solo para desarrollo local. El seed las guarda usando `bcrypt` y puede ejecutarse varias veces sin duplicar usuarios, salas ni miembros.
+
+Para probar login con `diego`:
+
+1. Levantar PostgreSQL local con `docker compose up -d postgres`.
+2. Ejecutar el seed con `cd backend && yarn seed`.
+3. Iniciar el backend con `cd backend && yarn start:dev`.
+4. Hacer `POST` a `http://localhost:3000/auth/login` con este body:
+
+```json
+{
+  "username": "diego",
+  "password": "diego123"
+}
+```
 
 ## Siguientes pasos recomendados
 
