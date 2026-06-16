@@ -46,6 +46,10 @@ export class MatchesService {
     return toMatchResponse(match);
   }
 
+  async findMatchEntityOrFail(matchId: string) {
+    return this.findMatchOrFail(matchId);
+  }
+
   async createMatch(createMatchDto: CreateMatchDto) {
     const resolvedTeams = await this.resolveTeamsFromInput(createMatchDto);
 

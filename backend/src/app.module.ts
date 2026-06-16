@@ -7,6 +7,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { HealthModule } from './modules/health/health.module';
 import { MatchesModule } from './modules/matches/matches.module';
+import { PredictionsModule } from './modules/predictions/predictions.module';
 import { RoomsModule } from './modules/rooms/rooms.module';
 
 @Module({
@@ -24,6 +25,7 @@ import { RoomsModule } from './modules/rooms/rooms.module';
     AuthModule,
     HealthModule,
     MatchesModule,
+    PredictionsModule,
     RoomsModule,
   ],
 })

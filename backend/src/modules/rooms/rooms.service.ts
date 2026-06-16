@@ -67,6 +67,27 @@ export class RoomsService {
     return this.toRoomDetail(room);
   }
 
+  async findRoomById(roomId: string) {
+    return this.roomsRepository.findOne({
+      where: { id: roomId },
+    });
+  }
+
+  async ensureRoomMember(roomId: string, userId: string) {
+    const membership = await this.roomMembersRepository.findOne({
+      where: {
+        roomId,
+        userId,
+      },
+    });
+
+    if (!membership) {
+      throw new ForbiddenException('You do not belong to this room.');
+    }
+
+    return membership;
+  }
+
   async createRoom(createRoomDto: CreateRoomDto, createdByUserId: string) {
     const existingRoom = await this.roomsRepository.findOne({
       where: { code: createRoomDto.code },
