@@ -3,8 +3,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { getDatabaseConfig } from './config/database.config';
+import { AdminModule } from './modules/admin/admin.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { HealthModule } from './modules/health/health.module';
+import { RoomsModule } from './modules/rooms/rooms.module';
 
 @Module({
   imports: [
@@ -17,8 +19,10 @@ import { HealthModule } from './modules/health/health.module';
       useFactory: (configService: ConfigService) =>
         getDatabaseConfig(configService),
     }),
+    AdminModule,
     AuthModule,
     HealthModule,
+    RoomsModule,
   ],
 })
 export class AppModule {}
