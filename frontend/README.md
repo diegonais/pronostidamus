@@ -18,3 +18,17 @@ VITE_API_URL=http://localhost:3000
 ```
 
 Tambien puedes partir de `.env.example`.
+
+## Deploy en Vercel
+
+Configurar el proyecto en Vercel con estos valores:
+
+- Root Directory: `frontend`
+- Build Command: `yarn build`
+- Output Directory: `dist`
+
+Variable de entorno de produccion:
+
+```env
+VITE_API_URL=https://url-del-backend-en-render
+```

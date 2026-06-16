@@ -3,7 +3,20 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { join } from 'path';
 
 function parseBoolean(value?: string): boolean {
-  return value === 'true';
+  if (!value) {
+    return false;
+  }
+
+  return ['true', '1', 'yes', 'on'].includes(value.trim().toLowerCase());
+}
+
+function parseNumber(value: string | undefined, fallback: number): number {
+  if (!value) {
+    return fallback;
+  }
+
+  const parsedValue = Number(value);
+  return Number.isFinite(parsedValue) ? parsedValue : fallback;
 }
 
 export function getDatabaseConfig(
@@ -32,7 +45,7 @@ export function getDatabaseConfig(
   return {
     ...baseConfig,
     host: configService.get<string>('DATABASE_HOST', 'localhost'),
-    port: configService.get<number>('DATABASE_PORT', 5432),
+    port: parseNumber(configService.get<string>('DATABASE_PORT'), 5432),
     username: configService.get<string>('DATABASE_USER', 'pronostidamus_user'),
     password: configService.get<string>(
       'DATABASE_PASSWORD',

@@ -1,8 +1,8 @@
 # pronostidamus
 
-Monorepo base para el MVP de `pronostidamus`, una aplicación web para gestionar pollas deportivas de fútbol enfocada inicialmente en el Mundial 2026.
+Monorepo del MVP de `pronostidamus`, una aplicacion web para gestionar pollas deportivas de futbol enfocada inicialmente en el Mundial 2026.
 
-## Estructura inicial
+## Estructura
 
 ```text
 pronostidamus/
@@ -15,44 +15,30 @@ pronostidamus/
 `-- AGENTS.md
 ```
 
-## Stack definido
+## Stack
 
 - Backend: NestJS + TypeScript + Yarn
 - Frontend: React + Vite + TypeScript + Yarn
 - Base de datos local: PostgreSQL con Docker
-- Base de datos de producción: Supabase PostgreSQL
+- Base de datos de produccion: Supabase PostgreSQL
 - Deploy frontend: Vercel
 - Deploy backend: Render
-- Autenticación: JWT
-- Variables de entorno: archivos `.env.example` por aplicación
-
-## Estado actual
-
-Esta base prepara la estructura del monorepo, PostgreSQL local con Docker y la documentación inicial del proyecto.
-
-Todavía no incluye:
-
-- Backend NestJS generado
-- Frontend React generado
-- Entidades ni migraciones
-- Lógica de negocio
-- Seeds o importadores de partidos
+- Autenticacion: JWT
 
 ## Desarrollo local
 
-### PostgreSQL local con Docker
+### PostgreSQL con Docker
 
-La base de datos local se ejecuta con Docker Compose usando estos valores:
+La base local usa estos valores por defecto:
 
 - Servicio: `postgres`
 - Imagen: `postgres:16-alpine`
 - Base de datos: `pronostidamus`
 - Usuario: `pronostidamus_user`
 - Password: `pronostidamus_password`
-- Puerto local: `5432`
-- Volumen persistente: `postgres_data`
+- Puerto: `5432`
 
-Levantar PostgreSQL local:
+Levantar PostgreSQL:
 
 ```bash
 docker compose up -d postgres
@@ -64,13 +50,13 @@ Detener servicios:
 docker compose down
 ```
 
-Ver logs del contenedor:
+Ver logs:
 
 ```bash
 docker compose logs -f postgres
 ```
 
-Eliminar contenedor y volumen local:
+Eliminar contenedor y volumen:
 
 ```bash
 docker compose down -v
@@ -78,28 +64,24 @@ docker compose down -v
 
 ### Variables de entorno
 
-El repositorio no incluye archivos `.env` reales. Solo se versionan ejemplos:
+El repositorio no incluye secretos reales. Solo se versionan ejemplos:
 
 - `backend/.env.example`
 - `frontend/.env.example`
 
-Uso recomendado durante desarrollo:
+Preparacion local recomendada:
 
 1. Copiar `backend/.env.example` a `backend/.env`.
 2. Copiar `frontend/.env.example` a `frontend/.env`.
 3. Ajustar valores solo si el entorno local lo necesita.
 
-Para desarrollo local, el backend debe conectarse usando `DATABASE_HOST=localhost` y `DATABASE_PORT=5432`.
+En desarrollo local, el backend usa `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_USER`, `DATABASE_PASSWORD` y `DATABASE_NAME`.
 
-En el estado actual del proyecto, el ejemplo de backend deja `DATABASE_SYNCHRONIZE=true` para facilitar la creación de tablas en desarrollo local mientras todavía no existen migraciones.
+En produccion, el backend acepta `DATABASE_URL` y `DATABASE_SSL=true`, por lo que puede conectarse a Supabase sin romper la configuracion de Docker local.
 
-Para producción, la aplicación debe quedar preparada para usar Supabase PostgreSQL mediante `DATABASE_URL` y `DATABASE_SSL=true` según la configuración del entorno desplegado.
+### Seed inicial
 
-### Seed inicial del backend
-
-El backend incluye un seed idempotente para cargar los datos iniciales del MVP sin exponer endpoints públicos.
-
-Antes de ejecutar el seed, verificar que `backend/.env` exista y que incluya al menos un `JWT_SECRET` de desarrollo.
+El backend incluye un seed idempotente para cargar los datos iniciales del MVP.
 
 Ejecutar el seed:
 
@@ -115,38 +97,84 @@ El seed crea o actualiza estos usuarios de desarrollo:
 - `josue` con rol `user`, password temporal `josue123`
 - `paolo` con rol `user`, password temporal `paolo123`
 
-También crea o actualiza la sala inicial:
+Tambien crea o actualiza la sala inicial `pronostidamus mundialcillo` con codigo `PRONOSTIDAMUS-MUNDIALCILLO` y asegura la membresia de los cuatro usuarios.
 
-- Nombre: `pronostidamus mundialcillo`
-- Código: `PRONOSTIDAMUS-MUNDIALCILLO`
-- Creada por: `diego`
+## Deploy
 
-Además, asegura que los cuatro usuarios pertenezcan a esa sala.
+### Frontend en Vercel
 
-Las passwords anteriores son solo para desarrollo local. El seed las guarda usando `bcrypt` y puede ejecutarse varias veces sin duplicar usuarios, salas ni miembros.
+Crear el proyecto en Vercel usando:
 
-Para probar login con `diego`:
+- Root Directory: `frontend`
+- Build Command: `yarn build`
+- Output Directory: `dist`
 
-1. Levantar PostgreSQL local con `docker compose up -d postgres`.
-2. Ejecutar el seed con `cd backend && yarn seed`.
-3. Iniciar el backend con `cd backend && yarn start:dev`.
-4. Hacer `POST` a `http://localhost:3000/auth/login` con este body:
+Variable de entorno de produccion:
 
-```json
-{
-  "username": "diego",
-  "password": "diego123"
-}
+```env
+VITE_API_URL=https://url-del-backend-en-render
 ```
 
-## Siguientes pasos recomendados
+No hardcodear la URL del backend en el codigo. Vercel debe inyectarla desde sus variables de entorno.
 
-1. Crear la base del backend NestJS en `backend/`.
-2. Crear la base del frontend React + Vite en `frontend/`.
-3. Conectar el backend a PostgreSQL local usando las variables de `backend/.env`.
-4. Mantener compatibilidad con Supabase PostgreSQL para producción.
+### Backend en Render
+
+Crear un Web Service en Render usando:
+
+- Root Directory: `backend`
+- Build Command: `yarn install --frozen-lockfile && yarn build`
+- Start Command: `yarn start:prod`
+
+Variables de entorno de produccion:
+
+```env
+PORT=10000
+DATABASE_URL=postgresql://usuario:password@host:5432/database
+DATABASE_SSL=true
+JWT_SECRET=definir-un-secreto-seguro
+JWT_EXPIRES_IN=1d
+FRONTEND_URL=https://url-del-frontend-en-vercel
+```
+
+Notas del backend para produccion:
+
+- Si `DATABASE_URL` esta definido, el backend lo prioriza sobre `DATABASE_HOST` y el resto de variables locales.
+- Si `DATABASE_SSL=true`, TypeORM habilita SSL para conexiones a Supabase.
+- CORS usa `FRONTEND_URL`, por lo que debe apuntar al dominio final del frontend en Vercel.
+- `GET /health` queda disponible para health checks y uptime monitoring.
+
+### Base de datos en Supabase
+
+Crear un proyecto PostgreSQL en Supabase y copiar la connection string en `DATABASE_URL` del backend en Render.
+
+Para produccion:
+
+- Usar la cadena PostgreSQL de Supabase en `DATABASE_URL`.
+- Mantener `DATABASE_SSL=true`.
+- No guardar credenciales reales en el repositorio.
+
+## Verificacion recomendada
+
+Antes de desplegar:
+
+```bash
+cd backend
+yarn build
+```
+
+```bash
+cd frontend
+yarn build
+```
+
+Despues del deploy:
+
+1. Abrir el frontend en Vercel.
+2. Verificar login contra el backend en Render.
+3. Consultar `GET https://url-del-backend-en-render/health`.
+4. Confirmar que el backend conecta a Supabase con SSL activo.
 
 ## Notas
 
 - El archivo `AGENTS.md` define el contexto operativo y funcional del proyecto.
-- Se prioriza un MVP simple, mantenible y compatible con Docker local y Supabase en producción.
+- Se prioriza un MVP simple, mantenible y compatible con Docker local y Supabase en produccion.
