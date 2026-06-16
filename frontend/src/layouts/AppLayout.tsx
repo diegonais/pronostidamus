@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
+import logo from '../assets/logo.png'
 import { useAuth } from '../context/useAuth'
 
 const navigationItems = [
@@ -18,8 +19,8 @@ export function AppLayout() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="sidebar__brand">
+          <img alt="pronostidamus" className="brand-logo brand-logo--sidebar" src={logo} />
           <span className="sidebar__eyebrow">Sistema</span>
-          <strong>pronostidamus</strong>
         </div>
 
         <nav className="sidebar__nav" aria-label="Principal">
@@ -44,9 +45,12 @@ export function AppLayout() {
 
       <main className="app-content">
         <header className="page-header">
-          <div>
-            <span className="page-header__eyebrow">Panel principal</span>
-            <h1>pronostidamus</h1>
+          <div className="page-header__brand">
+            <img alt="pronostidamus" className="brand-logo brand-logo--header" src={logo} />
+            <div>
+              <span className="page-header__eyebrow">Panel principal</span>
+              <h1>pronostidamus</h1>
+            </div>
           </div>
           <p>Navegacion protegida, sesion persistente y acceso administrativo por rol.</p>
         </header>

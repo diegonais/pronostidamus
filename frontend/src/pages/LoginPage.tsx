@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { apiClient } from '../api/apiClient'
+import logo from '../assets/logo.png'
 import { SectionCard } from '../components/SectionCard'
 import { getApiErrorMessage } from '../context/authErrors'
 import { useAuth } from '../context/useAuth'
@@ -47,6 +48,10 @@ export function LoginPage() {
       title="Iniciar sesion"
       description="Usa tus credenciales del MVP para obtener un JWT y entrar a las rutas privadas."
     >
+      <div className="login-brand">
+        <img alt="pronostidamus" className="brand-logo brand-logo--login" src={logo} />
+      </div>
+
       <form className="form-grid" onSubmit={handleSubmit}>
         <label className="field">
           <span>Usuario</span>
