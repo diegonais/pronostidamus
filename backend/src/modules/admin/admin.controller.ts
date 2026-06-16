@@ -28,6 +28,7 @@ import { MatchesService } from '../matches/matches.service';
 import { CreateMatchDto } from '../matches/dto/create-match.dto';
 import { UpdateMatchDto } from '../matches/dto/update-match.dto';
 import { UpdateMatchResultDto } from '../matches/dto/update-match-result.dto';
+import { ScoringService } from '../scoring/scoring.service';
 
 interface AuthenticatedRequest extends Request {
   user: AuthenticatedUser;
@@ -42,6 +43,7 @@ export class AdminController {
     private readonly roomsService: RoomsService,
     private readonly teamsService: TeamsService,
     private readonly matchesService: MatchesService,
+    private readonly scoringService: ScoringService,
   ) {}
 
   @Get('users')
@@ -127,6 +129,16 @@ export class AdminController {
     @Body() updateMatchResultDto: UpdateMatchResultDto,
   ) {
     return this.matchesService.updateMatchResult(matchId, updateMatchResultDto);
+  }
+
+  @Post('matches/:matchId/calculate-points')
+  calculateMatchPoints(@Param('matchId') matchId: string) {
+    return this.scoringService.calculatePointsForMatch(matchId);
+  }
+
+  @Post('matches/calculate-points')
+  calculateFinishedMatchesPoints() {
+    return this.scoringService.calculatePointsForFinishedMatches();
   }
 
   @Post('matches/import')

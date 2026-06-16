@@ -7,6 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { ScoringService } from '../scoring/scoring.service';
 import { UsersService } from '../users/users.service';
 import { AddRoomMemberDto } from './dto/add-room-member.dto';
 import { CreateRoomDto } from './dto/create-room.dto';
@@ -21,6 +22,7 @@ export class RoomsService {
     @InjectRepository(RoomMember)
     private readonly roomMembersRepository: Repository<RoomMember>,
     private readonly usersService: UsersService,
+    private readonly scoringService: ScoringService,
   ) {}
 
   async getMyRooms(userId: string) {
@@ -65,6 +67,20 @@ export class RoomsService {
     }
 
     return this.toRoomDetail(room);
+  }
+
+  async getLeaderboardForUser(roomId: string, userId: string) {
+    const room = await this.roomsRepository.findOne({
+      where: { id: roomId },
+    });
+
+    if (!room) {
+      throw new NotFoundException('Room not found.');
+    }
+
+    await this.ensureRoomMember(roomId, userId);
+
+    return this.scoringService.getRoomLeaderboard(roomId);
   }
 
   async findRoomById(roomId: string) {

@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { MatchStatus } from '../../common/enums/match-status.enum';
+import { ScoringService } from '../scoring/scoring.service';
 import { TeamsService } from '../teams/teams.service';
 import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
@@ -23,6 +24,7 @@ export class MatchesService {
     @InjectRepository(Match)
     private readonly matchesRepository: Repository<Match>,
     private readonly teamsService: TeamsService,
+    private readonly scoringService: ScoringService,
   ) {}
 
   async getMatches() {
@@ -115,6 +117,7 @@ export class MatchesService {
         : updateMatchDto.venue?.trim() || null;
 
     await this.matchesRepository.save(match);
+    await this.scoringService.synchronizeMatchPoints(match.id);
 
     return this.getMatchById(match.id);
   }
@@ -134,6 +137,7 @@ export class MatchesService {
     match.status = nextStatus;
 
     await this.matchesRepository.save(match);
+    await this.scoringService.synchronizeMatchPoints(match.id);
 
     return this.getMatchById(match.id);
   }

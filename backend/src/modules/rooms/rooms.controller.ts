@@ -26,4 +26,12 @@ export class RoomsController {
   ) {
     return this.roomsService.getRoomByIdForUser(roomId, request.user.id);
   }
+
+  @Get(':roomId/leaderboard')
+  getLeaderboard(
+    @Param('roomId') roomId: string,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.roomsService.getLeaderboardForUser(roomId, request.user.id);
+  }
 }
