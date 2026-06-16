@@ -42,7 +42,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -308,6 +309,7 @@ code {
 .quick-link-card,
 .room-banner,
 .match-card,
+.admin-card,
 .inline-note,
 .success-note {
   padding: 16px 18px;
@@ -351,6 +353,78 @@ code {
 
 .matches-list {
   grid-template-columns: 1fr;
+}
+
+.admin-page,
+.admin-users-list,
+.admin-rooms-list,
+.admin-matches-list {
+  display: grid;
+  gap: 16px;
+}
+
+.admin-summary-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.admin-card {
+  display: grid;
+  gap: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.admin-card__header,
+.admin-actions-row,
+.admin-toolbar,
+.admin-roles,
+.admin-match-form,
+.admin-match-form__scores {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-card__header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+.admin-actions-row {
+  grid-template-columns: repeat(2, minmax(0, max-content));
+}
+
+.admin-toolbar {
+  grid-template-columns: minmax(0, max-content);
+}
+
+.admin-roles {
+  grid-template-columns: repeat(2, minmax(0, max-content));
+}
+
+.checkbox-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-strong);
+}
+
+.admin-match-form__scores {
+  grid-template-columns: repeat(3, minmax(0, 180px));
+}
+
+.select-field {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: #fdfefe;
+  color: var(--text-strong);
+}
+
+.select-field:focus {
+  outline: 2px solid rgba(15, 118, 110, 0.22);
+  border-color: var(--accent);
 }
 
 .match-card {
@@ -459,6 +533,7 @@ code {
   .app-shell,
   .page-grid,
   .stats-grid,
+  .admin-summary-grid,
   .admin-actions,
   .quick-links {
     grid-template-columns: 1fr;
@@ -496,6 +571,10 @@ code {
   .match-card__header,
   .match-card__meta,
   .prediction-form__scores,
+  .admin-card__header,
+  .admin-actions-row,
+  .admin-roles,
+  .admin-match-form__scores,
   .room-banner {
     grid-template-columns: 1fr;
   }

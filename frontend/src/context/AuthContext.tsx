@@ -17,6 +17,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<Session | null>(() => getSession())
   const [isLoading, setIsLoading] = useState<boolean>(() => Boolean(getSession()?.accessToken))
 
+  const refreshUser = async () => {
+    const storedSession = getSession()
+
+    if (!storedSession?.accessToken) {
+      clearSession()
+      setSession(null)
+      setIsLoading(false)
+      return
+    }
+
+    const user = await apiClient.get<AuthUser>('/auth/me')
+    const nextSession: Session = {
+      accessToken: storedSession.accessToken,
+      user,
+    }
+
+    createSession(nextSession)
+    setSession(nextSession)
+    setIsLoading(false)
+  }
+
   useEffect(() => {
     const storedSession = getSession()
 
@@ -91,6 +112,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       token: session?.accessToken ?? null,
       login,
       logout,
+      refreshUser,
     }),
     [isLoading, session],
   )
