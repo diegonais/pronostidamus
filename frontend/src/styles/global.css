@@ -55,6 +55,10 @@ a {
   text-decoration: none;
 }
 
+p {
+  margin: 0;
+}
+
 code {
   font-family: 'Consolas', 'Courier New', monospace;
 }
@@ -110,7 +114,9 @@ code {
 .brand-lockup__assets,
 .stats-grid,
 .page-grid,
-.admin-actions {
+.admin-actions,
+.quick-links,
+.matches-list {
   display: grid;
   gap: 16px;
 }
@@ -122,8 +128,8 @@ code {
 
 .asset-slot,
 .stat-card,
-.match-row,
 .leaderboard-table,
+.match-card,
 .inline-note,
 .route-state {
   border: 1px solid var(--border-color);
@@ -158,11 +164,15 @@ code {
 .field span,
 .section-card__header p,
 .page-header p,
-.match-row p,
+.match-card p,
 .sidebar__footer p,
 .inline-note,
 .feature-list,
-.form-error {
+.form-error,
+.quick-link-card p,
+.success-note,
+.room-banner__label,
+.match-card__meta {
   color: var(--text-muted);
 }
 
@@ -203,6 +213,11 @@ code {
   background: transparent;
   color: var(--text-strong);
   border: 1px solid var(--border-color);
+}
+
+.button:disabled {
+  cursor: wait;
+  opacity: 0.75;
 }
 
 .form-error {
@@ -286,34 +301,127 @@ code {
   gap: 8px;
 }
 
-.table-like,
-.leaderboard-table {
-  overflow: hidden;
+.quick-links {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.match-row,
-.leaderboard-table__header,
-.leaderboard-table__empty {
+.quick-link-card,
+.room-banner,
+.match-card,
+.inline-note,
+.success-note {
   padding: 16px 18px;
 }
 
-.match-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: center;
+.quick-link-card {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.84);
+  transition:
+    transform 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
 }
 
-.leaderboard-table__header {
-  display: grid;
-  grid-template-columns: 0.8fr 1.6fr repeat(3, 1fr);
-  gap: 12px;
-  font-weight: 600;
+.quick-link-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(15, 118, 110, 0.28);
+  box-shadow: var(--shadow-sm);
+}
+
+.room-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
   background: rgba(15, 118, 110, 0.08);
 }
 
-.leaderboard-table__empty {
-  color: var(--text-muted);
+.room-banner__label {
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+  margin-bottom: 4px;
+}
+
+.matches-list {
+  grid-template-columns: 1fr;
+}
+
+.match-card {
+  display: grid;
+  gap: 16px;
+}
+
+.match-card__header,
+.match-card__meta,
+.prediction-form__scores {
+  display: grid;
+  gap: 12px;
+}
+
+.match-card__header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+.match-card__meta {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  font-size: 0.95rem;
+}
+
+.prediction-form {
+  display: grid;
+  gap: 14px;
+}
+
+.prediction-form__scores {
+  grid-template-columns: repeat(2, minmax(0, 120px));
+}
+
+.success-note {
+  color: var(--success);
+  background: var(--success-soft);
+  border: 1px solid rgba(22, 101, 52, 0.16);
+}
+
+.leaderboard-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.leaderboard-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+
+.leaderboard-table th,
+.leaderboard-table td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.leaderboard-table thead th {
+  background: rgba(15, 118, 110, 0.08);
+  color: var(--text-strong);
+  font-size: 0.95rem;
+}
+
+.leaderboard-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.leaderboard-table tbody tr:nth-child(even) {
+  background: rgba(244, 248, 252, 0.7);
 }
 
 .route-state {
@@ -351,7 +459,8 @@ code {
   .app-shell,
   .page-grid,
   .stats-grid,
-  .admin-actions {
+  .admin-actions,
+  .quick-links {
     grid-template-columns: 1fr;
   }
 
@@ -364,11 +473,6 @@ code {
 
   .app-content {
     padding: 20px;
-  }
-
-  .leaderboard-table__header {
-    grid-template-columns: repeat(5, minmax(110px, 1fr));
-    overflow-x: auto;
   }
 }
 
@@ -389,8 +493,14 @@ code {
     grid-template-columns: 1fr;
   }
 
-  .match-row {
-    flex-direction: column;
+  .match-card__header,
+  .match-card__meta,
+  .prediction-form__scores,
+  .room-banner {
+    grid-template-columns: 1fr;
+  }
+
+  .room-banner {
     align-items: flex-start;
   }
 }
