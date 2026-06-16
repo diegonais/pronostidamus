@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pronostidamus-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pronostidamus
+      POSTGRES_USER: pronostidamus
+      POSTGRES_PASSWORD: pronostidamus
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pronostidamus -d pronostidamus"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
