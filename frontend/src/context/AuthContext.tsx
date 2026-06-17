@@ -1,121 +1,71 @@
 import {
+  createContext,
+  useContext,
   useEffect,
   useMemo,
   useState,
   type ReactNode,
-} from 'react'
-import { apiClient } from '../api/apiClient'
-import type { LoginRequest, LoginResponse } from '../types/auth'
-import { clearSession, createSession, getSession, type AuthUser, type Session } from '../types/session'
-import { AuthContext, type AuthContextValue } from './authContext'
+} from 'react';
+import { authService } from '../services/authService';
+import { extractErrorMessage } from '../services/api';
+import type { LoginRequest, User } from '../types';
 
-type AuthProviderProps = {
-  children: ReactNode
+interface AuthContextValue {
+  currentUser: User | null;
+  isLoading: boolean;
+  login: (payload: LoginRequest) => Promise<User>;
+  logout: () => void;
 }
 
-export function AuthProvider({ children }: AuthProviderProps) {
-  const [session, setSession] = useState<Session | null>(() => getSession())
-  const [isLoading, setIsLoading] = useState<boolean>(() => Boolean(getSession()?.accessToken))
+const STORAGE_KEY = 'pronostidamus.auth';
 
-  const refreshUser = async () => {
-    const storedSession = getSession()
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-    if (!storedSession?.accessToken) {
-      clearSession()
-      setSession(null)
-      setIsLoading(false)
-      return
-    }
-
-    const user = await apiClient.get<AuthUser>('/auth/me')
-    const nextSession: Session = {
-      accessToken: storedSession.accessToken,
-      user,
-    }
-
-    createSession(nextSession)
-    setSession(nextSession)
-    setIsLoading(false)
-  }
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedSession = getSession()
+    const storedValue = window.localStorage.getItem(STORAGE_KEY);
 
-    if (!storedSession?.accessToken) {
-      return
+    if (storedValue) {
+      setCurrentUser(JSON.parse(storedValue) as User);
     }
 
-    let isMounted = true
-
-    const hydrateSession = async () => {
-      try {
-        const user = await apiClient.get<AuthUser>('/auth/me')
-
-        if (!isMounted) {
-          return
-        }
-
-        const nextSession: Session = {
-          accessToken: storedSession.accessToken,
-          user,
-        }
-
-        createSession(nextSession)
-        setSession(nextSession)
-      } catch {
-        if (!isMounted) {
-          return
-        }
-
-        clearSession()
-        setSession(null)
-      } finally {
-        if (isMounted) {
-          setIsLoading(false)
-        }
-      }
-    }
-
-    void hydrateSession()
-
-    return () => {
-      isMounted = false
-    }
-  }, [])
-
-  const login = async (credentials: LoginRequest) => {
-    const response = await apiClient.post<LoginResponse>('/auth/login', credentials, {
-      requiresAuth: false,
-    })
-
-    const nextSession: Session = {
-      accessToken: response.accessToken,
-      user: response.user,
-    }
-
-    createSession(nextSession)
-    setIsLoading(false)
-    setSession(nextSession)
-  }
-
-  const logout = () => {
-    clearSession()
-    setIsLoading(false)
-    setSession(null)
-  }
+    setIsLoading(false);
+  }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      isAuthenticated: Boolean(session?.accessToken),
+      currentUser,
       isLoading,
-      user: session?.user ?? null,
-      token: session?.accessToken ?? null,
-      login,
-      logout,
-      refreshUser,
+      async login(payload) {
+        try {
+          const response = await authService.previewLogin(payload);
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(response.user));
+          setCurrentUser(response.user);
+          return response.user;
+        } catch (error) {
+          throw new Error(extractErrorMessage(error));
+        }
+      },
+      logout() {
+        window.localStorage.removeItem(STORAGE_KEY);
+        setCurrentUser(null);
+      },
     }),
-    [isLoading, session],
-  )
+    [currentUser, isLoading],
+  );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+
+  if (!context) {
+    throw new Error('useAuth must be used inside AuthProvider');
+  }
+
+  return context;
 }
