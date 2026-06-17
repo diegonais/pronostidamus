@@ -16,8 +16,6 @@ const userLinks: NavItem[] = [
   { label: 'Panel', to: '/user' },
   { label: 'Perfil', to: '/user/profile' },
   { label: 'Mis salas', to: '/user/rooms' },
-  { label: 'Pronosticos', to: '/user/predictions' },
-  { label: 'Tabla', to: '/user/leaderboard' },
 ];
 
 const adminToolsLinks: NavItem[] = [

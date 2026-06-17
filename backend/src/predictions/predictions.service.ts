@@ -27,6 +27,7 @@ export class PredictionsService {
     createPredictionDto: CreatePredictionDto,
   ): Promise<Prediction> {
     const match = await this.matchesService.findOne(matchId);
+    this.ensurePredictionsOpen(match);
     await this.usersService.findOne(createPredictionDto.userId);
     await this.roomsService.ensureUserBelongsToRoom(
       match.roomId,
@@ -87,9 +88,20 @@ export class PredictionsService {
     updatePredictionDto: UpdatePredictionDto,
   ): Promise<Prediction> {
     const prediction = await this.findOne(id);
+    this.ensurePredictionsOpen(prediction.match);
 
     Object.assign(prediction, updatePredictionDto);
 
     return this.predictionsRepository.save(prediction);
+  }
+
+  private ensurePredictionsOpen(
+    match: Parameters<MatchesService['isPredictionClosed']>[0],
+  ): void {
+    if (this.matchesService.isPredictionClosed(match)) {
+      throw new ConflictException(
+        'Predictions are closed for this match',
+      );
+    }
   }
 }

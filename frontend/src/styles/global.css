@@ -343,6 +343,56 @@ select {
   width: 64px;
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: rgba(17, 26, 47, 0.42);
+  z-index: 50;
+}
+
+.modal-card {
+  width: min(720px, 100%);
+  max-height: calc(100vh - 3rem);
+  overflow-y: auto;
+  padding: 1.4rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 24px 60px rgba(23, 32, 51, 0.2);
+}
+
+.modal-header,
+.modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.modal-header {
+  margin-bottom: 1rem;
+}
+
+.modal-actions {
+  justify-content: flex-end;
+}
+
+.subsection-card {
+  display: grid;
+  gap: 1rem;
+  padding: 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--card);
+}
+
+.subsection-card + .subsection-card {
+  margin-top: 1rem;
+}
+
 @media (max-width: 960px) {
   .app-shell,
   .two-column {
@@ -359,7 +409,9 @@ select {
 
   .inline-actions,
   .match-row,
-  .prediction-form {
+  .prediction-form,
+  .modal-header,
+  .modal-actions {
     flex-direction: column;
     align-items: stretch;
   }

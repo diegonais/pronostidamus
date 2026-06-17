@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from '../layout/AppShell';
 import { useAuth } from '../context/AuthContext';
 import { ProtectedRoute } from '../routes/ProtectedRoute';
@@ -164,11 +164,9 @@ function LoginPage() {
           <img src="/ball.png" alt="Balon oficial" />
         </div>
         <div>
-          <p className="eyebrow">Ingreso temporal</p>
+          <p className="eyebrow">Iniciar sesion</p>
           <h1>Pronostidamus</h1>
-          <p className="page-description">
-            Ingresa con tu usuario y contrasena usando el endpoint actual `POST /auth/preview-login`.
-          </p>
+          <p className="page-description">Accede con tu usuario y contrasena.</p>
         </div>
 
         <form className="form-grid" onSubmit={handleSubmit}>
@@ -199,10 +197,6 @@ function LoginPage() {
           </button>
         </form>
 
-        <StateCard>
-          Usuarios seed disponibles: `diego / diego123`, `salva / salva123`, `josue / josue123`,
-          `paolo / paolo123`.
-        </StateCard>
       </section>
     </div>
   );
@@ -220,7 +214,7 @@ function AdminDashboardPage() {
     <div className="page-stack">
       <PageHeader
         title="Resumen admin"
-        description="La administracion queda separada del panel normal del usuario."
+        description="Vista general de administracion."
       />
       {error ? <StateCard tone="error">{error}</StateCard> : null}
       <div className="stats-grid">
@@ -236,9 +230,6 @@ function AdminDashboardPage() {
           }
         />
       </div>
-      <StateCard>
-        Desde aqui administras usuarios y salas. La carga de partidos ahora vive dentro de cada sala.
-      </StateCard>
     </div>
   );
 }
@@ -312,7 +303,7 @@ function AdminUsersPage() {
       <section className="panel-card">
         <PageHeader
           title="Gestion de usuarios"
-          description="Alta, edicion y deshabilitacion logica via el backend actual."
+          description="Administra usuarios y accesos."
         />
         {error ? <StateCard tone="error">{error}</StateCard> : null}
         {feedback ? <StateCard tone="success">{feedback}</StateCard> : null}
@@ -342,7 +333,7 @@ function AdminUsersPage() {
       <section className="panel-card">
         <PageHeader
           title={editingUser ? 'Editar usuario' : 'Crear usuario'}
-          description="Formulario simple y orientado al backend real."
+          description="Completa los datos del usuario."
         />
         <form className="form-grid" onSubmit={handleSubmit}>
           <label>
@@ -424,6 +415,8 @@ function AdminRoomsPage() {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [roomForm, setRoomForm] = useState({ name: '', isActive: true });
   const [selectedUserId, setSelectedUserId] = useState('');
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [isAddMatchModalOpen, setIsAddMatchModalOpen] = useState(false);
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
   const [feedback, setFeedback] = useState('');
   const [matchForm, setMatchForm] = useState<MatchPayload>({
@@ -439,6 +432,9 @@ function AdminRoomsPage() {
   useEffect(() => {
     if (!selectedRoom) {
       setRoomForm({ name: '', isActive: true });
+      setSelectedUserId('');
+      setIsAddUserModalOpen(false);
+      setIsAddMatchModalOpen(false);
       setEditingMatch(null);
       return;
     }
@@ -544,6 +540,7 @@ function AdminRoomsPage() {
       } else {
         await matchesService.create(selectedRoom.id, payload);
         setFeedback('Partido agregado a la sala.');
+        setIsAddMatchModalOpen(false);
       }
 
       setEditingMatch(null);
@@ -554,6 +551,10 @@ function AdminRoomsPage() {
   }
 
   const roomMatches = selectedRoom ? matchesByRoom[selectedRoom.id] ?? [] : [];
+  const roomMemberIds = new Set((selectedRoom?.roomUsers ?? []).map((membership) => membership.userId));
+  const availableUsers = users.filter((user) => !roomMemberIds.has(user.id));
+  const isEditingMatch = Boolean(editingMatch);
+  const isMatchModalOpen = isEditingMatch || isAddMatchModalOpen;
 
   if (loading) {
     return <StateCard>Cargando salas...</StateCard>;
@@ -624,69 +625,181 @@ function AdminRoomsPage() {
 
         {selectedRoom ? (
           <>
-            <h3>Miembros</h3>
-            <div className="inline-actions">
-              <select value={selectedUserId} onChange={(event) => setSelectedUserId(event.target.value)}>
-                <option value="">Selecciona usuario</option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.name} (@{user.username})
-                  </option>
+            <section className="subsection-card">
+              <div className="modal-header">
+                <h3>Miembros</h3>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => {
+                    setSelectedUserId('');
+                    setIsAddUserModalOpen(true);
+                  }}
+                >
+                  Anadir usuario
+                </button>
+              </div>
+              <SectionTable headers={['Miembro', 'Rol', 'Accion']}>
+                {(selectedRoom.roomUsers ?? []).map((membership) => (
+                  <tr key={membership.id}>
+                    <td>{membership.user.name}</td>
+                    <td>{membership.user.role}</td>
+                    <td>
+                      <button
+                        className="table-button danger"
+                        type="button"
+                        onClick={() => detachUser(selectedRoom.id, membership.user.id)}
+                      >
+                        Quitar
+                      </button>
+                    </td>
+                  </tr>
                 ))}
-              </select>
-              <button className="secondary-button" type="button" onClick={attachUser}>
-                Anadir usuario
+              </SectionTable>
+            </section>
+
+            <section className="subsection-card">
+              <div className="modal-header">
+                <h3>Partidos de la sala</h3>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => {
+                    setEditingMatch(null);
+                    setIsAddMatchModalOpen(true);
+                  }}
+                >
+                  Agregar partido
+                </button>
+              </div>
+              {roomMatches.length === 0 ? (
+                <StateCard>No hay partidos en esta sala.</StateCard>
+              ) : (
+                <SectionTable headers={['Partido', 'Fecha Bolivia', 'Estado', 'Resultado', 'Accion']}>
+                  {roomMatches.map((match) => {
+                    const statusLabel = getMatchVisualStatus(match.matchDate, match.status);
+                    return (
+                      <tr key={match.id}>
+                        <td>
+                          {match.teamA} vs {match.teamB}
+                        </td>
+                        <td>{formatDateTime(match.matchDate)}</td>
+                        <td>
+                          <StatusBadge label={statusLabel} tone={toneForMatchStatus(statusLabel)} />
+                        </td>
+                        <td>
+                          {match.teamAScore ?? '-'} : {match.teamBScore ?? '-'}
+                        </td>
+                        <td>
+                          <button className="table-button" type="button" onClick={() => setEditingMatch(match)}>
+                            Editar
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </SectionTable>
+              )}
+            </section>
+          </>
+        ) : null}
+      </section>
+
+      {selectedRoom && isAddUserModalOpen ? (
+        <div
+          className="modal-backdrop"
+          onClick={() => setIsAddUserModalOpen(false)}
+          role="presentation"
+        >
+          <section
+            className="modal-card"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-user-title"
+          >
+            <div className="modal-header">
+              <div>
+                <p className="eyebrow">Miembro</p>
+                <h3 id="add-user-title">Anadir usuario</h3>
+              </div>
+              <button className="table-button" type="button" onClick={() => setIsAddUserModalOpen(false)}>
+                Cerrar
               </button>
             </div>
-            <SectionTable headers={['Miembro', 'Rol', 'Accion']}>
-              {(selectedRoom.roomUsers ?? []).map((membership) => (
-                <tr key={membership.id}>
-                  <td>{membership.user.name}</td>
-                  <td>{membership.user.role}</td>
-                  <td>
-                    <button
-                      className="table-button danger"
-                      type="button"
-                      onClick={() => detachUser(selectedRoom.id, membership.user.id)}
-                    >
-                      Quitar
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </SectionTable>
-
-            <h3>Partidos de la sala</h3>
-            {roomMatches.length === 0 ? (
-              <StateCard>No hay partidos en esta sala.</StateCard>
+            {availableUsers.length === 0 ? (
+              <StateCard>Todos los usuarios disponibles ya pertenecen a esta sala.</StateCard>
             ) : (
-              <SectionTable headers={['Partido', 'Fecha Bolivia', 'Estado', 'Resultado', 'Accion']}>
-                {roomMatches.map((match) => {
-                  const statusLabel = getMatchVisualStatus(match.matchDate, match.status);
-                  return (
-                    <tr key={match.id}>
-                      <td>
-                        {match.teamA} vs {match.teamB}
-                      </td>
-                      <td>{formatDateTime(match.matchDate)}</td>
-                      <td>
-                        <StatusBadge label={statusLabel} tone={toneForMatchStatus(statusLabel)} />
-                      </td>
-                      <td>
-                        {match.teamAScore ?? '-'} : {match.teamBScore ?? '-'}
-                      </td>
-                      <td>
-                        <button className="table-button" type="button" onClick={() => setEditingMatch(match)}>
-                          Editar
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </SectionTable>
+              <div className="form-grid">
+                <label>
+                  Usuario
+                  <select value={selectedUserId} onChange={(event) => setSelectedUserId(event.target.value)}>
+                    <option value="">Selecciona usuario</option>
+                    {availableUsers.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.name} (@{user.username})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div className="modal-actions">
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => setIsAddUserModalOpen(false)}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    className="primary-button"
+                    type="button"
+                    onClick={async () => {
+                      await attachUser();
+                      setIsAddUserModalOpen(false);
+                    }}
+                    disabled={!selectedUserId}
+                  >
+                    Anadir usuario
+                  </button>
+                </div>
+              </div>
             )}
+          </section>
+        </div>
+      ) : null}
 
-            <h3>{editingMatch ? 'Editar partido' : 'Agregar partido a la sala'}</h3>
+      {selectedRoom && isMatchModalOpen ? (
+        <div
+          className="modal-backdrop"
+          onClick={() => {
+            setEditingMatch(null);
+            setIsAddMatchModalOpen(false);
+          }}
+          role="presentation"
+        >
+          <section
+            className="modal-card"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-match-title"
+          >
+            <div className="modal-header">
+              <div>
+                <p className="eyebrow">Partido</p>
+                <h3 id="edit-match-title">{isEditingMatch ? 'Editar partido' : 'Agregar partido'}</h3>
+              </div>
+              <button
+                className="table-button"
+                type="button"
+                onClick={() => {
+                  setEditingMatch(null);
+                  setIsAddMatchModalOpen(false);
+                }}
+              >
+                Cerrar
+              </button>
+            </div>
             <form className="form-grid" onSubmit={saveMatch}>
               <label>
                 Equipo A
@@ -763,13 +876,25 @@ function AdminRoomsPage() {
                   <option value={MatchStatus.FINISHED}>FINISHED</option>
                 </select>
               </label>
-              <button className="primary-button" type="submit">
-                {editingMatch ? 'Guardar partido' : 'Agregar partido'}
-              </button>
+              <div className="modal-actions">
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => {
+                    setEditingMatch(null);
+                    setIsAddMatchModalOpen(false);
+                  }}
+                >
+                  Cancelar
+                </button>
+                <button className="primary-button" type="submit">
+                  {isEditingMatch ? 'Guardar partido' : 'Agregar partido'}
+                </button>
+              </div>
             </form>
-          </>
-        ) : null}
-      </section>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -825,7 +950,7 @@ function AdminLeaderboardPage() {
     <div className="page-stack">
       <PageHeader
         title="Tabla general"
-        description="Vista general para admin usando los datos disponibles hoy."
+        description="Resumen general por sala."
       />
       {error ? <StateCard tone="error">{error}</StateCard> : null}
       <div className="inline-actions">
@@ -867,11 +992,6 @@ function UserDashboardPage() {
         <StatTile label="Puntaje exacto" value="3 pts" helper="Resultado exacto" />
         <StatTile label="Ganador/empate" value="1 pt" helper="Coincidencia parcial" />
       </div>
-      {currentUser?.role === UserRole.ADMIN ? (
-        <StateCard tone="warning">
-          Este es el mismo panel base del usuario. Tus herramientas extra estan en la seccion Admin.
-        </StateCard>
-      ) : null}
     </div>
   );
 }
@@ -903,7 +1023,7 @@ function UserProfilePage() {
     <div className="page-stack">
       <PageHeader
         title="Perfil"
-        description="Edicion basica de tus datos. El rol no se modifica desde aqui."
+        description="Actualiza tus datos personales."
       />
       {feedback ? <StateCard tone="success">{feedback}</StateCard> : null}
       <form className="form-grid panel-card" onSubmit={handleSubmit}>
@@ -945,17 +1065,8 @@ function UserProfilePage() {
 
 function UserRoomsPage() {
   const { currentUser } = useAuth();
-  const { rooms, matchesByRoom, loading, error } = useCatalogData();
+  const { rooms, matchesByRoom, predictionsByMatch, loading, error } = useCatalogData();
   const myRooms = getAccessibleRooms(rooms, currentUser);
-  const [roomId, setRoomId] = useState('');
-
-  useEffect(() => {
-    if (!roomId && myRooms[0]) {
-      setRoomId(myRooms[0].id);
-    }
-  }, [myRooms, roomId]);
-
-  const selectedRoom = myRooms.find((room) => room.id === roomId) ?? myRooms[0];
 
   if (loading) {
     return <StateCard>Cargando salas...</StateCard>;
@@ -967,27 +1078,141 @@ function UserRoomsPage() {
         title="Mis salas"
         description={
           currentUser?.role === UserRole.ADMIN
-            ? 'Como admin ves todas las salas desde este panel base.'
-            : 'Consulta tus salas y los partidos asociados.'
+            ? 'Accede a cualquier sala para ver sus partidos y pronosticos.'
+            : 'Elige una sala para ver sus partidos y tus pronosticos.'
         }
       />
       {error ? <StateCard tone="error">{error}</StateCard> : null}
       {myRooms.length === 0 ? (
         <StateCard>No hay salas registradas para este usuario.</StateCard>
       ) : (
-        <>
-          <div className="inline-actions">
-            <select value={selectedRoom?.id ?? ''} onChange={(event) => setRoomId(event.target.value)}>
-              {myRooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.name}
-                </option>
-              ))}
-            </select>
-          </div>
+        <SectionTable headers={['Sala', 'Miembros', 'Actividad', 'Accion']}>
+          {myRooms.map((room) => {
+            const roomMatches = matchesByRoom[room.id] ?? [];
+            const roomPredictions = roomMatches.flatMap(
+              (match) => predictionsByMatch[match.id] ?? [],
+            );
+
+            return (
+              <tr key={room.id}>
+                <td>
+                  <strong>{room.name}</strong>
+                </td>
+                <td>{room.roomUsers?.length ?? 0}</td>
+                <td>
+                  {roomMatches.length} partido{roomMatches.length === 1 ? '' : 's'} ·{' '}
+                  {roomPredictions.length} pronostico{roomPredictions.length === 1 ? '' : 's'}
+                </td>
+                <td>
+                  <Link className="table-button" to={`/user/rooms/${room.id}`}>
+                    Entrar
+                  </Link>
+                </td>
+              </tr>
+            );
+          })}
+        </SectionTable>
+      )}
+    </div>
+  );
+}
+
+function UserRoomDetailPage() {
+  const { currentUser } = useAuth();
+  const { roomId = '' } = useParams();
+  const { rooms, matchesByRoom, predictionsByMatch, loading, error, refresh } = useCatalogData();
+  const [feedback, setFeedback] = useState('');
+  const myRooms = getAccessibleRooms(rooms, currentUser);
+  const room = myRooms.find((item) => item.id === roomId);
+
+  async function submitPrediction(match: Match, formData: FormData) {
+    if (!currentUser) {
+      return;
+    }
+
+    const predictedTeamAScore = Number(formData.get(`teamA-${match.id}`));
+    const predictedTeamBScore = Number(formData.get(`teamB-${match.id}`));
+
+    if (predictedTeamAScore < 0 || predictedTeamBScore < 0) {
+      setFeedback('Los goles no pueden ser negativos.');
+      return;
+    }
+
+    const existingPrediction = (predictionsByMatch[match.id] ?? []).find(
+      (item) => item.userId === currentUser.id,
+    );
+
+    try {
+      if (existingPrediction) {
+        await predictionsService.update(existingPrediction.id, {
+          predictedTeamAScore,
+          predictedTeamBScore,
+        });
+        setFeedback('Pronostico actualizado.');
+      } else {
+        await predictionsService.create(match.id, {
+          userId: currentUser.id,
+          predictedTeamAScore,
+          predictedTeamBScore,
+        });
+        setFeedback('Pronostico guardado.');
+      }
+
+      await refresh();
+    } catch (requestError) {
+      setFeedback(extractErrorMessage(requestError));
+    }
+  }
+
+  if (loading) {
+    return <StateCard>Cargando sala...</StateCard>;
+  }
+
+  if (!room) {
+    return (
+      <div className="page-stack">
+        <PageHeader title="Sala" description="No se encontro la sala solicitada." />
+        <StateCard tone="warning">La sala no existe o no pertenece a este usuario.</StateCard>
+      </div>
+    );
+  }
+
+  const matches = matchesByRoom[room.id] ?? [];
+  const finishedMatches = matches.filter((match) => match.status === MatchStatus.FINISHED);
+  const openMatches = matches.filter((match) => !isPredictionLocked(match.matchDate, match.status));
+  const leaderboard = buildLeaderboard(
+    getRoomMembers(room),
+    getCurrentRoomPredictions(matches, predictionsByMatch),
+    matches,
+  );
+
+  return (
+    <div className="page-stack">
+      <PageHeader
+        title={room.name}
+        description="Consulta los partidos de la sala, registra tus pronosticos y revisa resultados."
+      />
+      {error ? <StateCard tone="error">{error}</StateCard> : null}
+      {feedback ? <StateCard tone="success">{feedback}</StateCard> : null}
+      <div className="stats-grid">
+        <StatTile label="Miembros" value={room.roomUsers?.length ?? 0} />
+        <StatTile label="Partidos" value={matches.length} />
+        <StatTile label="Abiertos" value={openMatches.length} />
+        <StatTile label="Finalizados" value={finishedMatches.length} />
+      </div>
+
+      <section className="panel-card">
+        <PageHeader
+          title="Partidos"
+          description="Resultados y estado actual de los partidos de esta sala."
+        />
+        {matches.length === 0 ? (
+          <StateCard>No hay partidos cargados en esta sala.</StateCard>
+        ) : (
           <SectionTable headers={['Partido', 'Fecha Bolivia', 'Estado', 'Resultado']}>
-            {(selectedRoom ? matchesByRoom[selectedRoom.id] ?? [] : []).map((match) => {
+            {matches.map((match) => {
               const statusLabel = getMatchVisualStatus(match.matchDate, match.status);
+
               return (
                 <tr key={match.id}>
                   <td>
@@ -1004,8 +1229,132 @@ function UserRoomsPage() {
               );
             })}
           </SectionTable>
-        </>
-      )}
+        )}
+      </section>
+
+      <section className="panel-card">
+        <PageHeader
+          title="Mis pronosticos"
+          description="Solo puedes editar mientras el partido siga abierto."
+        />
+        {matches.length === 0 ? (
+          <StateCard>No hay partidos disponibles en esta sala.</StateCard>
+        ) : (
+          matches.map((match) => {
+            const myPrediction = (predictionsByMatch[match.id] ?? []).find(
+              (item) => item.userId === currentUser?.id,
+            );
+            const locked = isPredictionLocked(match.matchDate, match.status);
+            const statusLabel = getMatchVisualStatus(match.matchDate, match.status);
+
+            return (
+              <section key={match.id} className="panel-card">
+                <div className="match-row">
+                  <div>
+                    <h3>
+                      {match.teamA} vs {match.teamB}
+                    </h3>
+                    <p className="page-description">{formatDateTime(match.matchDate)}</p>
+                  </div>
+                  <StatusBadge label={statusLabel} tone={toneForMatchStatus(statusLabel)} />
+                </div>
+                <form
+                  className="prediction-form"
+                  onSubmit={async (event) => {
+                    event.preventDefault();
+                    await submitPrediction(match, new FormData(event.currentTarget));
+                  }}
+                >
+                  <label>
+                    {match.teamA}
+                    <input
+                      name={`teamA-${match.id}`}
+                      type="number"
+                      min={0}
+                      defaultValue={myPrediction?.predictedTeamAScore ?? ''}
+                      disabled={locked}
+                      required
+                    />
+                  </label>
+                  <label>
+                    {match.teamB}
+                    <input
+                      name={`teamB-${match.id}`}
+                      type="number"
+                      min={0}
+                      defaultValue={myPrediction?.predictedTeamBScore ?? ''}
+                      disabled={locked}
+                      required
+                    />
+                  </label>
+                  <button className="primary-button" type="submit" disabled={locked}>
+                    {myPrediction ? 'Actualizar pronostico' : 'Guardar pronostico'}
+                  </button>
+                </form>
+                {myPrediction ? (
+                  <StateCard>
+                    Tu registro actual: {myPrediction.predictedTeamAScore} -{' '}
+                    {myPrediction.predictedTeamBScore} · {myPrediction.points ?? 0} puntos.
+                  </StateCard>
+                ) : null}
+              </section>
+            );
+          })
+        )}
+      </section>
+
+      <section className="panel-card">
+        <PageHeader
+          title="Pronosticos de la sala"
+          description="Los pronosticos de todos se muestran cuando el partido ya termino."
+        />
+        {finishedMatches.length === 0 ? (
+          <StateCard>No hay partidos finalizados todavia.</StateCard>
+        ) : (
+          finishedMatches.map((match) => {
+            const matchPredictions = predictionsByMatch[match.id] ?? [];
+
+            return (
+              <section key={match.id} className="panel-card">
+                <div className="match-row">
+                  <div>
+                    <h3>
+                      {match.teamA} vs {match.teamB}
+                    </h3>
+                    <p className="page-description">
+                      Resultado final: {match.teamAScore ?? '-'} - {match.teamBScore ?? '-'}
+                    </p>
+                  </div>
+                  <StatusBadge label="Finalizado" tone="info" />
+                </div>
+                {matchPredictions.length === 0 ? (
+                  <StateCard>No hay pronosticos registrados para este partido.</StateCard>
+                ) : (
+                  <SectionTable headers={['Usuario', 'Pronostico', 'Puntos']}>
+                    {matchPredictions.map((prediction) => (
+                      <tr key={prediction.id}>
+                        <td>
+                          <strong>{prediction.user?.name ?? 'Usuario'}</strong>
+                          <div className="muted-text">@{prediction.user?.username ?? ''}</div>
+                        </td>
+                        <td>
+                          {prediction.predictedTeamAScore} - {prediction.predictedTeamBScore}
+                        </td>
+                        <td>{prediction.points ?? 0}</td>
+                      </tr>
+                    ))}
+                  </SectionTable>
+                )}
+              </section>
+            );
+          })
+        )}
+      </section>
+
+      <section className="panel-card">
+        <PageHeader title="Tabla de la sala" description="Posiciones actuales dentro de esta sala." />
+        <LeaderboardTable items={leaderboard} />
+      </section>
     </div>
   );
 }
@@ -1166,7 +1515,7 @@ function UserLeaderboardPage() {
     <div className="page-stack">
       <PageHeader
         title="Tabla"
-        description="Clasificacion construida con los datos disponibles actualmente."
+        description="Posiciones de la sala seleccionada."
       />
       {error ? <StateCard tone="error">{error}</StateCard> : null}
       {room ? (
@@ -1207,6 +1556,7 @@ export function AppRoutes() {
             <Route path="/user" element={<UserDashboardPage />} />
             <Route path="/user/profile" element={<UserProfilePage />} />
             <Route path="/user/rooms" element={<UserRoomsPage />} />
+            <Route path="/user/rooms/:roomId" element={<UserRoomDetailPage />} />
             <Route path="/user/predictions" element={<UserPredictionsPage />} />
             <Route path="/user/leaderboard" element={<UserLeaderboardPage />} />
           </Route>
