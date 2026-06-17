@@ -19,18 +19,38 @@ import { PredictionsModule } from './predictions/predictions.module';
     ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.getOrThrow<string>('database.host'),
-        port: configService.getOrThrow<number>('database.port'),
-        username: configService.getOrThrow<string>('database.username'),
-        password: configService.getOrThrow<string>('database.password'),
-        database: configService.getOrThrow<string>('database.name'),
-        autoLoadEntities: true,
-        synchronize: configService.get<boolean>('database.synchronize', true),
-        logging: configService.get<boolean>('database.logging', false),
-        timezone: 'Z',
-      }),
+      useFactory: (configService: ConfigService) => {
+        const databaseUrl = configService.get<string>('database.url');
+        const useSsl = configService.get<boolean>('database.ssl', false);
+        const sslRejectUnauthorized = configService.get<boolean>(
+          'database.sslRejectUnauthorized',
+          true,
+        );
+
+        return {
+          type: 'postgres',
+          ...(databaseUrl
+            ? {
+                url: databaseUrl,
+              }
+            : {
+                host: configService.getOrThrow<string>('database.host'),
+                port: configService.getOrThrow<number>('database.port'),
+                username: configService.getOrThrow<string>('database.username'),
+                password: configService.getOrThrow<string>('database.password'),
+                database: configService.getOrThrow<string>('database.name'),
+              }),
+          ssl: useSsl
+            ? {
+                rejectUnauthorized: sslRejectUnauthorized,
+              }
+            : false,
+          autoLoadEntities: true,
+          synchronize: configService.get<boolean>('database.synchronize', true),
+          logging: configService.get<boolean>('database.logging', false),
+          timezone: 'Z',
+        };
+      },
     }),
     AuthModule,
     UsersModule,
