@@ -89,6 +89,19 @@ img {
   gap: 0.4rem;
 }
 
+.nav-section {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.nav-section-title {
+  margin: 0;
+  color: #92a0c7;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .nav-link {
   color: #cfd7ec;
   text-decoration: none;

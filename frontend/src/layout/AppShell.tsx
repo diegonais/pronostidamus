@@ -7,20 +7,24 @@ interface NavItem {
   to: string;
 }
 
-const adminLinks: NavItem[] = [
-  { label: 'Resumen', to: '/admin' },
-  { label: 'Usuarios', to: '/admin/users' },
-  { label: 'Salas', to: '/admin/rooms' },
-  { label: 'Partidos', to: '/admin/matches' },
-  { label: 'Tabla', to: '/admin/leaderboard' },
-];
+interface NavSection {
+  title?: string;
+  links: NavItem[];
+}
 
 const userLinks: NavItem[] = [
   { label: 'Panel', to: '/user' },
   { label: 'Perfil', to: '/user/profile' },
   { label: 'Mis salas', to: '/user/rooms' },
-  { label: 'Pronósticos', to: '/user/predictions' },
+  { label: 'Pronosticos', to: '/user/predictions' },
   { label: 'Tabla', to: '/user/leaderboard' },
+];
+
+const adminToolsLinks: NavItem[] = [
+  { label: 'Resumen admin', to: '/admin' },
+  { label: 'Gestion de usuarios', to: '/admin/users' },
+  { label: 'Gestion de salas', to: '/admin/rooms' },
+  { label: 'Tabla general', to: '/admin/leaderboard' },
 ];
 
 export function AppShell() {
@@ -31,14 +35,20 @@ export function AppShell() {
     return null;
   }
 
-  const links = currentUser.role === UserRole.ADMIN ? adminLinks : userLinks;
+  const sections: NavSection[] =
+    currentUser.role === UserRole.ADMIN
+      ? [
+          { title: 'Panel', links: userLinks },
+          { title: 'Admin', links: adminToolsLinks },
+        ]
+      : [{ title: 'Panel', links: userLinks }];
 
   return (
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand-block">
           <img className="brand-logo" src="/pronostidamus.png" alt="Pronostidamus" />
-          <img className="brand-ball" src="/ball.png" alt="Balón oficial" />
+          <img className="brand-ball" src="/ball.png" alt="Balon oficial" />
           <div>
             <p className="eyebrow">Pronostidamus</p>
             <h1>Panel deportivo</h1>
@@ -52,18 +62,23 @@ export function AppShell() {
           </span>
         </div>
 
-        <nav className="nav-list">
-          {links.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              end={link.to === '/admin' || link.to === '/user'}
-              className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
-            >
-              {link.label}
-            </NavLink>
-          ))}
-        </nav>
+        {sections.map((section) => (
+          <div key={section.title ?? 'default'} className="nav-section">
+            {section.title ? <p className="nav-section-title">{section.title}</p> : null}
+            <nav className="nav-list">
+              {section.links.map((link) => (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  end={link.to === '/admin' || link.to === '/user'}
+                  className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
+                >
+                  {link.label}
+                </NavLink>
+              ))}
+            </nav>
+          </div>
+        ))}
 
         <button
           className="secondary-button"
@@ -73,7 +88,7 @@ export function AppShell() {
             navigate('/login');
           }}
         >
-          Cerrar sesión
+          Cerrar sesion
         </button>
       </aside>
 

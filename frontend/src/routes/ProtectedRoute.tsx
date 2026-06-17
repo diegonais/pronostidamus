@@ -11,7 +11,7 @@ export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   const location = useLocation();
 
   if (isLoading) {
-    return <div className="state-card">Cargando sesión...</div>;
+    return <div className="state-card">Cargando sesion...</div>;
   }
 
   if (!currentUser) {
@@ -19,12 +19,7 @@ export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   }
 
   if (allowedRoles && !allowedRoles.includes(currentUser.role)) {
-    return (
-      <Navigate
-        to={currentUser.role === UserRole.ADMIN ? '/admin' : '/user'}
-        replace
-      />
-    );
+    return <Navigate to="/user" replace />;
   }
 
   return <Outlet />;

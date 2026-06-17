@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { AppShell } from '../layout/AppShell';
 import { useAuth } from '../context/AuthContext';
@@ -34,13 +34,11 @@ function toneForMatchStatus(statusLabel: string) {
   return 'success';
 }
 
-function getCurrentRoomPredictions(roomId: string, matches: Match[], allPredictions: Record<string, Prediction[]>) {
-  return matches
-    .filter((match) => match.roomId === roomId)
-    .reduce<Record<string, Prediction[]>>((accumulator, match) => {
-      accumulator[match.id] = allPredictions[match.id] ?? [];
-      return accumulator;
-    }, {});
+function getCurrentRoomPredictions(matches: Match[], allPredictions: Record<string, Prediction[]>) {
+  return matches.reduce<Record<string, Prediction[]>>((accumulator, match) => {
+    accumulator[match.id] = allPredictions[match.id] ?? [];
+    return accumulator;
+  }, {});
 }
 
 function useCatalogData() {
@@ -75,6 +73,7 @@ function useCatalogData() {
       const predictionsEntries = await Promise.all(
         matchIds.map(async (matchId) => [matchId, await predictionsService.getByMatch(matchId)] as const),
       );
+
       setPredictionsByMatch(Object.fromEntries(predictionsEntries));
     } catch (requestError) {
       setError(extractErrorMessage(requestError));
@@ -103,7 +102,7 @@ function SectionTable({
   children,
 }: {
   headers: string[];
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div className="table-wrap">
@@ -121,6 +120,16 @@ function SectionTable({
   );
 }
 
+function getAccessibleRooms(rooms: Room[], currentUser: User | null) {
+  if (currentUser?.role === UserRole.ADMIN) {
+    return rooms;
+  }
+
+  return rooms.filter((room) =>
+    room.roomUsers?.some((membership) => membership.userId === currentUser?.id),
+  );
+}
+
 function LoginPage() {
   const { currentUser, login } = useAuth();
   const navigate = useNavigate();
@@ -129,7 +138,7 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   if (currentUser) {
-    return <Navigate to={currentUser.role === UserRole.ADMIN ? '/admin' : '/user'} replace />;
+    return <Navigate to="/user" replace />;
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -138,8 +147,8 @@ function LoginPage() {
     try {
       setLoading(true);
       setError('');
-      const user = await login(form);
-      navigate(user.role === UserRole.ADMIN ? '/admin' : '/user', { replace: true });
+      await login(form);
+      navigate('/user', { replace: true });
     } catch (loginError) {
       setError(extractErrorMessage(loginError));
     } finally {
@@ -152,7 +161,7 @@ function LoginPage() {
       <section className="auth-card">
         <div className="auth-brand">
           <img src="/pronostidamus.png" alt="Pronostidamus" />
-          <img src="/ball.png" alt="Balón oficial" />
+          <img src="/ball.png" alt="Balon oficial" />
         </div>
         <div>
           <p className="eyebrow">Ingreso temporal</p>
@@ -207,8 +216,8 @@ function AdminDashboardPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        title="Dashboard Admin"
-        description="Resumen rápido del estado actual del backend conectado."
+        title="Resumen admin"
+        description="La administracion queda separada del panel normal del usuario."
       />
       {error ? <StateCard tone="error">{error}</StateCard> : null}
       <div className="stats-grid">
@@ -217,12 +226,15 @@ function AdminDashboardPage() {
         <StatTile label="Partidos" value={matches.length} />
         <StatTile
           label="Programados"
-          value={matches.filter((match) => getMatchVisualStatus(match.matchDate, match.status) === 'Programado').length}
+          value={
+            matches.filter(
+              (match) => getMatchVisualStatus(match.matchDate, match.status) === 'Programado',
+            ).length
+          }
         />
       </div>
       <StateCard>
-        El backend todavía no expone métricas agregadas de cierre ni cálculo de puntos; este panel resume a partir
-        de los endpoints base disponibles.
+        Desde aqui administras usuarios y salas. La carga de partidos ahora vive dentro de cada sala.
       </StateCard>
     </div>
   );
@@ -241,19 +253,22 @@ function AdminUsersPage() {
   });
 
   useEffect(() => {
-    if (editingUser) {
-      setForm({
-        name: editingUser.name,
-        username: editingUser.username,
-        email: editingUser.email,
-        role: editingUser.role,
-        isActive: editingUser.isActive,
-      });
+    if (!editingUser) {
+      return;
     }
+
+    setForm({
+      name: editingUser.name,
+      username: editingUser.username,
+      email: editingUser.email,
+      role: editingUser.role,
+      isActive: editingUser.isActive,
+    });
   }, [editingUser]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     try {
       if (editingUser) {
         await usersService.update(editingUser.id, form);
@@ -262,8 +277,15 @@ function AdminUsersPage() {
         await usersService.create(form);
         setFeedback('Usuario creado correctamente.');
       }
+
       setEditingUser(null);
-      setForm({ name: '', username: '', email: '', role: UserRole.USER, isActive: true });
+      setForm({
+        name: '',
+        username: '',
+        email: '',
+        role: UserRole.USER,
+        isActive: true,
+      });
       await refresh();
     } catch (requestError) {
       setFeedback(extractErrorMessage(requestError));
@@ -277,10 +299,13 @@ function AdminUsersPage() {
   return (
     <div className="page-stack two-column">
       <section className="panel-card">
-        <PageHeader title="Usuarios" description="Alta, edición y deshabilitación lógica vía `PATCH /users/:id`." />
+        <PageHeader
+          title="Gestion de usuarios"
+          description="Alta, edicion y deshabilitacion logica via el backend actual."
+        />
         {error ? <StateCard tone="error">{error}</StateCard> : null}
         {feedback ? <StateCard tone="success">{feedback}</StateCard> : null}
-        <SectionTable headers={['Nombre', 'Username', 'Email', 'Rol', 'Estado', 'Acción']}>
+        <SectionTable headers={['Nombre', 'Username', 'Email', 'Rol', 'Estado', 'Accion']}>
           {users.map((user) => (
             <tr key={user.id}>
               <td>{user.name}</td>
@@ -288,7 +313,10 @@ function AdminUsersPage() {
               <td>{user.email}</td>
               <td>{user.role}</td>
               <td>
-                <StatusBadge label={user.isActive ? 'Activo' : 'Deshabilitado'} tone={user.isActive ? 'success' : 'muted'} />
+                <StatusBadge
+                  label={user.isActive ? 'Activo' : 'Deshabilitado'}
+                  tone={user.isActive ? 'success' : 'muted'}
+                />
               </td>
               <td>
                 <button className="table-button" type="button" onClick={() => setEditingUser(user)}>
@@ -303,7 +331,7 @@ function AdminUsersPage() {
       <section className="panel-card">
         <PageHeader
           title={editingUser ? 'Editar usuario' : 'Crear usuario'}
-          description="Validación básica en frontend y validación real en backend."
+          description="Formulario simple y orientado al backend real."
         />
         <form className="form-grid" onSubmit={handleSubmit}>
           <label>
@@ -321,7 +349,9 @@ function AdminUsersPage() {
               required
               minLength={3}
               value={form.username}
-              onChange={(event) => setForm((current) => ({ ...current, username: event.target.value }))}
+              onChange={(event) =>
+                setForm((current) => ({ ...current, username: event.target.value }))
+              }
             />
           </label>
           <label>
@@ -337,7 +367,9 @@ function AdminUsersPage() {
             Rol
             <select
               value={form.role}
-              onChange={(event) => setForm((current) => ({ ...current, role: event.target.value as UserRole }))}
+              onChange={(event) =>
+                setForm((current) => ({ ...current, role: event.target.value as UserRole }))
+              }
             >
               <option value={UserRole.USER}>USER</option>
               <option value={UserRole.ADMIN}>ADMIN</option>
@@ -347,7 +379,9 @@ function AdminUsersPage() {
             Estado
             <select
               value={String(form.isActive)}
-              onChange={(event) => setForm((current) => ({ ...current, isActive: event.target.value === 'true' }))}
+              onChange={(event) =>
+                setForm((current) => ({ ...current, isActive: event.target.value === 'true' }))
+              }
             >
               <option value="true">Activo</option>
               <option value="false">Deshabilitado</option>
@@ -363,20 +397,60 @@ function AdminUsersPage() {
 }
 
 function AdminRoomsPage() {
-  const { rooms, users, loading, error, refresh } = useCatalogData();
+  const { rooms, users, matchesByRoom, loading, error, refresh } = useCatalogData();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [roomForm, setRoomForm] = useState({ name: '', isActive: true });
   const [selectedUserId, setSelectedUserId] = useState('');
+  const [editingMatch, setEditingMatch] = useState<Match | null>(null);
   const [feedback, setFeedback] = useState('');
+  const [matchForm, setMatchForm] = useState<MatchPayload>({
+    teamA: '',
+    teamB: '',
+    matchDate: '',
+    teamAScore: null,
+    teamBScore: null,
+    status: MatchStatus.SCHEDULED,
+    isActive: true,
+  });
 
   useEffect(() => {
-    if (selectedRoom) {
-      setRoomForm({ name: selectedRoom.name, isActive: selectedRoom.isActive });
+    if (!selectedRoom) {
+      setRoomForm({ name: '', isActive: true });
+      setEditingMatch(null);
+      return;
     }
+
+    setRoomForm({ name: selectedRoom.name, isActive: selectedRoom.isActive });
   }, [selectedRoom]);
+
+  useEffect(() => {
+    if (!editingMatch) {
+      setMatchForm({
+        teamA: '',
+        teamB: '',
+        matchDate: '',
+        teamAScore: null,
+        teamBScore: null,
+        status: MatchStatus.SCHEDULED,
+        isActive: true,
+      });
+      return;
+    }
+
+    setMatchForm({
+      teamA: editingMatch.teamA,
+      teamB: editingMatch.teamB,
+      matchDate: toDateTimeLocalValue(editingMatch.matchDate),
+      teamAScore: editingMatch.teamAScore,
+      teamBScore: editingMatch.teamBScore,
+      status: editingMatch.status,
+      isActive: editingMatch.isActive,
+    });
+  }, [editingMatch]);
 
   async function saveRoom(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     try {
       if (selectedRoom) {
         await roomsService.update(selectedRoom.id, roomForm);
@@ -385,8 +459,8 @@ function AdminRoomsPage() {
         await roomsService.create(roomForm);
         setFeedback('Sala creada correctamente.');
       }
+
       setSelectedRoom(null);
-      setRoomForm({ name: '', isActive: true });
       await refresh();
     } catch (requestError) {
       setFeedback(extractErrorMessage(requestError));
@@ -401,7 +475,7 @@ function AdminRoomsPage() {
     try {
       await roomsService.addUser(selectedRoom.id, selectedUserId);
       setSelectedUserId('');
-      setFeedback('Usuario añadido a la sala.');
+      setFeedback('Usuario anadido a la sala.');
       await refresh();
     } catch (requestError) {
       setFeedback(extractErrorMessage(requestError));
@@ -422,6 +496,42 @@ function AdminRoomsPage() {
     }
   }
 
+  async function saveMatch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!selectedRoom) {
+      setFeedback('Selecciona una sala para registrar partidos.');
+      return;
+    }
+
+    if (matchForm.teamA.trim().toLowerCase() === matchForm.teamB.trim().toLowerCase()) {
+      setFeedback('Los equipos no pueden ser iguales.');
+      return;
+    }
+
+    try {
+      const payload: MatchPayload = {
+        ...matchForm,
+        matchDate: fromDateTimeLocalValue(matchForm.matchDate),
+      };
+
+      if (editingMatch) {
+        await matchesService.update(editingMatch.id, payload);
+        setFeedback('Partido actualizado correctamente.');
+      } else {
+        await matchesService.create(selectedRoom.id, payload);
+        setFeedback('Partido agregado a la sala.');
+      }
+
+      setEditingMatch(null);
+      await refresh();
+    } catch (requestError) {
+      setFeedback(extractErrorMessage(requestError));
+    }
+  }
+
+  const roomMatches = selectedRoom ? matchesByRoom[selectedRoom.id] ?? [] : [];
+
   if (loading) {
     return <StateCard>Cargando salas...</StateCard>;
   }
@@ -429,15 +539,21 @@ function AdminRoomsPage() {
   return (
     <div className="page-stack two-column">
       <section className="panel-card">
-        <PageHeader title="Salas" description="Administración de salas y membresías disponibles en el backend actual." />
+        <PageHeader
+          title="Gestion de salas"
+          description="Desde aqui eliges una sala y luego manejas miembros y partidos dentro de ella."
+        />
         {error ? <StateCard tone="error">{error}</StateCard> : null}
         {feedback ? <StateCard tone="success">{feedback}</StateCard> : null}
-        <SectionTable headers={['Sala', 'Estado', 'Usuarios', 'Acción']}>
+        <SectionTable headers={['Sala', 'Estado', 'Usuarios', 'Accion']}>
           {rooms.map((room) => (
             <tr key={room.id}>
               <td>{room.name}</td>
               <td>
-                <StatusBadge label={room.isActive ? 'Activa' : 'Deshabilitada'} tone={room.isActive ? 'success' : 'muted'} />
+                <StatusBadge
+                  label={room.isActive ? 'Activa' : 'Deshabilitada'}
+                  tone={room.isActive ? 'success' : 'muted'}
+                />
               </td>
               <td>{room.roomUsers?.length ?? 0}</td>
               <td>
@@ -451,7 +567,11 @@ function AdminRoomsPage() {
       </section>
 
       <section className="panel-card">
-        <PageHeader title={selectedRoom ? 'Gestionar sala' : 'Crear sala'} description="Incluye alta, edición y membresías." />
+        <PageHeader
+          title={selectedRoom ? `Sala: ${selectedRoom.name}` : 'Crear sala'}
+          description="Cada sala concentra su configuracion, miembros y partidos."
+        />
+
         <form className="form-grid" onSubmit={saveRoom}>
           <label>
             Nombre
@@ -466,7 +586,9 @@ function AdminRoomsPage() {
             Estado
             <select
               value={String(roomForm.isActive)}
-              onChange={(event) => setRoomForm((current) => ({ ...current, isActive: event.target.value === 'true' }))}
+              onChange={(event) =>
+                setRoomForm((current) => ({ ...current, isActive: event.target.value === 'true' }))
+              }
             >
               <option value="true">Activa</option>
               <option value="false">Deshabilitada</option>
@@ -479,6 +601,7 @@ function AdminRoomsPage() {
 
         {selectedRoom ? (
           <>
+            <h3>Miembros</h3>
             <div className="inline-actions">
               <select value={selectedUserId} onChange={(event) => setSelectedUserId(event.target.value)}>
                 <option value="">Selecciona usuario</option>
@@ -489,10 +612,10 @@ function AdminRoomsPage() {
                 ))}
               </select>
               <button className="secondary-button" type="button" onClick={attachUser}>
-                Añadir usuario
+                Anadir usuario
               </button>
             </div>
-            <SectionTable headers={['Miembro', 'Rol', 'Acción']}>
+            <SectionTable headers={['Miembro', 'Rol', 'Accion']}>
               {(selectedRoom.roomUsers ?? []).map((membership) => (
                 <tr key={membership.id}>
                   <td>{membership.user.name}</td>
@@ -509,6 +632,118 @@ function AdminRoomsPage() {
                 </tr>
               ))}
             </SectionTable>
+
+            <h3>Partidos de la sala</h3>
+            {roomMatches.length === 0 ? (
+              <StateCard>No hay partidos en esta sala.</StateCard>
+            ) : (
+              <SectionTable headers={['Partido', 'Fecha Bolivia', 'Estado', 'Resultado', 'Accion']}>
+                {roomMatches.map((match) => {
+                  const statusLabel = getMatchVisualStatus(match.matchDate, match.status);
+                  return (
+                    <tr key={match.id}>
+                      <td>
+                        {match.teamA} vs {match.teamB}
+                      </td>
+                      <td>{formatDateTime(match.matchDate)}</td>
+                      <td>
+                        <StatusBadge label={statusLabel} tone={toneForMatchStatus(statusLabel)} />
+                      </td>
+                      <td>
+                        {match.teamAScore ?? '-'} : {match.teamBScore ?? '-'}
+                      </td>
+                      <td>
+                        <button className="table-button" type="button" onClick={() => setEditingMatch(match)}>
+                          Editar
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </SectionTable>
+            )}
+
+            <h3>{editingMatch ? 'Editar partido' : 'Agregar partido a la sala'}</h3>
+            <form className="form-grid" onSubmit={saveMatch}>
+              <label>
+                Equipo A
+                <input
+                  required
+                  value={matchForm.teamA}
+                  onChange={(event) =>
+                    setMatchForm((current) => ({ ...current, teamA: event.target.value }))
+                  }
+                />
+              </label>
+              <label>
+                Equipo B
+                <input
+                  required
+                  value={matchForm.teamB}
+                  onChange={(event) =>
+                    setMatchForm((current) => ({ ...current, teamB: event.target.value }))
+                  }
+                />
+              </label>
+              <label>
+                Fecha y hora
+                <input
+                  type="datetime-local"
+                  required
+                  value={matchForm.matchDate}
+                  onChange={(event) =>
+                    setMatchForm((current) => ({ ...current, matchDate: event.target.value }))
+                  }
+                />
+              </label>
+              <label>
+                Goles A
+                <input
+                  type="number"
+                  min={0}
+                  value={matchForm.teamAScore ?? ''}
+                  onChange={(event) =>
+                    setMatchForm((current) => ({
+                      ...current,
+                      teamAScore: event.target.value === '' ? null : Number(event.target.value),
+                    }))
+                  }
+                />
+              </label>
+              <label>
+                Goles B
+                <input
+                  type="number"
+                  min={0}
+                  value={matchForm.teamBScore ?? ''}
+                  onChange={(event) =>
+                    setMatchForm((current) => ({
+                      ...current,
+                      teamBScore: event.target.value === '' ? null : Number(event.target.value),
+                    }))
+                  }
+                />
+              </label>
+              <label>
+                Estado
+                <select
+                  value={matchForm.status}
+                  onChange={(event) =>
+                    setMatchForm((current) => ({
+                      ...current,
+                      status: event.target.value as MatchStatus,
+                    }))
+                  }
+                >
+                  <option value={MatchStatus.SCHEDULED}>SCHEDULED</option>
+                  <option value={MatchStatus.CLOSED}>CLOSED</option>
+                  <option value={MatchStatus.FINISHED}>FINISHED</option>
+                </select>
+              </label>
+              <button className="primary-button" type="submit">
+                {editingMatch ? 'Guardar partido' : 'Agregar partido'}
+              </button>
+            </form>
           </>
         ) : null}
       </section>
@@ -516,213 +751,13 @@ function AdminRoomsPage() {
   );
 }
 
-function AdminMatchesPage() {
-  const { rooms, matchesByRoom, loading, error, refresh } = useCatalogData();
-  const [selectedRoomId, setSelectedRoomId] = useState('');
-  const [editingMatch, setEditingMatch] = useState<Match | null>(null);
-  const [feedback, setFeedback] = useState('');
-  const [form, setForm] = useState<MatchPayload>({
-    teamA: '',
-    teamB: '',
-    matchDate: '',
-    teamAScore: null,
-    teamBScore: null,
-    status: MatchStatus.SCHEDULED,
-    isActive: true,
-  });
-
-  useEffect(() => {
-    if (editingMatch) {
-      setSelectedRoomId(editingMatch.roomId);
-      setForm({
-        teamA: editingMatch.teamA,
-        teamB: editingMatch.teamB,
-        matchDate: toDateTimeLocalValue(editingMatch.matchDate),
-        teamAScore: editingMatch.teamAScore,
-        teamBScore: editingMatch.teamBScore,
-        status: editingMatch.status,
-        isActive: editingMatch.isActive,
-      });
-    }
-  }, [editingMatch]);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (form.teamA.trim().toLowerCase() === form.teamB.trim().toLowerCase()) {
-      setFeedback('Los equipos no pueden ser iguales.');
-      return;
-    }
-
-    try {
-      const payload: MatchPayload = {
-        ...form,
-        matchDate: fromDateTimeLocalValue(form.matchDate),
-      };
-
-      if (editingMatch) {
-        await matchesService.update(editingMatch.id, payload);
-        setFeedback('Partido actualizado correctamente.');
-      } else if (selectedRoomId) {
-        await matchesService.create(selectedRoomId, payload);
-        setFeedback('Partido creado correctamente.');
-      } else {
-        setFeedback('Selecciona una sala para registrar el partido.');
-        return;
-      }
-
-      setEditingMatch(null);
-      setForm({
-        teamA: '',
-        teamB: '',
-        matchDate: '',
-        teamAScore: null,
-        teamBScore: null,
-        status: MatchStatus.SCHEDULED,
-        isActive: true,
-      });
-      await refresh();
-    } catch (requestError) {
-      setFeedback(extractErrorMessage(requestError));
-    }
-  }
-
-  const allMatches = Object.values(matchesByRoom).flat();
-
-  if (loading) {
-    return <StateCard>Cargando partidos...</StateCard>;
-  }
-
-  return (
-    <div className="page-stack two-column">
-      <section className="panel-card">
-        <PageHeader title="Partidos" description="Alta y mantenimiento por sala. El cierre real sigue dependiendo del backend." />
-        {error ? <StateCard tone="error">{error}</StateCard> : null}
-        {feedback ? <StateCard tone="success">{feedback}</StateCard> : null}
-        <SectionTable headers={['Sala', 'Partido', 'Fecha Bolivia', 'Estado', 'Resultado', 'Acción']}>
-          {allMatches.map((match) => {
-            const room = rooms.find((item) => item.id === match.roomId);
-            const statusLabel = getMatchVisualStatus(match.matchDate, match.status);
-            return (
-              <tr key={match.id}>
-                <td>{room?.name ?? 'Sin sala'}</td>
-                <td>
-                  {match.teamA} vs {match.teamB}
-                </td>
-                <td>{formatDateTime(match.matchDate)}</td>
-                <td>
-                  <StatusBadge label={statusLabel} tone={toneForMatchStatus(statusLabel)} />
-                </td>
-                <td>
-                  {match.teamAScore ?? '-'} : {match.teamBScore ?? '-'}
-                </td>
-                <td>
-                  <button className="table-button" type="button" onClick={() => setEditingMatch(match)}>
-                    Editar
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
-        </SectionTable>
-      </section>
-
-      <section className="panel-card">
-        <PageHeader title={editingMatch ? 'Editar partido' : 'Crear partido'} description="Validación de goles, estado y fecha local." />
-        <form className="form-grid" onSubmit={handleSubmit}>
-          <label>
-            Sala
-            <select value={selectedRoomId} onChange={(event) => setSelectedRoomId(event.target.value)} required>
-              <option value="">Selecciona sala</option>
-              {rooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Equipo A
-            <input required value={form.teamA} onChange={(event) => setForm((current) => ({ ...current, teamA: event.target.value }))} />
-          </label>
-          <label>
-            Equipo B
-            <input required value={form.teamB} onChange={(event) => setForm((current) => ({ ...current, teamB: event.target.value }))} />
-          </label>
-          <label>
-            Fecha y hora
-            <input
-              type="datetime-local"
-              required
-              value={form.matchDate}
-              onChange={(event) => setForm((current) => ({ ...current, matchDate: event.target.value }))}
-            />
-          </label>
-          <label>
-            Goles A
-            <input
-              type="number"
-              min={0}
-              value={form.teamAScore ?? ''}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  teamAScore: event.target.value === '' ? null : Number(event.target.value),
-                }))
-              }
-            />
-          </label>
-          <label>
-            Goles B
-            <input
-              type="number"
-              min={0}
-              value={form.teamBScore ?? ''}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  teamBScore: event.target.value === '' ? null : Number(event.target.value),
-                }))
-              }
-            />
-          </label>
-          <label>
-            Estado
-            <select
-              value={form.status}
-              onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as MatchStatus }))}
-            >
-              <option value={MatchStatus.SCHEDULED}>SCHEDULED</option>
-              <option value={MatchStatus.CLOSED}>CLOSED</option>
-              <option value={MatchStatus.FINISHED}>FINISHED</option>
-            </select>
-          </label>
-          <label>
-            Activo
-            <select
-              value={String(form.isActive)}
-              onChange={(event) => setForm((current) => ({ ...current, isActive: event.target.value === 'true' }))}
-            >
-              <option value="true">Sí</option>
-              <option value="false">No</option>
-            </select>
-          </label>
-          <button className="primary-button" type="submit">
-            {editingMatch ? 'Guardar partido' : 'Crear partido'}
-          </button>
-        </form>
-      </section>
-    </div>
-  );
-}
-
 function LeaderboardTable({ items }: { items: LeaderboardItem[] }) {
   if (items.length === 0) {
-    return <StateCard>No hay datos suficientes para construir la tabla todavía.</StateCard>;
+    return <StateCard>No hay datos suficientes para construir la tabla todavia.</StateCard>;
   }
 
   return (
-    <SectionTable headers={['Usuario', 'Puntos', 'Pronósticos', 'Exactos', 'Ganador/empate']}>
+    <SectionTable headers={['Usuario', 'Puntos', 'Pronosticos', 'Exactos', 'Ganador/empate']}>
       {items.map((item) => (
         <tr key={item.userId}>
           <td>
@@ -743,17 +778,21 @@ function AdminLeaderboardPage() {
   const { rooms, matchesByRoom, predictionsByMatch, loading, error } = useCatalogData();
   const [roomId, setRoomId] = useState('');
 
-  const room = rooms.find((item) => item.id === roomId) ?? rooms[0];
-  const matches = room ? matchesByRoom[room.id] ?? [] : [];
-  const leaderboard = room
-    ? buildLeaderboard(getRoomMembers(room), getCurrentRoomPredictions(room.id, matches, predictionsByMatch), matches)
-    : [];
-
   useEffect(() => {
     if (!roomId && rooms[0]) {
       setRoomId(rooms[0].id);
     }
   }, [roomId, rooms]);
+
+  const room = rooms.find((item) => item.id === roomId) ?? rooms[0];
+  const matches = room ? matchesByRoom[room.id] ?? [] : [];
+  const leaderboard = room
+    ? buildLeaderboard(
+        getRoomMembers(room),
+        getCurrentRoomPredictions(matches, predictionsByMatch),
+        matches,
+      )
+    : [];
 
   if (loading) {
     return <StateCard>Cargando tabla...</StateCard>;
@@ -761,7 +800,10 @@ function AdminLeaderboardPage() {
 
   return (
     <div className="page-stack">
-      <PageHeader title="Tabla de posiciones" description="Tabla derivada en frontend porque el backend aún no expone leaderboard." />
+      <PageHeader
+        title="Tabla general"
+        description="Vista general para admin usando los datos disponibles hoy."
+      />
       {error ? <StateCard tone="error">{error}</StateCard> : null}
       <div className="inline-actions">
         <select value={roomId} onChange={(event) => setRoomId(event.target.value)}>
@@ -772,10 +814,6 @@ function AdminLeaderboardPage() {
           ))}
         </select>
       </div>
-      <StateCard tone="warning">
-        Puntos oficiales y orden final dependen de un futuro endpoint de cálculo/leaderboard. Aquí se muestran los datos
-        guardados actualmente.
-      </StateCard>
       <LeaderboardTable items={leaderboard} />
     </div>
   );
@@ -784,23 +822,33 @@ function AdminLeaderboardPage() {
 function UserDashboardPage() {
   const { currentUser } = useAuth();
   const { rooms, matchesByRoom, loading, error } = useCatalogData();
-  const myRooms = rooms.filter((room) => room.roomUsers?.some((membership) => membership.userId === currentUser?.id));
-  const upcomingMatches = myRooms.flatMap((room) => matchesByRoom[room.id] ?? []).filter((match) => !isPredictionLocked(match.matchDate, match.status));
+  const myRooms = getAccessibleRooms(rooms, currentUser);
+  const upcomingMatches = myRooms
+    .flatMap((room) => matchesByRoom[room.id] ?? [])
+    .filter((match) => !isPredictionLocked(match.matchDate, match.status));
 
   if (loading) {
-    return <StateCard>Cargando panel de usuario...</StateCard>;
+    return <StateCard>Cargando panel...</StateCard>;
   }
 
   return (
     <div className="page-stack">
-      <PageHeader title="Dashboard Usuario" description={`Bienvenido, ${currentUser?.name ?? ''}.`} />
+      <PageHeader
+        title="Panel"
+        description={`Bienvenido, ${currentUser?.name ?? ''}.`}
+      />
       {error ? <StateCard tone="error">{error}</StateCard> : null}
       <div className="stats-grid">
-        <StatTile label="Mis salas" value={myRooms.length} />
-        <StatTile label="Partidos pronosticables" value={upcomingMatches.length} />
+        <StatTile label="Salas visibles" value={myRooms.length} />
+        <StatTile label="Partidos disponibles" value={upcomingMatches.length} />
         <StatTile label="Puntaje exacto" value="3 pts" helper="Resultado exacto" />
         <StatTile label="Ganador/empate" value="1 pt" helper="Coincidencia parcial" />
       </div>
+      {currentUser?.role === UserRole.ADMIN ? (
+        <StateCard tone="warning">
+          Este es el mismo panel base del usuario. Tus herramientas extra estan en la seccion Admin.
+        </StateCard>
+      ) : null}
     </div>
   );
 }
@@ -822,7 +870,7 @@ function UserProfilePage() {
 
     try {
       await usersService.update(currentUser.id, form);
-      setFeedback('Perfil actualizado. Si cambió el rol en backend, el próximo login refrescará la sesión.');
+      setFeedback('Perfil actualizado correctamente.');
     } catch (requestError) {
       setFeedback(extractErrorMessage(requestError));
     }
@@ -830,20 +878,38 @@ function UserProfilePage() {
 
   return (
     <div className="page-stack">
-      <PageHeader title="Perfil" description="Edición básica de tus datos. El rol no se expone para cambios de usuario." />
+      <PageHeader
+        title="Perfil"
+        description="Edicion basica de tus datos. El rol no se modifica desde aqui."
+      />
       {feedback ? <StateCard tone="success">{feedback}</StateCard> : null}
       <form className="form-grid panel-card" onSubmit={handleSubmit}>
         <label>
           Nombre
-          <input required value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} />
+          <input
+            required
+            value={form.name}
+            onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+          />
         </label>
         <label>
           Username
-          <input required value={form.username} onChange={(event) => setForm((current) => ({ ...current, username: event.target.value }))} />
+          <input
+            required
+            value={form.username}
+            onChange={(event) =>
+              setForm((current) => ({ ...current, username: event.target.value }))
+            }
+          />
         </label>
         <label>
           Email
-          <input type="email" required value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} />
+          <input
+            type="email"
+            required
+            value={form.email}
+            onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+          />
         </label>
         <StateCard>Rol actual: {currentUser?.role}</StateCard>
         <button className="primary-button" type="submit">
@@ -857,8 +923,8 @@ function UserProfilePage() {
 function UserRoomsPage() {
   const { currentUser } = useAuth();
   const { rooms, matchesByRoom, loading, error } = useCatalogData();
+  const myRooms = getAccessibleRooms(rooms, currentUser);
   const [roomId, setRoomId] = useState('');
-  const myRooms = rooms.filter((room) => room.roomUsers?.some((membership) => membership.userId === currentUser?.id));
 
   useEffect(() => {
     if (!roomId && myRooms[0]) {
@@ -869,15 +935,22 @@ function UserRoomsPage() {
   const selectedRoom = myRooms.find((room) => room.id === roomId) ?? myRooms[0];
 
   if (loading) {
-    return <StateCard>Cargando tus salas...</StateCard>;
+    return <StateCard>Cargando salas...</StateCard>;
   }
 
   return (
     <div className="page-stack">
-      <PageHeader title="Mis salas" description="Consulta tus salas y los partidos asociados." />
+      <PageHeader
+        title="Mis salas"
+        description={
+          currentUser?.role === UserRole.ADMIN
+            ? 'Como admin ves todas las salas desde este panel base.'
+            : 'Consulta tus salas y los partidos asociados.'
+        }
+      />
       {error ? <StateCard tone="error">{error}</StateCard> : null}
       {myRooms.length === 0 ? (
-        <StateCard>No hay salas registradas para tu usuario.</StateCard>
+        <StateCard>No hay salas registradas para este usuario.</StateCard>
       ) : (
         <>
           <div className="inline-actions">
@@ -918,8 +991,7 @@ function UserPredictionsPage() {
   const { currentUser } = useAuth();
   const { rooms, matchesByRoom, predictionsByMatch, loading, error, refresh } = useCatalogData();
   const [feedback, setFeedback] = useState('');
-
-  const myRooms = rooms.filter((room) => room.roomUsers?.some((membership) => membership.userId === currentUser?.id));
+  const myRooms = getAccessibleRooms(rooms, currentUser);
   const matches = myRooms.flatMap((room) => matchesByRoom[room.id] ?? []);
 
   async function submitPrediction(match: Match, formData: FormData) {
@@ -935,7 +1007,9 @@ function UserPredictionsPage() {
       return;
     }
 
-    const existingPrediction = (predictionsByMatch[match.id] ?? []).find((item) => item.userId === currentUser.id);
+    const existingPrediction = (predictionsByMatch[match.id] ?? []).find(
+      (item) => item.userId === currentUser.id,
+    );
 
     try {
       if (existingPrediction) {
@@ -943,15 +1017,16 @@ function UserPredictionsPage() {
           predictedTeamAScore,
           predictedTeamBScore,
         });
-        setFeedback('Pronóstico actualizado.');
+        setFeedback('Pronostico actualizado.');
       } else {
         await predictionsService.create(match.id, {
           userId: currentUser.id,
           predictedTeamAScore,
           predictedTeamBScore,
         });
-        setFeedback('Pronóstico guardado.');
+        setFeedback('Pronostico guardado.');
       }
+
       await refresh();
     } catch (requestError) {
       setFeedback(extractErrorMessage(requestError));
@@ -959,19 +1034,24 @@ function UserPredictionsPage() {
   }
 
   if (loading) {
-    return <StateCard>Cargando pronósticos...</StateCard>;
+    return <StateCard>Cargando pronosticos...</StateCard>;
   }
 
   return (
     <div className="page-stack">
-      <PageHeader title="Pronósticos" description="Edición disponible mientras el partido no esté cerrado por tiempo o estado." />
+      <PageHeader
+        title="Pronosticos"
+        description="Edicion disponible mientras el partido no este cerrado por tiempo o estado."
+      />
       {error ? <StateCard tone="error">{error}</StateCard> : null}
       {feedback ? <StateCard tone="success">{feedback}</StateCard> : null}
       {matches.length === 0 ? (
-        <StateCard>Todavía no realizaste pronósticos ni tienes partidos disponibles en tus salas.</StateCard>
+        <StateCard>Todavia no hay partidos disponibles para pronosticar.</StateCard>
       ) : (
         matches.map((match) => {
-          const myPrediction = (predictionsByMatch[match.id] ?? []).find((item) => item.userId === currentUser?.id);
+          const myPrediction = (predictionsByMatch[match.id] ?? []).find(
+            (item) => item.userId === currentUser?.id,
+          );
           const locked = isPredictionLocked(match.matchDate, match.status);
           const statusLabel = getMatchVisualStatus(match.matchDate, match.status);
 
@@ -1016,20 +1096,13 @@ function UserPredictionsPage() {
                   />
                 </label>
                 <button className="primary-button" type="submit" disabled={locked}>
-                  {myPrediction ? 'Actualizar pronóstico' : 'Guardar pronóstico'}
+                  {myPrediction ? 'Actualizar pronostico' : 'Guardar pronostico'}
                 </button>
               </form>
               {myPrediction ? (
                 <StateCard>
-                  Tu registro actual: {myPrediction.predictedTeamAScore} - {myPrediction.predictedTeamBScore}
-                  {' · '}
-                  {myPrediction.points ?? 0} puntos.
-                </StateCard>
-              ) : null}
-              {locked ? (
-                <StateCard tone="warning">
-                  Las predicciones dejan de mostrarse como editables 5 minutos antes del inicio, pero la validación final
-                  depende del backend.
+                  Tu registro actual: {myPrediction.predictedTeamAScore} -{' '}
+                  {myPrediction.predictedTeamBScore} · {myPrediction.points ?? 0} puntos.
                 </StateCard>
               ) : null}
             </section>
@@ -1043,7 +1116,7 @@ function UserPredictionsPage() {
 function UserLeaderboardPage() {
   const { currentUser } = useAuth();
   const { rooms, matchesByRoom, predictionsByMatch, loading, error } = useCatalogData();
-  const myRooms = rooms.filter((room) => room.roomUsers?.some((membership) => membership.userId === currentUser?.id));
+  const myRooms = getAccessibleRooms(rooms, currentUser);
   const [roomId, setRoomId] = useState('');
 
   useEffect(() => {
@@ -1055,16 +1128,23 @@ function UserLeaderboardPage() {
   const room = myRooms.find((item) => item.id === roomId) ?? myRooms[0];
   const matches = room ? matchesByRoom[room.id] ?? [] : [];
   const leaderboard = room
-    ? buildLeaderboard(getRoomMembers(room), getCurrentRoomPredictions(room.id, matches, predictionsByMatch), matches)
+    ? buildLeaderboard(
+        getRoomMembers(room),
+        getCurrentRoomPredictions(matches, predictionsByMatch),
+        matches,
+      )
     : [];
 
   if (loading) {
-    return <StateCard>Cargando tabla del usuario...</StateCard>;
+    return <StateCard>Cargando tabla...</StateCard>;
   }
 
   return (
     <div className="page-stack">
-      <PageHeader title="Tabla" description="Clasificación de tu sala usando los datos disponibles hoy." />
+      <PageHeader
+        title="Tabla"
+        description="Clasificacion construida con los datos disponibles actualmente."
+      />
       {error ? <StateCard tone="error">{error}</StateCard> : null}
       {room ? (
         <>
@@ -1080,7 +1160,7 @@ function UserLeaderboardPage() {
           <LeaderboardTable items={leaderboard} />
         </>
       ) : (
-        <StateCard>No perteneces a ninguna sala todavía.</StateCard>
+        <StateCard>No perteneces a ninguna sala todavia.</StateCard>
       )}
     </div>
   );
@@ -1100,23 +1180,22 @@ export function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route element={<ProtectedRoute allowedRoles={[UserRole.ADMIN, UserRole.USER]} />}>
         <Route element={<AppShell />}>
-          <Route element={<ProtectedRoute allowedRoles={[UserRole.ADMIN]} />}>
-            <Route path="/admin" element={<AdminDashboardPage />} />
-            <Route path="/admin/users" element={<AdminUsersPage />} />
-            <Route path="/admin/rooms" element={<AdminRoomsPage />} />
-            <Route path="/admin/matches" element={<AdminMatchesPage />} />
-            <Route path="/admin/leaderboard" element={<AdminLeaderboardPage />} />
-          </Route>
-          <Route element={<ProtectedRoute allowedRoles={[UserRole.USER]} />}>
+          <Route element={<ProtectedRoute allowedRoles={[UserRole.ADMIN, UserRole.USER]} />}>
             <Route path="/user" element={<UserDashboardPage />} />
             <Route path="/user/profile" element={<UserProfilePage />} />
             <Route path="/user/rooms" element={<UserRoomsPage />} />
             <Route path="/user/predictions" element={<UserPredictionsPage />} />
             <Route path="/user/leaderboard" element={<UserLeaderboardPage />} />
           </Route>
+          <Route element={<ProtectedRoute allowedRoles={[UserRole.ADMIN]} />}>
+            <Route path="/admin" element={<AdminDashboardPage />} />
+            <Route path="/admin/users" element={<AdminUsersPage />} />
+            <Route path="/admin/rooms" element={<AdminRoomsPage />} />
+            <Route path="/admin/leaderboard" element={<AdminLeaderboardPage />} />
+          </Route>
         </Route>
       </Route>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<Navigate to="/user" replace />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
