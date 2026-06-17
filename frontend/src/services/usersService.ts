@@ -5,6 +5,7 @@ export interface UserPayload {
   name: string;
   username: string;
   email: string;
+  password?: string;
   role?: UserRole;
   isActive?: boolean;
 }

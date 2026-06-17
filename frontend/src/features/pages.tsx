@@ -133,7 +133,7 @@ function getAccessibleRooms(rooms: Room[], currentUser: User | null) {
 function LoginPage() {
   const { currentUser, login } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ username: '', email: '' });
+  const [form, setForm] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -167,7 +167,7 @@ function LoginPage() {
           <p className="eyebrow">Ingreso temporal</p>
           <h1>Pronostidamus</h1>
           <p className="page-description">
-            Usa el endpoint actual `POST /auth/preview-login` con un usuario activo de la base de datos.
+            Ingresa con tu usuario y contrasena usando el endpoint actual `POST /auth/preview-login`.
           </p>
         </div>
 
@@ -182,12 +182,15 @@ function LoginPage() {
             />
           </label>
           <label>
-            Email
+            Contrasena
             <input
-              type="email"
-              value={form.email}
-              onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+              type="password"
+              value={form.password}
+              onChange={(event) =>
+                setForm((current) => ({ ...current, password: event.target.value }))
+              }
               required
+              minLength={6}
             />
           </label>
           {error ? <StateCard tone="error">{error}</StateCard> : null}
@@ -197,8 +200,8 @@ function LoginPage() {
         </form>
 
         <StateCard>
-          Usuarios seed disponibles: `diego / diego@example.com`, `salva / salva@example.com`,
-          `josue / josue@example.com`, `paolo / paolo@example.com`.
+          Usuarios seed disponibles: `diego / diego123`, `salva / salva123`, `josue / josue123`,
+          `paolo / paolo123`.
         </StateCard>
       </section>
     </div>
@@ -248,6 +251,7 @@ function AdminUsersPage() {
     name: '',
     username: '',
     email: '',
+    password: '',
     role: UserRole.USER,
     isActive: true,
   });
@@ -261,6 +265,7 @@ function AdminUsersPage() {
       name: editingUser.name,
       username: editingUser.username,
       email: editingUser.email,
+      password: '',
       role: editingUser.role,
       isActive: editingUser.isActive,
     });
@@ -270,11 +275,16 @@ function AdminUsersPage() {
     event.preventDefault();
 
     try {
+      const payload: UserPayload = {
+        ...form,
+        ...(form.password?.trim() ? { password: form.password } : {}),
+      };
+
       if (editingUser) {
-        await usersService.update(editingUser.id, form);
+        await usersService.update(editingUser.id, payload);
         setFeedback('Usuario actualizado correctamente.');
       } else {
-        await usersService.create(form);
+        await usersService.create(payload);
         setFeedback('Usuario creado correctamente.');
       }
 
@@ -283,6 +293,7 @@ function AdminUsersPage() {
         name: '',
         username: '',
         email: '',
+        password: '',
         role: UserRole.USER,
         isActive: true,
       });
@@ -361,6 +372,18 @@ function AdminUsersPage() {
               required
               value={form.email}
               onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+            />
+          </label>
+          <label>
+            Contrasena
+            <input
+              type="password"
+              required={!editingUser}
+              minLength={6}
+              value={form.password ?? ''}
+              onChange={(event) =>
+                setForm((current) => ({ ...current, password: event.target.value }))
+              }
             />
           </label>
           <label>

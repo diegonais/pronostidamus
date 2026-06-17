@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, Length } from 'class-validator';
+import { IsString, Length } from 'class-validator';
 
 export class PreviewLoginDto {
   @ApiProperty()
@@ -8,6 +8,7 @@ export class PreviewLoginDto {
   username: string;
 
   @ApiProperty()
-  @IsEmail()
-  email: string;
+  @IsString()
+  @Length(6, 128)
+  password: string;
 }

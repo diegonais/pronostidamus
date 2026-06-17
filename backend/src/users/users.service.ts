@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { hashPassword } from '../auth/password.util';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -20,13 +21,16 @@ export class UsersService {
     await this.ensureUniqueFields(createUserDto.email, createUserDto.username);
 
     const user = this.usersRepository.create({
-      ...createUserDto,
       email: createUserDto.email.trim().toLowerCase(),
       username: createUserDto.username.trim().toLowerCase(),
       name: createUserDto.name.trim(),
+      passwordHash: hashPassword(createUserDto.password),
+      role: createUserDto.role,
+      isActive: createUserDto.isActive,
     });
 
-    return this.usersRepository.save(user);
+    const savedUser = await this.usersRepository.save(user);
+    return this.findOne(savedUser.id);
   }
 
   findAll(): Promise<User[]> {
@@ -60,27 +64,35 @@ export class UsersService {
       );
     }
 
-    Object.assign(user, {
-      ...updateUserDto,
+    const nextValues: Partial<User> = {
       email: updateUserDto.email?.trim().toLowerCase() ?? user.email,
       username: updateUserDto.username?.trim().toLowerCase() ?? user.username,
       name: updateUserDto.name?.trim() ?? user.name,
-    });
+      role: updateUserDto.role ?? user.role,
+      isActive: updateUserDto.isActive ?? user.isActive,
+    };
 
-    return this.usersRepository.save(user);
+    if (updateUserDto.password?.trim()) {
+      nextValues.passwordHash = hashPassword(updateUserDto.password);
+    }
+
+    Object.assign(user, nextValues);
+
+    const savedUser = await this.usersRepository.save(user);
+    return this.findOne(savedUser.id);
   }
 
-  async findActiveByUsernameAndEmail(
+  async findActiveByUsername(
     username: string,
-    email: string,
   ): Promise<User | null> {
-    return this.usersRepository.findOne({
-      where: {
+    return this.usersRepository
+      .createQueryBuilder('user')
+      .addSelect('user.passwordHash')
+      .where('LOWER(user.username) = :username', {
         username: username.trim().toLowerCase(),
-        email: email.trim().toLowerCase(),
-        isActive: true,
-      },
-    });
+      })
+      .andWhere('user.isActive = :isActive', { isActive: true })
+      .getOne();
   }
 
   private async ensureUniqueFields(

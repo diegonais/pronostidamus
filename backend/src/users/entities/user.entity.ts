@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
 import { Column, Entity, OneToMany, Unique } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { UserRole } from '../../common/enums/user-role.enum';
@@ -20,6 +20,15 @@ export class User extends BaseEntity {
   @ApiProperty()
   @Column({ type: 'varchar', length: 50 })
   username: string;
+
+  @ApiHideProperty()
+  @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    select: false,
+  })
+  passwordHash: string | null;
 
   @ApiProperty({ enum: UserRole, enumName: 'UserRole' })
   @Column({

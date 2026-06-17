@@ -137,7 +137,7 @@ Usa estos datos:
 
 ## Pendiente para Fase 2
 
-- Login real por `username` y `email`
+- Login preview por `username` y `password`
 - Roles y permisos
 - cierre de predicciones 5 minutos antes del partido
 - calculo de puntos

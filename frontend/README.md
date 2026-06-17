@@ -93,7 +93,7 @@ Se usan los archivos oficiales encontrados en la raíz del proyecto:
 
 ## Funcionalidades listas
 
-- Login preview con `username` y `email`
+- Login preview con `username` y `password`
 - Persistencia mínima de sesión en `localStorage`
 - Redirección automática por rol
 - Rutas protegidas
@@ -123,4 +123,4 @@ Los siguientes puntos no tienen endpoint específico en la API actual, por lo qu
 
 - La seguridad real sigue dependiendo del backend.
 - El frontend oculta acciones fuera de rol, pero no reemplaza validaciones del servidor.
-- Para pruebas rápidas con seed actual del backend: `diego`, `salva`, `josue`, `paolo`.
+- Para pruebas rápidas con seed actual del backend: `diego / diego123`, `salva / salva123`, `josue / josue123`, `paolo / paolo123`.

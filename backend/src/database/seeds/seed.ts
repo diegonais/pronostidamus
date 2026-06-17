@@ -6,6 +6,7 @@ import { UserRole } from '../../common/enums/user-role.enum';
 import { Match } from '../../matches/entities/match.entity';
 import { Room } from '../../rooms/entities/room.entity';
 import { RoomUser } from '../../rooms/entities/room-user.entity';
+import { hashPassword } from '../../auth/password.util';
 import { User } from '../../users/entities/user.entity';
 
 async function runSeed() {
@@ -24,6 +25,7 @@ async function runSeed() {
       name: 'Diego Armando',
       username: 'diego',
       email: 'diego@example.com',
+      password: 'diego123',
       role: UserRole.ADMIN,
       isActive: true,
     },
@@ -31,6 +33,7 @@ async function runSeed() {
       name: 'Salva',
       username: 'salva',
       email: 'salva@example.com',
+      password: 'salva123',
       role: UserRole.USER,
       isActive: true,
     },
@@ -38,6 +41,7 @@ async function runSeed() {
       name: 'Josue',
       username: 'josue',
       email: 'josue@example.com',
+      password: 'josue123',
       role: UserRole.USER,
       isActive: true,
     },
@@ -45,6 +49,7 @@ async function runSeed() {
       name: 'Paolo',
       username: 'paolo',
       email: 'paolo@example.com',
+      password: 'paolo123',
       role: UserRole.USER,
       isActive: true,
     },
@@ -57,9 +62,22 @@ async function runSeed() {
     });
 
     if (!user) {
-      user = userRepository.create(seedUser);
-      user = await userRepository.save(user);
+      user = userRepository.create({
+        ...seedUser,
+        passwordHash: hashPassword(seedUser.password),
+      });
+    } else {
+      Object.assign(user, {
+        name: seedUser.name,
+        username: seedUser.username,
+        email: seedUser.email,
+        role: seedUser.role,
+        isActive: seedUser.isActive,
+        passwordHash: hashPassword(seedUser.password),
+      });
     }
+
+    user = await userRepository.save(user);
 
     users.push(user);
   }
