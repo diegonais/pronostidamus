@@ -1,32 +1,14 @@
-import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { ConfigService } from '@nestjs/config';
-
 import { AppModule } from './app.module';
-
-function getCorsOrigins(frontendUrl?: string): string[] | true {
-  if (!frontendUrl) {
-    return true;
-  }
-
-  const origins = frontendUrl
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean);
-
-  return origins.length > 0 ? origins : true;
-}
+import { ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
+  process.env.TZ = process.env.TZ ?? 'America/La_Paz';
+
   const app = await NestFactory.create(AppModule);
-  const configService = app.get(ConfigService);
-  const frontendUrl = configService.get<string>('FRONTEND_URL');
-
-  app.enableCors({
-    origin: getCorsOrigins(frontendUrl),
-    credentials: true,
-  });
-
+  app.enableCors();
+  app.setGlobalPrefix('api');
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -38,8 +20,16 @@ async function bootstrap() {
     }),
   );
 
-  const port = Number(configService.get<string>('PORT') ?? 3000);
-  await app.listen(port);
-}
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Pronostidamus API')
+    .setDescription(
+      'Backend base para Pronostidamus. Las fechas se manejan con America/La_Paz como referencia de negocio.',
+    )
+    .setVersion('1.0.0')
+    .build();
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api/docs', app, document);
 
+  await app.listen(process.env.PORT ?? 3000);
+}
 void bootstrap();

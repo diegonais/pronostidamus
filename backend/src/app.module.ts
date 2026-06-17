@@ -1,32 +1,42 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
-import { getDatabaseConfig } from './config/database.config';
-import { AdminModule } from './modules/admin/admin.module';
-import { AuthModule } from './modules/auth/auth.module';
-import { HealthModule } from './modules/health/health.module';
-import { MatchesModule } from './modules/matches/matches.module';
-import { PredictionsModule } from './modules/predictions/predictions.module';
-import { RoomsModule } from './modules/rooms/rooms.module';
+import { configuration } from './config/configuration';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
+import { RoomsModule } from './rooms/rooms.module';
+import { MatchesModule } from './matches/matches.module';
+import { PredictionsModule } from './predictions/predictions.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env.local', '.env'],
+      load: [configuration],
+      envFilePath: ['.env'],
     }),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) =>
-        getDatabaseConfig(configService),
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.getOrThrow<string>('database.host'),
+        port: configService.getOrThrow<number>('database.port'),
+        username: configService.getOrThrow<string>('database.username'),
+        password: configService.getOrThrow<string>('database.password'),
+        database: configService.getOrThrow<string>('database.name'),
+        autoLoadEntities: true,
+        synchronize: configService.get<boolean>('database.synchronize', true),
+        logging: configService.get<boolean>('database.logging', false),
+        timezone: 'Z',
+      }),
     }),
-    AdminModule,
     AuthModule,
-    HealthModule,
+    UsersModule,
+    RoomsModule,
     MatchesModule,
     PredictionsModule,
-    RoomsModule,
   ],
 })
 export class AppModule {}

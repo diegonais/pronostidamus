@@ -1,6 +1,5 @@
 export enum MatchStatus {
-  SCHEDULED = 'scheduled',
-  LIVE = 'live',
-  FINISHED = 'finished',
-  CANCELLED = 'cancelled',
+  SCHEDULED = 'SCHEDULED',
+  CLOSED = 'CLOSED',
+  FINISHED = 'FINISHED',
 }

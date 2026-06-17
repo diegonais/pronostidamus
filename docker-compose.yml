@@ -5,21 +5,38 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: pronostidamus
-      POSTGRES_USER: pronostidamus_user
-      POSTGRES_PASSWORD: pronostidamus_password
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      TZ: America/La_Paz
+      PGTZ: America/La_Paz
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U pronostidamus_user -d pronostidamus"
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - postgres-data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+    container_name: pronostidamus-backend
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      PORT: 3000
+      TZ: America/La_Paz
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: pronostidamus
+      DB_SYNCHRONIZE: 'true'
+      DB_LOGGING: 'false'
+    ports:
+      - '3000:3000'
+    command: yarn start:dev
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
 
 volumes:
-  postgres_data:
+  postgres-data:

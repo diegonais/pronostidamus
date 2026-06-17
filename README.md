@@ -1,180 +1,145 @@
-# pronostidamus
+# Pronostidamus
 
-Monorepo del MVP de `pronostidamus`, una aplicacion web para gestionar pollas deportivas de futbol enfocada inicialmente en el Mundial 2026.
+Pronostidamus es un backend para una polla deportiva de futbol. Esta primera fase deja una base funcional con NestJS, PostgreSQL, TypeORM, Swagger, validaciones, Docker y seed inicial.
 
-## Estructura
+## Requisitos
+
+- Node.js 24+
+- Yarn 1.x
+- Docker y Docker Compose
+
+## Estructura actual
+
+- `backend/`: API NestJS
+- `docker-compose.yml`: servicios `postgres` y `backend`
+
+## Instalar dependencias
+
+```bash
+cd backend
+yarn install
+```
+
+## Variables de entorno
+
+Crear `backend/.env` tomando como base `backend/.env.example`.
+
+Variables principales:
+
+- `PORT=3000`
+- `TZ=America/La_Paz`
+- `DB_HOST=localhost`
+- `DB_PORT=5432`
+- `DB_USERNAME=postgres`
+- `DB_PASSWORD=postgres`
+- `DB_NAME=pronostidamus`
+- `DB_SYNCHRONIZE=true`
+- `DB_LOGGING=false`
+
+## Levantar PostgreSQL con Docker
+
+Desde la raiz del proyecto:
+
+```bash
+docker-compose up -d postgres
+```
+
+Si quieres levantar tambien el backend en Docker:
+
+```bash
+docker-compose up -d --build
+```
+
+## Ejecutar el backend localmente
+
+```bash
+cd backend
+yarn start:dev
+```
+
+La API quedara disponible en:
+
+- `http://localhost:3000/api`
+
+## Swagger
+
+Swagger queda disponible en:
+
+- `http://localhost:3000/api/docs`
+
+Notas de fechas:
+
+- `matchDate` debe enviarse en formato ISO 8601.
+- La referencia de negocio es `America/La_Paz`.
+- En base de datos se usan columnas `timestamptz`.
+
+Ejemplo valido:
 
 ```text
-pronostidamus/
-|-- backend/
-|-- frontend/
-|-- docs/
-|-- docker-compose.yml
-|-- .gitignore
-|-- README.md
-`-- AGENTS.md
+2026-06-18T20:00:00-04:00
 ```
 
-## Stack
+## Ejecutar el seed
 
-- Backend: NestJS + TypeScript + Yarn
-- Frontend: React + Vite + TypeScript + Yarn
-- Base de datos local: PostgreSQL con Docker
-- Base de datos de produccion: Supabase PostgreSQL
-- Deploy frontend: Vercel
-- Deploy backend: Render
-- Autenticacion: JWT
-
-## Desarrollo local
-
-### PostgreSQL con Docker
-
-La base local usa estos valores por defecto:
-
-- Servicio: `postgres`
-- Imagen: `postgres:16-alpine`
-- Base de datos: `pronostidamus`
-- Usuario: `pronostidamus_user`
-- Password: `pronostidamus_password`
-- Puerto: `5432`
-
-Levantar PostgreSQL:
-
-```bash
-docker compose up -d postgres
-```
-
-Detener servicios:
-
-```bash
-docker compose down
-```
-
-Ver logs:
-
-```bash
-docker compose logs -f postgres
-```
-
-Eliminar contenedor y volumen:
-
-```bash
-docker compose down -v
-```
-
-### Variables de entorno
-
-El repositorio no incluye secretos reales. Solo se versionan ejemplos:
-
-- `backend/.env.example`
-- `frontend/.env.example`
-
-Preparacion local recomendada:
-
-1. Copiar `backend/.env.example` a `backend/.env`.
-2. Copiar `frontend/.env.example` a `frontend/.env`.
-3. Ajustar valores solo si el entorno local lo necesita.
-
-En desarrollo local, el backend usa `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_USER`, `DATABASE_PASSWORD` y `DATABASE_NAME`.
-
-En produccion, el backend acepta `DATABASE_URL` y `DATABASE_SSL=true`, por lo que puede conectarse a Supabase sin romper la configuracion de Docker local.
-
-### Seed inicial
-
-El backend incluye un seed idempotente para cargar los datos iniciales del MVP.
-
-Ejecutar el seed:
+Con PostgreSQL ya levantado:
 
 ```bash
 cd backend
 yarn seed
 ```
 
-El seed crea o actualiza estos usuarios de desarrollo:
+El seed crea:
 
-- `diego` con roles `user` y `admin`, password temporal `diego123`
-- `salva` con rol `user`, password temporal `salva123`
-- `josue` con rol `user`, password temporal `josue123`
-- `paolo` con rol `user`, password temporal `paolo123`
+- 4 usuarios iniciales
+- 1 sala: `apuestillas mundialcillo`
+- membresias de los 4 usuarios en esa sala
+- 3 partidos de ejemplo
 
-Tambien crea o actualiza la sala inicial `pronostidamus mundialcillo` con codigo `PRONOSTIDAMUS-MUNDIALCILLO` y asegura la membresia de los cuatro usuarios.
+## Conectarte desde TablePlus
 
-## Deploy
+Usa estos datos:
 
-### Frontend en Vercel
+- Host: `localhost`
+- Port: `5432`
+- Database: `pronostidamus`
+- User: `postgres`
+- Password: `postgres`
 
-Crear el proyecto en Vercel usando:
+## Endpoints base de esta fase
 
-- Root Directory: `frontend`
-- Build Command: `yarn build`
-- Output Directory: `dist`
+- `POST /api/users`
+- `GET /api/users`
+- `GET /api/users/:id`
+- `PATCH /api/users/:id`
+- `POST /api/rooms`
+- `GET /api/rooms`
+- `GET /api/rooms/:id`
+- `PATCH /api/rooms/:id`
+- `POST /api/rooms/:roomId/users/:userId`
+- `DELETE /api/rooms/:roomId/users/:userId`
+- `POST /api/rooms/:roomId/matches`
+- `GET /api/rooms/:roomId/matches`
+- `GET /api/matches/:id`
+- `PATCH /api/matches/:id`
+- `POST /api/matches/:matchId/predictions`
+- `GET /api/matches/:matchId/predictions`
+- `GET /api/predictions/:id`
+- `PATCH /api/predictions/:id`
+- `GET /api/auth/status`
+- `POST /api/auth/preview-login`
 
-Variable de entorno de produccion:
+## Notas tecnicas
 
-```env
-VITE_API_URL=https://url-del-backend-en-render
-```
+- TypeORM esta configurado con `synchronize: true` para desarrollo inicial.
+- No usar `synchronize` en produccion.
+- En una siguiente fase conviene generar la primera migracion base y apagar `synchronize`.
+- La estructura ya queda lista para incorporar `@nestjs/schedule`, auth real, cierre de predicciones, calculo de puntos y leaderboard.
 
-No hardcodear la URL del backend en el codigo. Vercel debe inyectarla desde sus variables de entorno.
+## Pendiente para Fase 2
 
-### Backend en Render
-
-Crear un Web Service en Render usando:
-
-- Root Directory: `backend`
-- Build Command: `yarn install --frozen-lockfile && yarn build`
-- Start Command: `yarn start:prod`
-
-Variables de entorno de produccion:
-
-```env
-PORT=10000
-DATABASE_URL=postgresql://usuario:password@host:5432/database
-DATABASE_SSL=true
-JWT_SECRET=definir-un-secreto-seguro
-JWT_EXPIRES_IN=1d
-FRONTEND_URL=https://url-del-frontend-en-vercel
-```
-
-Notas del backend para produccion:
-
-- Si `DATABASE_URL` esta definido, el backend lo prioriza sobre `DATABASE_HOST` y el resto de variables locales.
-- Si `DATABASE_SSL=true`, TypeORM habilita SSL para conexiones a Supabase.
-- CORS usa `FRONTEND_URL`, por lo que debe apuntar al dominio final del frontend en Vercel.
-- `GET /health` queda disponible para health checks y uptime monitoring.
-
-### Base de datos en Supabase
-
-Crear un proyecto PostgreSQL en Supabase y copiar la connection string en `DATABASE_URL` del backend en Render.
-
-Para produccion:
-
-- Usar la cadena PostgreSQL de Supabase en `DATABASE_URL`.
-- Mantener `DATABASE_SSL=true`.
-- No guardar credenciales reales en el repositorio.
-
-## Verificacion recomendada
-
-Antes de desplegar:
-
-```bash
-cd backend
-yarn build
-```
-
-```bash
-cd frontend
-yarn build
-```
-
-Despues del deploy:
-
-1. Abrir el frontend en Vercel.
-2. Verificar login contra el backend en Render.
-3. Consultar `GET https://url-del-backend-en-render/health`.
-4. Confirmar que el backend conecta a Supabase con SSL activo.
-
-## Notas
-
-- El archivo `AGENTS.md` define el contexto operativo y funcional del proyecto.
-- Se prioriza un MVP simple, mantenible y compatible con Docker local y Supabase en produccion.
+- Login real por `username` y `email`
+- Roles y permisos
+- cierre de predicciones 5 minutos antes del partido
+- calculo de puntos
+- leaderboard
+- migraciones TypeORM
