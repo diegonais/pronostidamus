@@ -23,6 +23,8 @@ import {
 } from '../types';
 
 type RoomDetailTab = 'matches' | 'predictions' | 'room-predictions';
+type AdminRoomSection = 'overview' | 'members' | 'matches';
+type AdminRoomDetailTab = 'members' | 'matches' | 'room-predictions';
 
 function toneForMatchStatus(statusLabel: string) {
   if (statusLabel === 'Finalizado') {
@@ -66,6 +68,12 @@ function getCurrentRoomPredictions(matches: Match[], allPredictions: Record<stri
     accumulator[match.id] = allPredictions[match.id] ?? [];
     return accumulator;
   }, {});
+}
+
+function getUserRoomCount(rooms: Room[], userId: string) {
+  return rooms.filter((room) =>
+    room.roomUsers?.some((membership) => membership.userId === userId),
+  ).length;
 }
 
 function useCatalogData() {
@@ -225,39 +233,109 @@ function LoginPage() {
 }
 
 function AdminDashboardPage() {
-  const { rooms, matchesByRoom, users, loading, error } = useCatalogData();
+  const { rooms, matchesByRoom, predictionsByMatch, users, loading, error } = useCatalogData();
   const matches = Object.values(matchesByRoom).flat();
+  const activeRooms = rooms.filter((room) => room.isActive).length;
+  const activeUsers = users.filter((user) => user.isActive).length;
+  const finishedMatches = matches.filter((match) => match.status === MatchStatus.FINISHED).length;
+  const pendingMatches = matches.filter(
+    (match) => getMatchVisualStatus(match.matchDate, match.status) === 'Programado',
+  ).length;
+  const roomSnapshots = rooms
+    .map((room) => {
+      const roomMatches = matchesByRoom[room.id] ?? [];
+      const roomPredictions = roomMatches.flatMap((match) => predictionsByMatch[match.id] ?? []);
+      return {
+        room,
+        matches: roomMatches.length,
+        predictions: roomPredictions.length,
+      };
+    })
+    .sort((left, right) => right.matches - left.matches || right.predictions - left.predictions);
 
   if (loading) {
     return <AppLoadingScreen message="Cargando datos del panel..." />;
   }
 
   return (
-    <div className="page-stack">
-      <PageHeader
-        title="Resumen admin"
-        description="Vista general de administracion."
-      />
-      {error ? <StateCard tone="error">{error}</StateCard> : null}
-      <div className="stats-grid">
-        <StatTile label="Usuarios" value={users.length} />
-        <StatTile label="Salas" value={rooms.length} />
-        <StatTile label="Partidos" value={matches.length} />
-        <StatTile
-          label="Programados"
-          value={
-            matches.filter(
-              (match) => getMatchVisualStatus(match.matchDate, match.status) === 'Programado',
-            ).length
-          }
+    <div className="admin-dashboard-layout">
+      <section className="page-stack">
+        <PageHeader
+          title="Resumen admin"
+          description="Un punto de control rapido para ver el estado del sistema y bajar a la sala o gestion que necesites."
         />
-      </div>
+        {error ? <StateCard tone="error">{error}</StateCard> : null}
+        <div className="stats-grid">
+          <StatTile label="Usuarios activos" value={activeUsers} helper={`${users.length} registrados`} />
+          <StatTile label="Salas activas" value={activeRooms} helper={`${rooms.length} creadas`} />
+          <StatTile label="Partidos" value={matches.length} />
+          <StatTile label="Programados" value={pendingMatches} helper={`${finishedMatches} finalizados`} />
+        </div>
+
+        <section className="panel-card">
+          <PageHeader
+            title="Gestion ordenada"
+            description="La tabla completa ya vive dentro de cada sala. Desde aqui solo vemos senales y accesos rapidos."
+          />
+          <div className="admin-overview-grid">
+            <article className="subsection-card compact-card">
+              <h3>Usuarios</h3>
+              <p className="page-description">
+                Revisa estado y rol desde una lista resumida, y abre el formulario solo cuando quieras editar.
+              </p>
+            </article>
+            <article className="subsection-card compact-card">
+              <h3>Salas</h3>
+              <p className="page-description">
+                Cada sala se maneja por bloques: configuracion, miembros y partidos, sin mostrar todo a la vez.
+              </p>
+            </article>
+            <article className="subsection-card compact-card">
+              <h3>Tabla</h3>
+              <p className="page-description">
+                La lectura competitiva queda dentro de la experiencia de sala, que es donde realmente hace sentido.
+              </p>
+            </article>
+          </div>
+        </section>
+      </section>
+
+      <aside className="page-stack admin-side-column">
+        <section className="panel-card">
+          <PageHeader
+            title="Salas con mas movimiento"
+            description="Un vistazo corto para decidir en que sala entrar sin abrir una tabla enorme."
+          />
+          {roomSnapshots.length === 0 ? (
+            <StateCard>No hay salas creadas todavia.</StateCard>
+          ) : (
+            <div className="admin-overview-grid">
+              {roomSnapshots.slice(0, 6).map(({ room, matches: roomMatches, predictions }) => (
+                <article key={room.id} className="subsection-card compact-card">
+                  <div className="summary-row">
+                    <h3>{room.name}</h3>
+                    <StatusBadge
+                      label={room.isActive ? 'Activa' : 'Deshabilitada'}
+                      tone={room.isActive ? 'success' : 'muted'}
+                    />
+                  </div>
+                  <div className="compact-metrics">
+                    <span>{room.roomUsers?.length ?? 0} miembros</span>
+                    <span>{roomMatches} partidos</span>
+                    <span>{predictions} pronosticos</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      </aside>
     </div>
   );
 }
 
 function AdminUsersPage() {
-  const { users, loading, error, refresh } = useCatalogData();
+  const { users, rooms, loading, error, refresh } = useCatalogData();
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [feedback, setFeedback] = useState('');
   const [form, setForm] = useState<UserPayload>({
@@ -316,26 +394,57 @@ function AdminUsersPage() {
     }
   }
 
+  const totalAdmins = users.filter((user) => user.role === UserRole.ADMIN).length;
+  const activeUsers = users.filter((user) => user.isActive).length;
+  const inactiveUsers = users.length - activeUsers;
+
   if (loading) {
     return <AppLoadingScreen message="Cargando usuarios..." />;
   }
 
   return (
-    <div className="page-stack two-column">
+    <div className="admin-workspace">
       <section className="panel-card">
         <PageHeader
           title="Gestion de usuarios"
-          description="Administra usuarios y accesos."
+          description="Lista corta con lo esencial. El detalle completo aparece solo cuando eliges a quien editar."
+          actions={
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() => {
+                setEditingUser(null);
+                setForm({
+                  name: '',
+                  username: '',
+                  email: '',
+                  password: '',
+                  role: UserRole.USER,
+                  isActive: true,
+                });
+              }}
+            >
+              Nuevo usuario
+            </button>
+          }
         />
         {error ? <StateCard tone="error">{error}</StateCard> : null}
         {feedback ? <StateCard tone="success">{feedback}</StateCard> : null}
-        <SectionTable headers={['Nombre', 'Username', 'Email', 'Rol', 'Estado', 'Accion']}>
+        <div className="compact-metrics admin-metrics-row">
+          <span>{users.length} registrados</span>
+          <span>{totalAdmins} admins</span>
+          <span>{activeUsers} activos</span>
+          <span>{inactiveUsers} deshabilitados</span>
+        </div>
+        <SectionTable headers={['Usuario', 'Rol', 'Salas', 'Estado', 'Accion']}>
           {users.map((user) => (
             <tr key={user.id}>
-              <td>{user.name}</td>
-              <td>{user.username}</td>
-              <td>{user.email}</td>
+              <td>
+                <strong>{user.name}</strong>
+                <div className="muted-text">@{user.username}</div>
+              </td>
               <td>{user.role}</td>
+              <td>{getUserRoomCount(rooms, user.id)}</td>
               <td>
                 <StatusBadge
                   label={user.isActive ? 'Activo' : 'Deshabilitado'}
@@ -352,89 +461,108 @@ function AdminUsersPage() {
         </SectionTable>
       </section>
 
-      <section className="panel-card">
-        <PageHeader
-          title={editingUser ? 'Editar usuario' : 'Crear usuario'}
-          description="Completa los datos del usuario."
-        />
-        <form className="form-grid" onSubmit={handleSubmit}>
-          <label>
-            Nombre
-            <input
-              required
-              minLength={2}
-              value={form.name}
-              onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-            />
-          </label>
-          <label>
-            Username
-            <input
-              required
-              minLength={3}
-              value={form.username}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, username: event.target.value }))
-              }
-            />
-          </label>
-          <label>
-            Email
-            <input
-              type="email"
-              required
-              value={form.email}
-              onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-            />
-          </label>
-          <label>
-            Contrasena
-            <input
-              type="password"
-              required={!editingUser}
-              minLength={6}
-              value={form.password ?? ''}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, password: event.target.value }))
-              }
-            />
-          </label>
-          <label>
-            Rol
-            <select
-              value={form.role}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, role: event.target.value as UserRole }))
-              }
-            >
-              <option value={UserRole.USER}>USER</option>
-              <option value={UserRole.ADMIN}>ADMIN</option>
-            </select>
-          </label>
-          <label>
-            Estado
-            <select
-              value={String(form.isActive)}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, isActive: event.target.value === 'true' }))
-              }
-            >
-              <option value="true">Activo</option>
-              <option value="false">Deshabilitado</option>
-            </select>
-          </label>
-          <button className="primary-button" type="submit">
-            {editingUser ? 'Guardar cambios' : 'Crear usuario'}
-          </button>
-        </form>
-      </section>
+      <aside className="page-stack admin-side-column">
+        <section className="panel-card">
+          <PageHeader
+            title={editingUser ? 'Editar usuario' : 'Crear usuario'}
+            description={
+              editingUser
+                ? 'Ajusta solo lo necesario. Dejamos la informacion extendida fuera de la tabla principal.'
+                : 'Completa los datos basicos para habilitar un nuevo acceso.'
+            }
+          />
+          {editingUser ? (
+            <div className="detail-summary">
+              <div>
+                <span className="muted-text">Email</span>
+                <strong>{editingUser.email}</strong>
+              </div>
+              <div>
+                <span className="muted-text">Salas</span>
+                <strong>{getUserRoomCount(rooms, editingUser.id)}</strong>
+              </div>
+            </div>
+          ) : null}
+          <form className="form-grid" onSubmit={handleSubmit}>
+            <label>
+              Nombre
+              <input
+                required
+                minLength={2}
+                value={form.name}
+                onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+              />
+            </label>
+            <label>
+              Username
+              <input
+                required
+                minLength={3}
+                value={form.username}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, username: event.target.value }))
+                }
+              />
+            </label>
+            <label>
+              Email
+              <input
+                type="email"
+                required
+                value={form.email}
+                onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+              />
+            </label>
+            <label>
+              Contrasena
+              <input
+                type="password"
+                required={!editingUser}
+                minLength={6}
+                value={form.password ?? ''}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, password: event.target.value }))
+                }
+              />
+            </label>
+            <label>
+              Rol
+              <select
+                value={form.role}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, role: event.target.value as UserRole }))
+                }
+              >
+                <option value={UserRole.USER}>USER</option>
+                <option value={UserRole.ADMIN}>ADMIN</option>
+              </select>
+            </label>
+            <label>
+              Estado
+              <select
+                value={String(form.isActive)}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, isActive: event.target.value === 'true' }))
+                }
+              >
+                <option value="true">Activo</option>
+                <option value="false">Deshabilitado</option>
+              </select>
+            </label>
+            <button className="primary-button" type="submit">
+              {editingUser ? 'Guardar cambios' : 'Crear usuario'}
+            </button>
+          </form>
+        </section>
+      </aside>
     </div>
   );
 }
 
 function AdminRoomsPage() {
-  const { rooms, users, matchesByRoom, loading, error, refresh } = useCatalogData();
+  const { rooms, users, matchesByRoom, predictionsByMatch, loading, error, refresh } = useCatalogData();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [activeSection, setActiveSection] = useState<AdminRoomSection>('overview');
   const [roomForm, setRoomForm] = useState({ name: '', isActive: true });
   const [selectedUserId, setSelectedUserId] = useState('');
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
@@ -454,6 +582,7 @@ function AdminRoomsPage() {
   useEffect(() => {
     if (!selectedRoom) {
       setRoomForm({ name: '', isActive: true });
+      setActiveSection('overview');
       setSelectedUserId('');
       setIsAddUserModalOpen(false);
       setIsAddMatchModalOpen(false);
@@ -462,6 +591,7 @@ function AdminRoomsPage() {
     }
 
     setRoomForm({ name: selectedRoom.name, isActive: selectedRoom.isActive });
+    setActiveSection('overview');
   }, [selectedRoom]);
 
   useEffect(() => {
@@ -577,24 +707,108 @@ function AdminRoomsPage() {
   const availableUsers = users.filter((user) => !roomMemberIds.has(user.id));
   const isEditingMatch = Boolean(editingMatch);
   const isMatchModalOpen = isEditingMatch || isAddMatchModalOpen;
+  const roomFinishedMatches = roomMatches.filter((match) => match.status === MatchStatus.FINISHED).length;
 
   if (loading) {
     return <AppLoadingScreen message="Cargando salas..." />;
   }
 
   return (
-    <div className="page-stack two-column">
+    <div className="page-stack">
       <section className="panel-card">
         <PageHeader
           title="Gestion de salas"
-          description="Desde aqui eliges una sala y luego manejas miembros y partidos dentro de ella."
+          description="Entra a una sala para administrarla como espacio propio: miembros, partidos y pronosticos por partido."
         />
         {error ? <StateCard tone="error">{error}</StateCard> : null}
         {feedback ? <StateCard tone="success">{feedback}</StateCard> : null}
-        <SectionTable headers={['Sala', 'Estado', 'Usuarios', 'Accion']}>
+        <SectionTable headers={['Sala', 'Estado', 'Miembros', 'Actividad', 'Accion']}>
+          {rooms.map((room) => {
+            const roomMatches = matchesByRoom[room.id] ?? [];
+            const roomPredictions = roomMatches.flatMap((match) => predictionsByMatch[match.id] ?? []);
+
+            return (
+              <tr key={room.id}>
+                <td>
+                  <strong>{room.name}</strong>
+                </td>
+                <td>
+                  <StatusBadge
+                    label={room.isActive ? 'Activa' : 'Deshabilitada'}
+                    tone={room.isActive ? 'success' : 'muted'}
+                  />
+                </td>
+                <td>{room.roomUsers?.length ?? 0}</td>
+                <td>
+                  {roomMatches.length} partido{roomMatches.length === 1 ? '' : 's'} · {roomPredictions.length}{' '}
+                  pronostico{roomPredictions.length === 1 ? '' : 's'}
+                </td>
+                <td>
+                  <Link className="table-button" to={`/admin/rooms/${room.id}`}>
+                    Gestionar
+                  </Link>
+                </td>
+              </tr>
+            );
+          })}
+        </SectionTable>
+      </section>
+
+      <section className="panel-card">
+        <PageHeader
+          title="Crear sala"
+          description="Primero la creas y luego entras a gestionarla desde su propia vista."
+        />
+        <form className="form-grid" onSubmit={saveRoom}>
+          <label>
+            Nombre
+            <input
+              required
+              minLength={2}
+              value={roomForm.name}
+              onChange={(event) => setRoomForm((current) => ({ ...current, name: event.target.value }))}
+            />
+          </label>
+          <label>
+            Estado
+            <select
+              value={String(roomForm.isActive)}
+              onChange={(event) =>
+                setRoomForm((current) => ({ ...current, isActive: event.target.value === 'true' }))
+              }
+            >
+              <option value="true">Activa</option>
+              <option value="false">Deshabilitada</option>
+            </select>
+          </label>
+          <button className="primary-button" type="submit">
+            Crear sala
+          </button>
+        </form>
+      </section>
+    </div>
+  );
+
+  return (
+    <div className="admin-workspace">
+      <section className="panel-card">
+        <PageHeader
+          title="Gestion de salas"
+          description="Primero eliges una sala. Despues trabajas por secciones para no tener toda la informacion abierta al mismo tiempo."
+          actions={
+            <button className="secondary-button" type="button" onClick={() => setSelectedRoom(null)}>
+              Nueva sala
+            </button>
+          }
+        />
+        {error ? <StateCard tone="error">{error}</StateCard> : null}
+        {feedback ? <StateCard tone="success">{feedback}</StateCard> : null}
+        <SectionTable headers={['Sala', 'Estado', 'Miembros', 'Partidos', 'Accion']}>
           {rooms.map((room) => (
             <tr key={room.id}>
-              <td>{room.name}</td>
+              <td>
+                <strong>{room.name}</strong>
+              </td>
               <td>
                 <StatusBadge
                   label={room.isActive ? 'Activa' : 'Deshabilitada'}
@@ -602,6 +816,7 @@ function AdminRoomsPage() {
                 />
               </td>
               <td>{room.roomUsers?.length ?? 0}</td>
+              <td>{matchesByRoom[room.id]?.length ?? 0}</td>
               <td>
                 <button className="table-button" type="button" onClick={() => setSelectedRoom(room)}>
                   Gestionar
@@ -612,11 +827,16 @@ function AdminRoomsPage() {
         </SectionTable>
       </section>
 
-      <section className="panel-card">
-        <PageHeader
-          title={selectedRoom ? `Sala: ${selectedRoom.name}` : 'Crear sala'}
-          description="Cada sala concentra su configuracion, miembros y partidos."
-        />
+      <aside className="page-stack admin-side-column">
+        <section className="panel-card">
+          <PageHeader
+            title={selectedRoom ? `Sala: ${selectedRoom!.name}` : 'Crear sala'}
+            description={
+              selectedRoom
+                ? 'Configuracion centralizada con detalle por bloques.'
+                : 'Crea una nueva sala y luego agrega miembros y partidos desde su gestion.'
+            }
+          />
 
         <form className="form-grid" onSubmit={saveRoom}>
           <label>
@@ -647,85 +867,153 @@ function AdminRoomsPage() {
 
         {selectedRoom ? (
           <>
-            <section className="subsection-card">
-              <div className="modal-header">
-                <h3>Miembros</h3>
-                <button
-                  className="secondary-button"
-                  type="button"
-                  onClick={() => {
-                    setSelectedUserId('');
-                    setIsAddUserModalOpen(true);
-                  }}
-                >
-                  Anadir usuario
-                </button>
-              </div>
-              <SectionTable headers={['Miembro', 'Rol', 'Accion']}>
-                {(selectedRoom.roomUsers ?? []).map((membership) => (
-                  <tr key={membership.id}>
-                    <td>{membership.user.name}</td>
-                    <td>{membership.user.role}</td>
-                    <td>
-                      <button
-                        className="table-button danger"
-                        type="button"
-                        onClick={() => detachUser(selectedRoom.id, membership.user.id)}
-                      >
-                        Quitar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </SectionTable>
-            </section>
+            <div className="stats-grid compact-stats-grid">
+              <StatTile label="Miembros" value={selectedRoom!.roomUsers?.length ?? 0} />
+              <StatTile label="Partidos" value={roomMatches.length} />
+              <StatTile label="Finalizados" value={roomFinishedMatches} />
+            </div>
 
-            <section className="subsection-card">
-              <div className="modal-header">
-                <h3>Partidos de la sala</h3>
-                <button
-                  className="secondary-button"
-                  type="button"
-                  onClick={() => {
-                    setEditingMatch(null);
-                    setIsAddMatchModalOpen(true);
-                  }}
-                >
-                  Agregar partido
-                </button>
-              </div>
-              {roomMatches.length === 0 ? (
-                <StateCard>No hay partidos en esta sala.</StateCard>
-              ) : (
-                <SectionTable headers={['Partido', 'Fecha Bolivia', 'Estado', 'Resultado', 'Accion']}>
-                  {roomMatches.map((match) => {
-                    const statusLabel = getMatchVisualStatus(match.matchDate, match.status);
-                    return (
-                      <tr key={match.id}>
+            <div className="tab-switcher" role="tablist" aria-label="Gestion de la sala">
+              <button
+                className={`tab-button ${activeSection === 'overview' ? 'active' : ''}`}
+                type="button"
+                onClick={() => setActiveSection('overview')}
+              >
+                Resumen
+              </button>
+              <button
+                className={`tab-button ${activeSection === 'members' ? 'active' : ''}`}
+                type="button"
+                onClick={() => setActiveSection('members')}
+              >
+                Miembros
+              </button>
+              <button
+                className={`tab-button ${activeSection === 'matches' ? 'active' : ''}`}
+                type="button"
+                onClick={() => setActiveSection('matches')}
+              >
+                Partidos
+              </button>
+            </div>
+
+            {activeSection === 'overview' ? (
+              <section className="subsection-card">
+                <div className="subsection-heading">
+                  <h3>Resumen de la sala</h3>
+                  <StatusBadge
+                    label={selectedRoom!.isActive ? 'Activa' : 'Deshabilitada'}
+                    tone={selectedRoom!.isActive ? 'success' : 'muted'}
+                  />
+                </div>
+                <div className="detail-summary">
+                  <div>
+                    <span className="muted-text">Miembros registrados</span>
+                    <strong>{selectedRoom!.roomUsers?.length ?? 0}</strong>
+                  </div>
+                  <div>
+                    <span className="muted-text">Partidos cargados</span>
+                    <strong>{roomMatches.length}</strong>
+                  </div>
+                  <div>
+                    <span className="muted-text">Pendientes o cerrados</span>
+                    <strong>{roomMatches.length - roomFinishedMatches}</strong>
+                  </div>
+                </div>
+              </section>
+            ) : null}
+
+            {activeSection === 'members' ? (
+              <section className="subsection-card">
+                <div className="modal-header">
+                  <h3>Miembros</h3>
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => {
+                      setSelectedUserId('');
+                      setIsAddUserModalOpen(true);
+                    }}
+                  >
+                    Anadir usuario
+                  </button>
+                </div>
+                {(selectedRoom!.roomUsers ?? []).length === 0 ? (
+                  <StateCard>No hay miembros en esta sala todavia.</StateCard>
+                ) : (
+                  <SectionTable headers={['Miembro', 'Rol', 'Accion']}>
+                    {(selectedRoom!.roomUsers ?? []).map((membership) => (
+                      <tr key={membership.id}>
                         <td>
-                          {match.teamA} vs {match.teamB}
+                          <strong>{membership.user.name}</strong>
+                          <div className="muted-text">@{membership.user.username}</div>
                         </td>
-                        <td>{formatDateTime(match.matchDate)}</td>
+                        <td>{membership.user.role}</td>
                         <td>
-                          <StatusBadge label={statusLabel} tone={toneForMatchStatus(statusLabel)} />
-                        </td>
-                        <td>
-                          {match.teamAScore ?? '-'} : {match.teamBScore ?? '-'}
-                        </td>
-                        <td>
-                          <button className="table-button" type="button" onClick={() => setEditingMatch(match)}>
-                            Editar
+                          <button
+                            className="table-button danger"
+                            type="button"
+                            onClick={() => detachUser(selectedRoom!.id, membership.user.id)}
+                          >
+                            Quitar
                           </button>
                         </td>
                       </tr>
-                    );
-                  })}
-                </SectionTable>
-              )}
-            </section>
+                    ))}
+                  </SectionTable>
+                )}
+              </section>
+            ) : null}
+
+            {activeSection === 'matches' ? (
+              <section className="subsection-card">
+                <div className="modal-header">
+                  <h3>Partidos de la sala</h3>
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => {
+                      setEditingMatch(null);
+                      setIsAddMatchModalOpen(true);
+                    }}
+                  >
+                    Agregar partido
+                  </button>
+                </div>
+                {roomMatches.length === 0 ? (
+                  <StateCard>No hay partidos en esta sala.</StateCard>
+                ) : (
+                  <SectionTable headers={['Partido', 'Fecha Bolivia', 'Estado', 'Resultado', 'Accion']}>
+                    {roomMatches.map((match) => {
+                      const statusLabel = getMatchVisualStatus(match.matchDate, match.status);
+                      return (
+                        <tr key={match.id}>
+                          <td>
+                            {match.teamA} vs {match.teamB}
+                          </td>
+                          <td>{formatDateTime(match.matchDate)}</td>
+                          <td>
+                            <StatusBadge label={statusLabel} tone={toneForMatchStatus(statusLabel)} />
+                          </td>
+                          <td>
+                            {match.teamAScore ?? '-'} : {match.teamBScore ?? '-'}
+                          </td>
+                          <td>
+                            <button className="table-button" type="button" onClick={() => setEditingMatch(match)}>
+                              Editar
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </SectionTable>
+                )}
+              </section>
+            ) : null}
           </>
         ) : null}
-      </section>
+        </section>
+      </aside>
 
       {selectedRoom && isAddUserModalOpen ? (
         <div
@@ -791,6 +1079,623 @@ function AdminRoomsPage() {
       ) : null}
 
       {selectedRoom && isMatchModalOpen ? (
+        <div
+          className="modal-backdrop"
+          onClick={() => {
+            setEditingMatch(null);
+            setIsAddMatchModalOpen(false);
+          }}
+          role="presentation"
+        >
+          <section
+            className="modal-card"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-match-title"
+          >
+            <div className="modal-header">
+              <div>
+                <p className="eyebrow">Partido</p>
+                <h3 id="edit-match-title">{isEditingMatch ? 'Editar partido' : 'Agregar partido'}</h3>
+              </div>
+              <button
+                className="table-button"
+                type="button"
+                onClick={() => {
+                  setEditingMatch(null);
+                  setIsAddMatchModalOpen(false);
+                }}
+              >
+                Cerrar
+              </button>
+            </div>
+            <form className="form-grid" onSubmit={saveMatch}>
+              <label>
+                Equipo A
+                <input
+                  required
+                  value={matchForm.teamA}
+                  onChange={(event) =>
+                    setMatchForm((current) => ({ ...current, teamA: event.target.value }))
+                  }
+                />
+              </label>
+              <label>
+                Equipo B
+                <input
+                  required
+                  value={matchForm.teamB}
+                  onChange={(event) =>
+                    setMatchForm((current) => ({ ...current, teamB: event.target.value }))
+                  }
+                />
+              </label>
+              <label>
+                Fecha y hora
+                <input
+                  type="datetime-local"
+                  required
+                  value={matchForm.matchDate}
+                  onChange={(event) =>
+                    setMatchForm((current) => ({ ...current, matchDate: event.target.value }))
+                  }
+                />
+              </label>
+              <label>
+                Goles A
+                <input
+                  type="number"
+                  min={0}
+                  value={matchForm.teamAScore ?? ''}
+                  onChange={(event) =>
+                    setMatchForm((current) => ({
+                      ...current,
+                      teamAScore: event.target.value === '' ? null : Number(event.target.value),
+                    }))
+                  }
+                />
+              </label>
+              <label>
+                Goles B
+                <input
+                  type="number"
+                  min={0}
+                  value={matchForm.teamBScore ?? ''}
+                  onChange={(event) =>
+                    setMatchForm((current) => ({
+                      ...current,
+                      teamBScore: event.target.value === '' ? null : Number(event.target.value),
+                    }))
+                  }
+                />
+              </label>
+              <label>
+                Estado
+                <select
+                  value={matchForm.status}
+                  onChange={(event) =>
+                    setMatchForm((current) => ({
+                      ...current,
+                      status: event.target.value as MatchStatus,
+                    }))
+                  }
+                >
+                  <option value={MatchStatus.SCHEDULED}>SCHEDULED</option>
+                  <option value={MatchStatus.CLOSED}>CLOSED</option>
+                  <option value={MatchStatus.FINISHED}>FINISHED</option>
+                </select>
+              </label>
+              <div className="modal-actions">
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => {
+                    setEditingMatch(null);
+                    setIsAddMatchModalOpen(false);
+                  }}
+                >
+                  Cancelar
+                </button>
+                <button className="primary-button" type="submit">
+                  {isEditingMatch ? 'Guardar partido' : 'Agregar partido'}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function AdminRoomDetailPage() {
+  const { roomId = '' } = useParams();
+  const { rooms, users, matchesByRoom, predictionsByMatch, loading, error, refresh } = useCatalogData();
+  const [activeTab, setActiveTab] = useState<AdminRoomDetailTab>('matches');
+  const [roomForm, setRoomForm] = useState({ name: '', isActive: true });
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [isAddMatchModalOpen, setIsAddMatchModalOpen] = useState(false);
+  const [editingMatch, setEditingMatch] = useState<Match | null>(null);
+  const [feedback, setFeedback] = useState('');
+  const [matchDayFilter, setMatchDayFilter] = useState('all');
+  const [matchForm, setMatchForm] = useState<MatchPayload>({
+    teamA: '',
+    teamB: '',
+    matchDate: '',
+    teamAScore: null,
+    teamBScore: null,
+    status: MatchStatus.SCHEDULED,
+    isActive: true,
+  });
+  const room = rooms.find((item) => item.id === roomId);
+
+  useEffect(() => {
+    if (!room) {
+      return;
+    }
+
+    setRoomForm({ name: room.name, isActive: room.isActive });
+  }, [room]);
+
+  useEffect(() => {
+    if (!editingMatch) {
+      setMatchForm({
+        teamA: '',
+        teamB: '',
+        matchDate: '',
+        teamAScore: null,
+        teamBScore: null,
+        status: MatchStatus.SCHEDULED,
+        isActive: true,
+      });
+      return;
+    }
+
+    setMatchForm({
+      teamA: editingMatch.teamA,
+      teamB: editingMatch.teamB,
+      matchDate: toDateTimeLocalValue(editingMatch.matchDate),
+      teamAScore: editingMatch.teamAScore,
+      teamBScore: editingMatch.teamBScore,
+      status: editingMatch.status,
+      isActive: editingMatch.isActive,
+    });
+  }, [editingMatch]);
+
+  async function saveRoom(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!room) {
+      return;
+    }
+
+    try {
+      await roomsService.update(room.id, roomForm);
+      setFeedback('Sala actualizada correctamente.');
+      await refresh();
+    } catch (requestError) {
+      setFeedback(extractErrorMessage(requestError));
+    }
+  }
+
+  async function attachUser() {
+    if (!room || !selectedUserId) {
+      return;
+    }
+
+    try {
+      await roomsService.addUser(room.id, selectedUserId);
+      setSelectedUserId('');
+      setFeedback('Usuario anadido a la sala.');
+      await refresh();
+    } catch (requestError) {
+      setFeedback(extractErrorMessage(requestError));
+    }
+  }
+
+  async function detachUser(userId: string) {
+    if (!room || !window.confirm('¿Quitar usuario de la sala?')) {
+      return;
+    }
+
+    try {
+      await roomsService.removeUser(room.id, userId);
+      setFeedback('Usuario retirado de la sala.');
+      await refresh();
+    } catch (requestError) {
+      setFeedback(extractErrorMessage(requestError));
+    }
+  }
+
+  async function saveMatch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!room) {
+      return;
+    }
+
+    if (matchForm.teamA.trim().toLowerCase() === matchForm.teamB.trim().toLowerCase()) {
+      setFeedback('Los equipos no pueden ser iguales.');
+      return;
+    }
+
+    try {
+      const payload: MatchPayload = {
+        ...matchForm,
+        matchDate: fromDateTimeLocalValue(matchForm.matchDate),
+      };
+
+      if (editingMatch) {
+        await matchesService.update(editingMatch.id, payload);
+        setFeedback('Partido actualizado correctamente.');
+      } else {
+        await matchesService.create(room.id, payload);
+        setFeedback('Partido agregado a la sala.');
+        setIsAddMatchModalOpen(false);
+      }
+
+      setEditingMatch(null);
+      await refresh();
+    } catch (requestError) {
+      setFeedback(extractErrorMessage(requestError));
+    }
+  }
+
+  if (loading) {
+    return <AppLoadingScreen message="Cargando sala admin..." />;
+  }
+
+  if (!room) {
+    return (
+      <div className="page-stack">
+        <PageHeader title="Sala admin" description="No se encontro la sala solicitada." />
+        <StateCard tone="warning">La sala no existe o fue removida.</StateCard>
+      </div>
+    );
+  }
+
+  const roomMatches = sortMatchesByDate(matchesByRoom[room.id] ?? []);
+  const finishedMatches = roomMatches.filter((match) => match.status === MatchStatus.FINISHED);
+  const roomMemberIds = new Set((room.roomUsers ?? []).map((membership) => membership.userId));
+  const availableUsers = users.filter((user) => !roomMemberIds.has(user.id));
+  const isEditingMatch = Boolean(editingMatch);
+  const isMatchModalOpen = isEditingMatch || isAddMatchModalOpen;
+  const leaderboard = buildLeaderboard(
+    getRoomMembers(room),
+    getCurrentRoomPredictions(roomMatches, predictionsByMatch),
+    roomMatches,
+  );
+  const matchDayOptions = roomMatches.reduce<Array<{ value: string; label: string }>>((options, match) => {
+    const value = getMatchDayKey(match.matchDate);
+
+    if (options.some((option) => option.value === value)) {
+      return options;
+    }
+
+    return [...options, { value, label: formatMatchDayLabel(match.matchDate) }];
+  }, []);
+  const filteredPredictionMatches =
+    matchDayFilter === 'all'
+      ? roomMatches
+      : roomMatches.filter((match) => getMatchDayKey(match.matchDate) === matchDayFilter);
+
+  return (
+    <div className="page-stack">
+      <PageHeader
+        title={room.name}
+        description="Entraste a la sala admin. Desde aqui la gestion ocurre dentro del contexto real de la sala."
+        actions={<Link className="secondary-button" to="/admin/rooms">Volver a salas</Link>}
+      />
+      {error ? <StateCard tone="error">{error}</StateCard> : null}
+      {feedback ? <StateCard tone="success">{feedback}</StateCard> : null}
+      <div className="stats-grid">
+        <StatTile label="Miembros" value={room.roomUsers?.length ?? 0} />
+        <StatTile label="Partidos" value={roomMatches.length} />
+        <StatTile label="Finalizados" value={finishedMatches.length} />
+        <StatTile
+          label="Pronosticos"
+          value={roomMatches.flatMap((match) => predictionsByMatch[match.id] ?? []).length}
+        />
+      </div>
+
+      <section className="panel-card">
+        <PageHeader
+          title="Configuracion de la sala"
+          description="Ajusta los datos base sin salir de la sala."
+        />
+        <form className="form-grid" onSubmit={saveRoom}>
+          <label>
+            Nombre
+            <input
+              required
+              minLength={2}
+              value={roomForm.name}
+              onChange={(event) => setRoomForm((current) => ({ ...current, name: event.target.value }))}
+            />
+          </label>
+          <label>
+            Estado
+            <select
+              value={String(roomForm.isActive)}
+              onChange={(event) =>
+                setRoomForm((current) => ({ ...current, isActive: event.target.value === 'true' }))
+              }
+            >
+              <option value="true">Activa</option>
+              <option value="false">Deshabilitada</option>
+            </select>
+          </label>
+          <button className="primary-button" type="submit">
+            Guardar sala
+          </button>
+        </form>
+      </section>
+
+      <section className="panel-card">
+        <PageHeader
+          title="Tabla de la sala"
+          description="La tabla vive dentro de la sala, igual que en la experiencia de usuario."
+        />
+        <LeaderboardTable items={leaderboard} />
+      </section>
+
+      <section className="panel-card">
+        <PageHeader
+          title="Gestion de la sala"
+          description="Cambia entre miembros, partidos y pronosticos por partido sin salir del contexto."
+        />
+        <div className="tab-switcher" role="tablist" aria-label="Secciones de gestion de la sala">
+          <button
+            className={`tab-button ${activeTab === 'members' ? 'active' : ''}`}
+            type="button"
+            onClick={() => setActiveTab('members')}
+          >
+            Miembros
+          </button>
+          <button
+            className={`tab-button ${activeTab === 'matches' ? 'active' : ''}`}
+            type="button"
+            onClick={() => setActiveTab('matches')}
+          >
+            Partidos
+          </button>
+          <button
+            className={`tab-button ${activeTab === 'room-predictions' ? 'active' : ''}`}
+            type="button"
+            onClick={() => setActiveTab('room-predictions')}
+          >
+            Pronosticos por partido
+          </button>
+        </div>
+
+        {activeTab === 'members' ? (
+          <div className="tab-panel">
+            <section className="subsection-card">
+              <div className="modal-header">
+                <h3>Miembros</h3>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => {
+                    setSelectedUserId('');
+                    setIsAddUserModalOpen(true);
+                  }}
+                >
+                  Anadir usuario
+                </button>
+              </div>
+              {(room.roomUsers ?? []).length === 0 ? (
+                <StateCard>No hay miembros en esta sala todavia.</StateCard>
+              ) : (
+                <SectionTable headers={['Miembro', 'Rol', 'Accion']}>
+                  {(room.roomUsers ?? []).map((membership) => (
+                    <tr key={membership.id}>
+                      <td>
+                        <strong>{membership.user.name}</strong>
+                        <div className="muted-text">@{membership.user.username}</div>
+                      </td>
+                      <td>{membership.user.role}</td>
+                      <td>
+                        <button
+                          className="table-button danger"
+                          type="button"
+                          onClick={() => detachUser(membership.user.id)}
+                        >
+                          Quitar
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </SectionTable>
+              )}
+            </section>
+          </div>
+        ) : null}
+
+        {activeTab === 'matches' ? (
+          <div className="tab-panel">
+            <section className="subsection-card">
+              <div className="modal-header">
+                <h3>Partidos de la sala</h3>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => {
+                    setEditingMatch(null);
+                    setIsAddMatchModalOpen(true);
+                  }}
+                >
+                  Agregar partido
+                </button>
+              </div>
+              {roomMatches.length === 0 ? (
+                <StateCard>No hay partidos en esta sala.</StateCard>
+              ) : (
+                <SectionTable headers={['Partido', 'Fecha Bolivia', 'Estado', 'Resultado', 'Accion']}>
+                  {roomMatches.map((match) => {
+                    const statusLabel = getMatchVisualStatus(match.matchDate, match.status);
+
+                    return (
+                      <tr key={match.id}>
+                        <td>
+                          {match.teamA} vs {match.teamB}
+                        </td>
+                        <td>{formatDateTime(match.matchDate)}</td>
+                        <td>
+                          <StatusBadge label={statusLabel} tone={toneForMatchStatus(statusLabel)} />
+                        </td>
+                        <td>
+                          {match.teamAScore ?? '-'} : {match.teamBScore ?? '-'}
+                        </td>
+                        <td>
+                          <button className="table-button" type="button" onClick={() => setEditingMatch(match)}>
+                            Editar
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </SectionTable>
+              )}
+            </section>
+          </div>
+        ) : null}
+
+        {activeTab === 'room-predictions' ? (
+          <div className="tab-panel">
+            <PageHeader
+              title="Pronosticos por partido"
+              description="Revisa que pronostico hizo cada usuario dentro de cada partido."
+              actions={
+                matchDayOptions.length > 0 ? (
+                  <select value={matchDayFilter} onChange={(event) => setMatchDayFilter(event.target.value)}>
+                    <option value="all">Todas las fechas</option>
+                    {matchDayOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : null
+              }
+            />
+            {roomMatches.length === 0 ? (
+              <StateCard>No hay partidos registrados en esta sala todavia.</StateCard>
+            ) : filteredPredictionMatches.length === 0 ? (
+              <StateCard>No hay partidos para la fecha seleccionada.</StateCard>
+            ) : (
+              <div className="prediction-cards-grid">
+                {filteredPredictionMatches.map((match) => {
+                  const matchPredictions = predictionsByMatch[match.id] ?? [];
+                  const statusLabel = getMatchVisualStatus(match.matchDate, match.status);
+
+                  return (
+                    <section key={match.id} className="subsection-card room-prediction-card">
+                      <div className="match-row">
+                        <div>
+                          <h3>
+                            {match.teamA} vs {match.teamB}
+                          </h3>
+                          <p className="page-description">{formatDateTime(match.matchDate)}</p>
+                          <p className="page-description">
+                            Resultado: {match.teamAScore ?? '-'} - {match.teamBScore ?? '-'}
+                          </p>
+                        </div>
+                        <StatusBadge label={statusLabel} tone={toneForMatchStatus(statusLabel)} />
+                      </div>
+                      {matchPredictions.length === 0 ? (
+                        <StateCard>No hay pronosticos registrados para este partido.</StateCard>
+                      ) : (
+                        <SectionTable headers={['Usuario', 'Pronostico', 'Puntos']}>
+                          {matchPredictions.map((prediction) => (
+                            <tr key={prediction.id}>
+                              <td>
+                                <strong>{prediction.user?.name ?? 'Usuario'}</strong>
+                                <div className="muted-text">@{prediction.user?.username ?? ''}</div>
+                              </td>
+                              <td>
+                                {prediction.predictedTeamAScore} - {prediction.predictedTeamBScore}
+                              </td>
+                              <td>{prediction.points ?? 0}</td>
+                            </tr>
+                          ))}
+                        </SectionTable>
+                      )}
+                    </section>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : null}
+      </section>
+
+      {isAddUserModalOpen ? (
+        <div
+          className="modal-backdrop"
+          onClick={() => setIsAddUserModalOpen(false)}
+          role="presentation"
+        >
+          <section
+            className="modal-card"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-user-title"
+          >
+            <div className="modal-header">
+              <div>
+                <p className="eyebrow">Miembro</p>
+                <h3 id="add-user-title">Anadir usuario</h3>
+              </div>
+              <button className="table-button" type="button" onClick={() => setIsAddUserModalOpen(false)}>
+                Cerrar
+              </button>
+            </div>
+            {availableUsers.length === 0 ? (
+              <StateCard>Todos los usuarios disponibles ya pertenecen a esta sala.</StateCard>
+            ) : (
+              <div className="form-grid">
+                <label>
+                  Usuario
+                  <select value={selectedUserId} onChange={(event) => setSelectedUserId(event.target.value)}>
+                    <option value="">Selecciona usuario</option>
+                    {availableUsers.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.name} (@{user.username})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div className="modal-actions">
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => setIsAddUserModalOpen(false)}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    className="primary-button"
+                    type="button"
+                    onClick={async () => {
+                      await attachUser();
+                      setIsAddUserModalOpen(false);
+                    }}
+                    disabled={!selectedUserId}
+                  >
+                    Anadir usuario
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
+      ) : null}
+
+      {isMatchModalOpen ? (
         <div
           className="modal-backdrop"
           onClick={() => {
@@ -1048,51 +1953,6 @@ function AppLoadingScreen({ message }: { message: string }) {
           <strong>{message}</strong>
         </div>
       </div>
-    </div>
-  );
-}
-
-function AdminLeaderboardPage() {
-  const { rooms, matchesByRoom, predictionsByMatch, loading, error } = useCatalogData();
-  const [roomId, setRoomId] = useState('');
-
-  useEffect(() => {
-    if (!roomId && rooms[0]) {
-      setRoomId(rooms[0].id);
-    }
-  }, [roomId, rooms]);
-
-  const room = rooms.find((item) => item.id === roomId) ?? rooms[0];
-  const matches = room ? matchesByRoom[room.id] ?? [] : [];
-  const leaderboard = room
-    ? buildLeaderboard(
-        getRoomMembers(room),
-        getCurrentRoomPredictions(matches, predictionsByMatch),
-        matches,
-      )
-    : [];
-
-  if (loading) {
-    return <AppLoadingScreen message="Cargando tabla..." />;
-  }
-
-  return (
-    <div className="page-stack">
-      <PageHeader
-        title="Tabla general"
-        description="Resumen general por sala."
-      />
-      {error ? <StateCard tone="error">{error}</StateCard> : null}
-      <div className="inline-actions">
-        <select value={roomId} onChange={(event) => setRoomId(event.target.value)}>
-          {rooms.map((currentRoom) => (
-            <option key={currentRoom.id} value={currentRoom.id}>
-              {currentRoom.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      <LeaderboardTable items={leaderboard} />
     </div>
   );
 }
@@ -1556,7 +2416,7 @@ function UserRoomDetailPage() {
           </div>
         ) : null}
       </section>
-    </div>
+      </div>
   );
 }
 
@@ -1731,7 +2591,7 @@ export function AppRoutes() {
             <Route path="/admin" element={<AdminDashboardPage />} />
             <Route path="/admin/users" element={<AdminUsersPage />} />
             <Route path="/admin/rooms" element={<AdminRoomsPage />} />
-            <Route path="/admin/leaderboard" element={<AdminLeaderboardPage />} />
+            <Route path="/admin/rooms/:roomId" element={<AdminRoomDetailPage />} />
           </Route>
         </Route>
       </Route>

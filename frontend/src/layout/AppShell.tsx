@@ -23,7 +23,6 @@ const adminToolsLinks: NavItem[] = [
   { label: 'Resumen admin', to: '/admin' },
   { label: 'Gestion de usuarios', to: '/admin/users' },
   { label: 'Gestion de salas', to: '/admin/rooms' },
-  { label: 'Tabla general', to: '/admin/leaderboard' },
 ];
 
 export function AppShell() {
