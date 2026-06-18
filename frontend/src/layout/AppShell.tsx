@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../types';
@@ -28,6 +29,20 @@ const adminToolsLinks: NavItem[] = [
 export function AppShell() {
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    function handleScroll() {
+      setShowScrollTop(window.scrollY > 320);
+    }
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   if (!currentUser) {
     return null;
@@ -103,6 +118,17 @@ export function AppShell() {
       <main className="main-content">
         <Outlet />
       </main>
+
+      {showScrollTop ? (
+        <button
+          className="scroll-top-button"
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          aria-label="Volver arriba"
+        >
+          ↑
+        </button>
+      ) : null}
     </div>
   );
 }
