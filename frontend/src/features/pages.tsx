@@ -22,6 +22,8 @@ import {
   type User,
 } from '../types';
 
+type RoomDetailTab = 'matches' | 'predictions' | 'room-predictions';
+
 function toneForMatchStatus(statusLabel: string) {
   if (statusLabel === 'Finalizado') {
     return 'info';
@@ -32,6 +34,31 @@ function toneForMatchStatus(statusLabel: string) {
   }
 
   return 'success';
+}
+
+function sortMatchesByDate(matches: Match[]) {
+  return [...matches].sort(
+    (left, right) => new Date(left.matchDate).getTime() - new Date(right.matchDate).getTime(),
+  );
+}
+
+function getMatchDayKey(matchDate: string) {
+  return new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    timeZone: 'America/La_Paz',
+  }).format(new Date(matchDate));
+}
+
+function formatMatchDayLabel(matchDate: string) {
+  return new Intl.DateTimeFormat('es-BO', {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'America/La_Paz',
+  }).format(new Date(matchDate));
 }
 
 function getCurrentRoomPredictions(matches: Match[], allPredictions: Record<string, Prediction[]>) {
@@ -160,13 +187,8 @@ function LoginPage() {
     <div className="auth-screen">
       <section className="auth-card">
         <div className="auth-brand">
-          <img src="/pronostidamus.png" alt="Pronostidamus" />
           <img src="/ball.png" alt="Balon oficial" />
-        </div>
-        <div>
-          <p className="eyebrow">Iniciar sesion</p>
-          <h1>Pronostidamus</h1>
-          <p className="page-description">Accede con tu usuario y contrasena.</p>
+          <img src="/pronostidamus.png" alt="Pronostidamus" />
         </div>
 
         <form className="form-grid" onSubmit={handleSubmit}>
@@ -207,7 +229,7 @@ function AdminDashboardPage() {
   const matches = Object.values(matchesByRoom).flat();
 
   if (loading) {
-    return <StateCard>Cargando datos del panel...</StateCard>;
+    return <AppLoadingScreen message="Cargando datos del panel..." />;
   }
 
   return (
@@ -295,7 +317,7 @@ function AdminUsersPage() {
   }
 
   if (loading) {
-    return <StateCard>Cargando usuarios...</StateCard>;
+    return <AppLoadingScreen message="Cargando usuarios..." />;
   }
 
   return (
@@ -557,7 +579,7 @@ function AdminRoomsPage() {
   const isMatchModalOpen = isEditingMatch || isAddMatchModalOpen;
 
   if (loading) {
-    return <StateCard>Cargando salas...</StateCard>;
+    return <AppLoadingScreen message="Cargando salas..." />;
   }
 
   return (
@@ -922,6 +944,114 @@ function LeaderboardTable({ items }: { items: LeaderboardItem[] }) {
   );
 }
 
+function PredictionMatchCard({
+  match,
+  prediction,
+  isLocked,
+  isSubmitting = false,
+  onSubmit,
+}: {
+  match: Match;
+  prediction?: Prediction;
+  isLocked: boolean;
+  isSubmitting?: boolean;
+  onSubmit: (match: Match, formData: FormData) => Promise<void>;
+}) {
+  const statusLabel = getMatchVisualStatus(match.matchDate, match.status);
+
+  return (
+    <section className={`panel-card prediction-card ${isSubmitting ? 'is-submitting' : ''}`}>
+      <div className="match-row prediction-card-header">
+        <div>
+          <h3>
+            {match.teamA} vs {match.teamB}
+          </h3>
+          <p className="page-description">{formatDateTime(match.matchDate)}</p>
+        </div>
+        <div className="prediction-card-status">
+          {prediction ? (
+            <span className="prediction-points-chip">
+              {prediction.points ?? 0} pt{prediction.points === 1 ? '' : 's'}
+            </span>
+          ) : null}
+          <StatusBadge label={statusLabel} tone={toneForMatchStatus(statusLabel)} />
+        </div>
+      </div>
+      <form
+        className="prediction-form"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          await onSubmit(match, new FormData(event.currentTarget));
+        }}
+      >
+        <label>
+          {match.teamA}
+          <input
+            name={`teamA-${match.id}`}
+            type="number"
+            min={0}
+            defaultValue={prediction?.predictedTeamAScore ?? ''}
+            disabled={isLocked || isSubmitting}
+            required
+          />
+        </label>
+        <label>
+          {match.teamB}
+          <input
+            name={`teamB-${match.id}`}
+            type="number"
+            min={0}
+            defaultValue={prediction?.predictedTeamBScore ?? ''}
+            disabled={isLocked || isSubmitting}
+            required
+          />
+        </label>
+        {!isLocked ? (
+          <button className="primary-button" type="submit" disabled={isSubmitting}>
+            {isSubmitting
+              ? 'Guardando...'
+              : prediction
+                ? 'Actualizar pronostico'
+                : 'Guardar pronostico'}
+          </button>
+        ) : null}
+      </form>
+    </section>
+  );
+}
+
+function PredictionLoadingOverlay({ visible }: { visible: boolean }) {
+  if (!visible) {
+    return null;
+  }
+
+  return (
+    <div className="loading-overlay" aria-live="polite" aria-busy="true">
+      <div className="loading-overlay-card">
+        <span className="loading-spinner" aria-hidden="true" />
+        <strong>Guardando pronostico...</strong>
+      </div>
+    </div>
+  );
+}
+
+function AppLoadingScreen({ message }: { message: string }) {
+  return (
+    <div className="app-loading-screen">
+      <div className="app-loading-card">
+        <div className="app-loading-brand">
+          <img src="/ball.png" alt="Balon oficial" />
+          <img src="/pronostidamus.png" alt="Pronostidamus" />
+        </div>
+        <div className="app-loading-copy">
+          <span className="loading-spinner" aria-hidden="true" />
+          <strong>{message}</strong>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AdminLeaderboardPage() {
   const { rooms, matchesByRoom, predictionsByMatch, loading, error } = useCatalogData();
   const [roomId, setRoomId] = useState('');
@@ -943,7 +1073,7 @@ function AdminLeaderboardPage() {
     : [];
 
   if (loading) {
-    return <StateCard>Cargando tabla...</StateCard>;
+    return <AppLoadingScreen message="Cargando tabla..." />;
   }
 
   return (
@@ -976,7 +1106,7 @@ function UserDashboardPage() {
     .filter((match) => !isPredictionLocked(match.matchDate, match.status));
 
   if (loading) {
-    return <StateCard>Cargando panel...</StateCard>;
+    return <AppLoadingScreen message="Cargando panel..." />;
   }
 
   return (
@@ -1069,7 +1199,7 @@ function UserRoomsPage() {
   const myRooms = getAccessibleRooms(rooms, currentUser);
 
   if (loading) {
-    return <StateCard>Cargando salas...</StateCard>;
+    return <AppLoadingScreen message="Cargando salas..." />;
   }
 
   return (
@@ -1121,7 +1251,10 @@ function UserRoomDetailPage() {
   const { currentUser } = useAuth();
   const { roomId = '' } = useParams();
   const { rooms, matchesByRoom, predictionsByMatch, loading, error, refresh } = useCatalogData();
-  const [feedback, setFeedback] = useState('');
+  const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; message: string } | null>(null);
+  const [activeTab, setActiveTab] = useState<RoomDetailTab>('predictions');
+  const [finishedMatchDayFilter, setFinishedMatchDayFilter] = useState('all');
+  const [submittingMatchId, setSubmittingMatchId] = useState<string | null>(null);
   const myRooms = getAccessibleRooms(rooms, currentUser);
   const room = myRooms.find((item) => item.id === roomId);
 
@@ -1134,7 +1267,7 @@ function UserRoomDetailPage() {
     const predictedTeamBScore = Number(formData.get(`teamB-${match.id}`));
 
     if (predictedTeamAScore < 0 || predictedTeamBScore < 0) {
-      setFeedback('Los goles no pueden ser negativos.');
+      setFeedback({ tone: 'error', message: 'Los goles no pueden ser negativos.' });
       return;
     }
 
@@ -1143,29 +1276,34 @@ function UserRoomDetailPage() {
     );
 
     try {
+      setSubmittingMatchId(match.id);
+      setFeedback(null);
+
       if (existingPrediction) {
         await predictionsService.update(existingPrediction.id, {
           predictedTeamAScore,
           predictedTeamBScore,
         });
-        setFeedback('Pronostico actualizado.');
+        setFeedback({ tone: 'success', message: 'Pronostico actualizado correctamente.' });
       } else {
         await predictionsService.create(match.id, {
           userId: currentUser.id,
           predictedTeamAScore,
           predictedTeamBScore,
         });
-        setFeedback('Pronostico guardado.');
+        setFeedback({ tone: 'success', message: 'Pronostico guardado correctamente.' });
       }
 
       await refresh();
     } catch (requestError) {
-      setFeedback(extractErrorMessage(requestError));
+      setFeedback({ tone: 'error', message: extractErrorMessage(requestError) });
+    } finally {
+      setSubmittingMatchId(null);
     }
   }
 
   if (loading) {
-    return <StateCard>Cargando sala...</StateCard>;
+    return <AppLoadingScreen message="Cargando sala..." />;
   }
 
   if (!room) {
@@ -1177,9 +1315,31 @@ function UserRoomDetailPage() {
     );
   }
 
-  const matches = matchesByRoom[room.id] ?? [];
+  const matches = sortMatchesByDate(matchesByRoom[room.id] ?? []);
   const finishedMatches = matches.filter((match) => match.status === MatchStatus.FINISHED);
   const openMatches = matches.filter((match) => !isPredictionLocked(match.matchDate, match.status));
+  const pendingPredictionMatches = matches.filter(
+    (match) => !isPredictionLocked(match.matchDate, match.status),
+  );
+  const lockedPredictionMatches = matches.filter((match) =>
+    isPredictionLocked(match.matchDate, match.status),
+  );
+  const finishedMatchDayOptions = finishedMatches.reduce<Array<{ value: string; label: string }>>(
+    (options, match) => {
+      const value = getMatchDayKey(match.matchDate);
+
+      if (options.some((option) => option.value === value)) {
+        return options;
+      }
+
+      return [...options, { value, label: formatMatchDayLabel(match.matchDate) }];
+    },
+    [],
+  );
+  const filteredFinishedMatches =
+    finishedMatchDayFilter === 'all'
+      ? finishedMatches
+      : finishedMatches.filter((match) => getMatchDayKey(match.matchDate) === finishedMatchDayFilter);
   const leaderboard = buildLeaderboard(
     getRoomMembers(room),
     getCurrentRoomPredictions(matches, predictionsByMatch),
@@ -1187,173 +1347,214 @@ function UserRoomDetailPage() {
   );
 
   return (
-    <div className="page-stack">
+    <div className={`page-stack page-with-overlay ${submittingMatchId ? 'is-loading' : ''}`}>
+      <PredictionLoadingOverlay visible={Boolean(submittingMatchId)} />
       <PageHeader
         title={room.name}
-        description="Consulta los partidos de la sala, registra tus pronosticos y revisa resultados."
+        description="Consulta la tabla primero y luego navega por las secciones de la sala sin tener todo extendido."
       />
       {error ? <StateCard tone="error">{error}</StateCard> : null}
-      {feedback ? <StateCard tone="success">{feedback}</StateCard> : null}
+      {feedback ? <StateCard tone={feedback.tone}>{feedback.message}</StateCard> : null}
       <div className="stats-grid">
         <StatTile label="Miembros" value={room.roomUsers?.length ?? 0} />
         <StatTile label="Partidos" value={matches.length} />
-        <StatTile label="Abiertos" value={openMatches.length} />
+        <StatTile label="Pendientes" value={openMatches.length} />
         <StatTile label="Finalizados" value={finishedMatches.length} />
       </div>
 
       <section className="panel-card">
-        <PageHeader
-          title="Partidos"
-          description="Resultados y estado actual de los partidos de esta sala."
-        />
-        {matches.length === 0 ? (
-          <StateCard>No hay partidos cargados en esta sala.</StateCard>
-        ) : (
-          <SectionTable headers={['Partido', 'Fecha Bolivia', 'Estado', 'Resultado']}>
-            {matches.map((match) => {
-              const statusLabel = getMatchVisualStatus(match.matchDate, match.status);
-
-              return (
-                <tr key={match.id}>
-                  <td>
-                    {match.teamA} vs {match.teamB}
-                  </td>
-                  <td>{formatDateTime(match.matchDate)}</td>
-                  <td>
-                    <StatusBadge label={statusLabel} tone={toneForMatchStatus(statusLabel)} />
-                  </td>
-                  <td>
-                    {match.teamAScore ?? '-'} : {match.teamBScore ?? '-'}
-                  </td>
-                </tr>
-              );
-            })}
-          </SectionTable>
-        )}
-      </section>
-
-      <section className="panel-card">
-        <PageHeader
-          title="Mis pronosticos"
-          description="Solo puedes editar mientras el partido siga abierto."
-        />
-        {matches.length === 0 ? (
-          <StateCard>No hay partidos disponibles en esta sala.</StateCard>
-        ) : (
-          matches.map((match) => {
-            const myPrediction = (predictionsByMatch[match.id] ?? []).find(
-              (item) => item.userId === currentUser?.id,
-            );
-            const locked = isPredictionLocked(match.matchDate, match.status);
-            const statusLabel = getMatchVisualStatus(match.matchDate, match.status);
-
-            return (
-              <section key={match.id} className="panel-card">
-                <div className="match-row">
-                  <div>
-                    <h3>
-                      {match.teamA} vs {match.teamB}
-                    </h3>
-                    <p className="page-description">{formatDateTime(match.matchDate)}</p>
-                  </div>
-                  <StatusBadge label={statusLabel} tone={toneForMatchStatus(statusLabel)} />
-                </div>
-                <form
-                  className="prediction-form"
-                  onSubmit={async (event) => {
-                    event.preventDefault();
-                    await submitPrediction(match, new FormData(event.currentTarget));
-                  }}
-                >
-                  <label>
-                    {match.teamA}
-                    <input
-                      name={`teamA-${match.id}`}
-                      type="number"
-                      min={0}
-                      defaultValue={myPrediction?.predictedTeamAScore ?? ''}
-                      disabled={locked}
-                      required
-                    />
-                  </label>
-                  <label>
-                    {match.teamB}
-                    <input
-                      name={`teamB-${match.id}`}
-                      type="number"
-                      min={0}
-                      defaultValue={myPrediction?.predictedTeamBScore ?? ''}
-                      disabled={locked}
-                      required
-                    />
-                  </label>
-                  <button className="primary-button" type="submit" disabled={locked}>
-                    {myPrediction ? 'Actualizar pronostico' : 'Guardar pronostico'}
-                  </button>
-                </form>
-                {myPrediction ? (
-                  <StateCard>
-                    Tu registro actual: {myPrediction.predictedTeamAScore} -{' '}
-                    {myPrediction.predictedTeamBScore} · {myPrediction.points ?? 0} puntos.
-                  </StateCard>
-                ) : null}
-              </section>
-            );
-          })
-        )}
-      </section>
-
-      <section className="panel-card">
-        <PageHeader
-          title="Pronosticos de la sala"
-          description="Los pronosticos de todos se muestran cuando el partido ya termino."
-        />
-        {finishedMatches.length === 0 ? (
-          <StateCard>No hay partidos finalizados todavia.</StateCard>
-        ) : (
-          finishedMatches.map((match) => {
-            const matchPredictions = predictionsByMatch[match.id] ?? [];
-
-            return (
-              <section key={match.id} className="panel-card">
-                <div className="match-row">
-                  <div>
-                    <h3>
-                      {match.teamA} vs {match.teamB}
-                    </h3>
-                    <p className="page-description">
-                      Resultado final: {match.teamAScore ?? '-'} - {match.teamBScore ?? '-'}
-                    </p>
-                  </div>
-                  <StatusBadge label="Finalizado" tone="info" />
-                </div>
-                {matchPredictions.length === 0 ? (
-                  <StateCard>No hay pronosticos registrados para este partido.</StateCard>
-                ) : (
-                  <SectionTable headers={['Usuario', 'Pronostico', 'Puntos']}>
-                    {matchPredictions.map((prediction) => (
-                      <tr key={prediction.id}>
-                        <td>
-                          <strong>{prediction.user?.name ?? 'Usuario'}</strong>
-                          <div className="muted-text">@{prediction.user?.username ?? ''}</div>
-                        </td>
-                        <td>
-                          {prediction.predictedTeamAScore} - {prediction.predictedTeamBScore}
-                        </td>
-                        <td>{prediction.points ?? 0}</td>
-                      </tr>
-                    ))}
-                  </SectionTable>
-                )}
-              </section>
-            );
-          })
-        )}
-      </section>
-
-      <section className="panel-card">
         <PageHeader title="Tabla de la sala" description="Posiciones actuales dentro de esta sala." />
         <LeaderboardTable items={leaderboard} />
+      </section>
+
+      <section className="panel-card">
+        <PageHeader
+          title="Explorar la sala"
+          description="Cambia entre partidos, tus pronosticos y los pronosticos del grupo."
+        />
+        <div className="tab-switcher" role="tablist" aria-label="Secciones de la sala">
+          <button
+            className={`tab-button ${activeTab === 'matches' ? 'active' : ''}`}
+            type="button"
+            onClick={() => setActiveTab('matches')}
+          >
+            Partidos
+          </button>
+          <button
+            className={`tab-button ${activeTab === 'predictions' ? 'active' : ''}`}
+            type="button"
+            onClick={() => setActiveTab('predictions')}
+          >
+            Mis pronosticos
+          </button>
+          <button
+            className={`tab-button ${activeTab === 'room-predictions' ? 'active' : ''}`}
+            type="button"
+            onClick={() => setActiveTab('room-predictions')}
+          >
+            Pronosticos de la sala
+          </button>
+        </div>
+
+        {activeTab === 'matches' ? (
+          <div className="tab-panel">
+            {matches.length === 0 ? (
+              <StateCard>No hay partidos cargados en esta sala.</StateCard>
+            ) : (
+              <SectionTable headers={['Partido', 'Fecha Bolivia', 'Estado', 'Resultado']}>
+                {matches.map((match) => {
+                  const statusLabel = getMatchVisualStatus(match.matchDate, match.status);
+
+                  return (
+                    <tr key={match.id}>
+                      <td>
+                        {match.teamA} vs {match.teamB}
+                      </td>
+                      <td>{formatDateTime(match.matchDate)}</td>
+                      <td>
+                        <StatusBadge label={statusLabel} tone={toneForMatchStatus(statusLabel)} />
+                      </td>
+                      <td>
+                        {match.teamAScore ?? '-'} : {match.teamBScore ?? '-'}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </SectionTable>
+            )}
+          </div>
+        ) : null}
+
+        {activeTab === 'predictions' ? (
+          <div className="tab-panel room-detail-sections">
+            <section className="subsection-card">
+              <div className="subsection-heading">
+                <h3>Habilitados para pronosticar</h3>
+                <span>{pendingPredictionMatches.length}</span>
+              </div>
+              {pendingPredictionMatches.length === 0 ? (
+                <StateCard>No hay partidos habilitados para pronosticar o actualizar en esta sala.</StateCard>
+              ) : (
+                <div className="prediction-cards-grid">
+                  {pendingPredictionMatches.map((match) => {
+                    const myPrediction = (predictionsByMatch[match.id] ?? []).find(
+                      (item) => item.userId === currentUser?.id,
+                    );
+
+                    return (
+                      <PredictionMatchCard
+                      key={match.id}
+                      match={match}
+                      prediction={myPrediction}
+                      isLocked={false}
+                      isSubmitting={submittingMatchId === match.id}
+                      onSubmit={submitPrediction}
+                    />
+                  );
+                  })}
+                </div>
+              )}
+            </section>
+
+            <section className="subsection-card">
+              <div className="subsection-heading">
+                <h3>Cerrados o finalizados</h3>
+                <span>{lockedPredictionMatches.length}</span>
+              </div>
+              {lockedPredictionMatches.length === 0 ? (
+                <StateCard>Todavia no hay partidos cerrados o finalizados.</StateCard>
+              ) : (
+                <div className="prediction-cards-grid">
+                  {lockedPredictionMatches.map((match) => {
+                    const myPrediction = (predictionsByMatch[match.id] ?? []).find(
+                      (item) => item.userId === currentUser?.id,
+                    );
+
+                    return (
+                      <PredictionMatchCard
+                      key={match.id}
+                      match={match}
+                      prediction={myPrediction}
+                      isLocked
+                      isSubmitting={submittingMatchId === match.id}
+                      onSubmit={submitPrediction}
+                    />
+                  );
+                  })}
+                </div>
+              )}
+            </section>
+          </div>
+        ) : null}
+
+        {activeTab === 'room-predictions' ? (
+          <div className="tab-panel">
+            <PageHeader
+              title="Pronosticos de la sala"
+              description="Filtra por fecha para revisar solo la jornada que te interesa."
+              actions={
+                finishedMatchDayOptions.length > 0 ? (
+                  <select
+                    value={finishedMatchDayFilter}
+                    onChange={(event) => setFinishedMatchDayFilter(event.target.value)}
+                  >
+                    <option value="all">Todas las fechas</option>
+                    {finishedMatchDayOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : null
+              }
+            />
+            {finishedMatches.length === 0 ? (
+              <StateCard>No hay partidos finalizados todavia.</StateCard>
+            ) : filteredFinishedMatches.length === 0 ? (
+              <StateCard>No hay partidos finalizados para la fecha seleccionada.</StateCard>
+            ) : (
+              <div className="prediction-cards-grid">
+                {filteredFinishedMatches.map((match) => {
+                  const matchPredictions = predictionsByMatch[match.id] ?? [];
+
+                  return (
+                    <section key={match.id} className="subsection-card room-prediction-card">
+                      <div className="match-row">
+                        <div>
+                          <h3>
+                            {match.teamA} vs {match.teamB}
+                          </h3>
+                          <p className="page-description">
+                            Resultado final: {match.teamAScore ?? '-'} - {match.teamBScore ?? '-'}
+                          </p>
+                        </div>
+                        <StatusBadge label="Finalizado" tone="info" />
+                      </div>
+                      {matchPredictions.length === 0 ? (
+                        <StateCard>No hay pronosticos registrados para este partido.</StateCard>
+                      ) : (
+                        <SectionTable headers={['Usuario', 'Pronostico', 'Puntos']}>
+                          {matchPredictions.map((prediction) => (
+                            <tr key={prediction.id}>
+                              <td>
+                                <strong>{prediction.user?.name ?? 'Usuario'}</strong>
+                                <div className="muted-text">@{prediction.user?.username ?? ''}</div>
+                              </td>
+                              <td>
+                                {prediction.predictedTeamAScore} - {prediction.predictedTeamBScore}
+                              </td>
+                              <td>{prediction.points ?? 0}</td>
+                            </tr>
+                          ))}
+                        </SectionTable>
+                      )}
+                    </section>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : null}
       </section>
     </div>
   );
@@ -1362,9 +1563,10 @@ function UserRoomDetailPage() {
 function UserPredictionsPage() {
   const { currentUser } = useAuth();
   const { rooms, matchesByRoom, predictionsByMatch, loading, error, refresh } = useCatalogData();
-  const [feedback, setFeedback] = useState('');
+  const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; message: string } | null>(null);
+  const [submittingMatchId, setSubmittingMatchId] = useState<string | null>(null);
   const myRooms = getAccessibleRooms(rooms, currentUser);
-  const matches = myRooms.flatMap((room) => matchesByRoom[room.id] ?? []);
+  const matches = sortMatchesByDate(myRooms.flatMap((room) => matchesByRoom[room.id] ?? []));
 
   async function submitPrediction(match: Match, formData: FormData) {
     if (!currentUser) {
@@ -1375,7 +1577,7 @@ function UserPredictionsPage() {
     const predictedTeamBScore = Number(formData.get(`teamB-${match.id}`));
 
     if (predictedTeamAScore < 0 || predictedTeamBScore < 0) {
-      setFeedback('Los goles no pueden ser negativos.');
+      setFeedback({ tone: 'error', message: 'Los goles no pueden ser negativos.' });
       return;
     }
 
@@ -1384,102 +1586,67 @@ function UserPredictionsPage() {
     );
 
     try {
+      setSubmittingMatchId(match.id);
+      setFeedback(null);
+
       if (existingPrediction) {
         await predictionsService.update(existingPrediction.id, {
           predictedTeamAScore,
           predictedTeamBScore,
         });
-        setFeedback('Pronostico actualizado.');
+        setFeedback({ tone: 'success', message: 'Pronostico actualizado correctamente.' });
       } else {
         await predictionsService.create(match.id, {
           userId: currentUser.id,
           predictedTeamAScore,
           predictedTeamBScore,
         });
-        setFeedback('Pronostico guardado.');
+        setFeedback({ tone: 'success', message: 'Pronostico guardado correctamente.' });
       }
 
       await refresh();
     } catch (requestError) {
-      setFeedback(extractErrorMessage(requestError));
+      setFeedback({ tone: 'error', message: extractErrorMessage(requestError) });
+    } finally {
+      setSubmittingMatchId(null);
     }
   }
 
   if (loading) {
-    return <StateCard>Cargando pronosticos...</StateCard>;
+    return <AppLoadingScreen message="Cargando pronosticos..." />;
   }
 
   return (
-    <div className="page-stack">
+    <div className={`page-stack page-with-overlay ${submittingMatchId ? 'is-loading' : ''}`}>
+      <PredictionLoadingOverlay visible={Boolean(submittingMatchId)} />
       <PageHeader
         title="Pronosticos"
         description="Edicion disponible mientras el partido no este cerrado por tiempo o estado."
       />
       {error ? <StateCard tone="error">{error}</StateCard> : null}
-      {feedback ? <StateCard tone="success">{feedback}</StateCard> : null}
+      {feedback ? <StateCard tone={feedback.tone}>{feedback.message}</StateCard> : null}
       {matches.length === 0 ? (
         <StateCard>Todavia no hay partidos disponibles para pronosticar.</StateCard>
       ) : (
-        matches.map((match) => {
-          const myPrediction = (predictionsByMatch[match.id] ?? []).find(
-            (item) => item.userId === currentUser?.id,
-          );
-          const locked = isPredictionLocked(match.matchDate, match.status);
-          const statusLabel = getMatchVisualStatus(match.matchDate, match.status);
+        <div className="prediction-cards-grid">
+          {matches.map((match) => {
+            const myPrediction = (predictionsByMatch[match.id] ?? []).find(
+              (item) => item.userId === currentUser?.id,
+            );
+            const locked = isPredictionLocked(match.matchDate, match.status);
 
-          return (
-            <section key={match.id} className="panel-card">
-              <div className="match-row">
-                <div>
-                  <h3>
-                    {match.teamA} vs {match.teamB}
-                  </h3>
-                  <p className="page-description">{formatDateTime(match.matchDate)}</p>
-                </div>
-                <StatusBadge label={statusLabel} tone={toneForMatchStatus(statusLabel)} />
-              </div>
-              <form
-                className="prediction-form"
-                onSubmit={async (event) => {
-                  event.preventDefault();
-                  await submitPrediction(match, new FormData(event.currentTarget));
-                }}
-              >
-                <label>
-                  {match.teamA}
-                  <input
-                    name={`teamA-${match.id}`}
-                    type="number"
-                    min={0}
-                    defaultValue={myPrediction?.predictedTeamAScore ?? ''}
-                    disabled={locked}
-                    required
-                  />
-                </label>
-                <label>
-                  {match.teamB}
-                  <input
-                    name={`teamB-${match.id}`}
-                    type="number"
-                    min={0}
-                    defaultValue={myPrediction?.predictedTeamBScore ?? ''}
-                    disabled={locked}
-                    required
-                  />
-                </label>
-                <button className="primary-button" type="submit" disabled={locked}>
-                  {myPrediction ? 'Actualizar pronostico' : 'Guardar pronostico'}
-                </button>
-              </form>
-              {myPrediction ? (
-                <StateCard>
-                  Tu registro actual: {myPrediction.predictedTeamAScore} -{' '}
-                  {myPrediction.predictedTeamBScore} · {myPrediction.points ?? 0} puntos.
-                </StateCard>
-              ) : null}
-            </section>
+            return (
+              <PredictionMatchCard
+              key={match.id}
+              match={match}
+              prediction={myPrediction}
+              isLocked={locked}
+              isSubmitting={submittingMatchId === match.id}
+              onSubmit={submitPrediction}
+            />
           );
-        })
+          })}
+        </div>
       )}
     </div>
   );
@@ -1508,7 +1675,7 @@ function UserLeaderboardPage() {
     : [];
 
   if (loading) {
-    return <StateCard>Cargando tabla...</StateCard>;
+    return <AppLoadingScreen message="Cargando tabla..." />;
   }
 
   return (
@@ -1573,3 +1740,5 @@ export function AppRoutes() {
     </Routes>
   );
 }
+
+

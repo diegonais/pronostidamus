@@ -45,11 +45,9 @@ export function AppShell() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand-block">
-          <img className="brand-logo" src="/pronostidamus.png" alt="Pronostidamus" />
-          <img className="brand-ball" src="/ball.png" alt="Balon oficial" />
-          <div>
-            <p className="eyebrow">Pronostidamus</p>
-            <h1>Panel deportivo</h1>
+          <div className="brand-mark">
+            <img className="brand-ball" src="/ball.png" alt="Balon oficial" />
+            <img className="brand-logo" src="/pronostidamus.png" alt="Pronostidamus" />
           </div>
         </div>
 
@@ -88,6 +86,18 @@ export function AppShell() {
         >
           Cerrar sesion
         </button>
+
+        <div className="sidebar-footer">
+          <span>Desarrollado por </span>
+          <a
+            href="https://diegonais.vercel.app"
+            target="_blank"
+            rel="noreferrer"
+          >
+            diegonais
+          </a>
+          <span> - 2026</span>
+        </div>
       </aside>
 
       <main className="main-content">

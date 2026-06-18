@@ -15,7 +15,7 @@ Frontend visual para consumir el backend de Pronostidamus con separación por ro
 
 - Node.js 20+
 - Yarn 1.x o Yarn moderno compatible
-- Backend disponible en `http://localhost:3000/api` o una URL equivalente
+- Backend disponible en `http://localhost:3001/api` o una URL equivalente
 
 ## Instalación
 
@@ -29,7 +29,7 @@ yarn install
 Crear `.env` a partir de `.env.example`.
 
 ```bash
-VITE_API_URL=http://localhost:3000/api
+VITE_API_URL=http://localhost:3001/api
 ```
 
 ## Ejecución

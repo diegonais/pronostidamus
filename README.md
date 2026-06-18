@@ -11,6 +11,7 @@ Pronostidamus es un backend para una polla deportiva de futbol. Esta primera fas
 ## Estructura actual
 
 - `backend/`: API NestJS
+- `frontend/`: app React/Vite
 - `docker-compose.yml`: servicios `postgres` y `backend`
 
 ## Instalar dependencias
@@ -26,12 +27,12 @@ Crear `backend/.env` tomando como base `backend/.env.example`.
 
 Variables principales:
 
-- `PORT=3000`
+- `PORT=3001`
 - `TZ=America/La_Paz`
 - `DB_HOST=localhost`
-- `DB_PORT=5432`
-- `DB_USERNAME=postgres`
-- `DB_PASSWORD=postgres`
+- `DB_PORT=5439`
+- `DB_USERNAME=pronostidamus_user`
+- `DB_PASSWORD=pronostidamus_password`
 - `DB_NAME=pronostidamus`
 - `DB_SYNCHRONIZE=true`
 - `DB_LOGGING=false`
@@ -43,6 +44,12 @@ Desde la raiz del proyecto:
 ```bash
 docker-compose up -d postgres
 ```
+
+Puertos locales reservados para este proyecto:
+
+- `5439`: PostgreSQL local de Pronostidamus
+- `3001`: backend NestJS
+- `5173`: frontend Vite
 
 Si quieres levantar tambien el backend en Docker:
 
@@ -59,13 +66,24 @@ yarn start:dev
 
 La API quedara disponible en:
 
-- `http://localhost:3000/api`
+- `http://localhost:3001/api`
+
+## Ejecutar el frontend localmente
+
+```bash
+cd frontend
+yarn dev --host 127.0.0.1 --port 5173
+```
+
+La app quedara disponible en:
+
+- `http://127.0.0.1:5173`
 
 ## Swagger
 
 Swagger queda disponible en:
 
-- `http://localhost:3000/api/docs`
+- `http://localhost:3001/api/docs`
 
 Notas de fechas:
 
@@ -95,15 +113,22 @@ El seed crea:
 - membresias de los 4 usuarios en esa sala
 - 3 partidos de ejemplo
 
+Credenciales utiles para pruebas locales:
+
+- `diego / diego123`
+- `salva / salva123`
+- `josue / josue123`
+- `paolo / paolo123`
+
 ## Conectarte desde TablePlus
 
 Usa estos datos:
 
 - Host: `localhost`
-- Port: `5432`
+- Port: `5439`
 - Database: `pronostidamus`
-- User: `postgres`
-- Password: `postgres`
+- User: `pronostidamus_user`
+- Password: `pronostidamus_password`
 
 ## Endpoints base de esta fase
 
