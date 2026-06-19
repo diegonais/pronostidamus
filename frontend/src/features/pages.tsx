@@ -1951,7 +1951,7 @@ function AppLoadingScreen({ message }: { message: string }) {
       <div className="app-loading-card">
         <div className="app-loading-brand">
           <img src="/ball.png" alt="Balon oficial" />
-          <img src="/pronostidamus.png" alt="Pronostidamus" />
+          <img className="app-loading-logo" src="/pronostidamus.png" alt="Pronostidamus" />
         </div>
         <div className="app-loading-copy">
           <span className="loading-spinner" aria-hidden="true" />

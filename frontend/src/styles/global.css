@@ -361,11 +361,24 @@ img {
   width: 180px;
 }
 
+.app-loading-logo {
+  transition: filter 0.25s ease;
+}
+
+:root[data-theme='dark'] .app-loading-logo {
+  filter: brightness(0) invert(1);
+}
+
 .app-loading-copy {
   display: inline-flex;
   align-items: center;
   gap: 0.8rem;
   color: var(--brand);
+}
+
+.app-loading-copy .loading-spinner {
+  border-color: color-mix(in srgb, var(--brand) 22%, transparent);
+  border-top-color: var(--brand);
 }
 
 .two-column {
