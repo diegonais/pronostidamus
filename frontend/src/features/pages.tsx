@@ -8,6 +8,7 @@ import { predictionsService } from '../services/predictionsService';
 import { roomsService } from '../services/roomsService';
 import { extractErrorMessage } from '../services/api';
 import { usersService, type UserPayload } from '../services/usersService';
+import { ThemeToggle } from '../components/ThemeToggle';
 import { PageHeader, StateCard, StatTile, StatusBadge } from '../components/common';
 import { buildLeaderboard, getRoomMembers } from '../utils/leaderboard';
 import { formatDateTime, fromDateTimeLocalValue, toDateTimeLocalValue } from '../utils/date';
@@ -194,9 +195,13 @@ function LoginPage() {
   return (
     <div className="auth-screen">
       <section className="auth-card">
+        <div className="auth-theme-toggle">
+          <ThemeToggle />
+        </div>
+
         <div className="auth-brand">
           <img src="/ball.png" alt="Balon oficial" />
-          <img src="/pronostidamus.png" alt="Pronostidamus" />
+          <img className="auth-logo" src="/pronostidamus.png" alt="Pronostidamus" />
         </div>
 
         <form className="form-grid" onSubmit={handleSubmit}>

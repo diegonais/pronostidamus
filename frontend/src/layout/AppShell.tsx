@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { ThemeToggle } from '../components/ThemeToggle';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../types';
 
@@ -71,6 +72,8 @@ export function AppShell() {
             @{currentUser.username} · {currentUser.role}
           </span>
         </div>
+
+        <ThemeToggle />
 
         {sections.map((section) => (
           <div key={section.title ?? 'default'} className="nav-section">
