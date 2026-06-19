@@ -9,6 +9,7 @@ import { roomsService } from '../services/roomsService';
 import { extractErrorMessage } from '../services/api';
 import { usersService, type UserPayload } from '../services/usersService';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { InternalMatchScoreCard } from '../components/InternalMatchScoreCard';
 import { PageHeader, StateCard, StatTile, StatusBadge } from '../components/common';
 import { buildLeaderboard, getRoomMembers } from '../utils/leaderboard';
 import { formatDateTime, fromDateTimeLocalValue, toDateTimeLocalValue } from '../utils/date';
@@ -1868,16 +1869,30 @@ function PredictionMatchCard({
   onSubmit: (match: Match, formData: FormData) => Promise<void>;
 }) {
   const statusLabel = getMatchVisualStatus(match.matchDate, match.status);
+  const showExternalScoreOnly = isLocked;
 
   return (
     <section className={`panel-card prediction-card ${isSubmitting ? 'is-submitting' : ''}`}>
-      <div className="match-row prediction-card-header">
-        <div>
-          <h3>
-            {match.teamA} vs {match.teamB}
-          </h3>
-          <p className="page-description">{formatDateTime(match.matchDate)}</p>
-        </div>
+      <div className={`match-row prediction-card-header ${showExternalScoreOnly ? 'prediction-card-header--compact' : ''}`}>
+        {!showExternalScoreOnly ? (
+          <div>
+            <h3>
+              {match.teamA} vs {match.teamB}
+            </h3>
+            <p className="page-description">{formatDateTime(match.matchDate)}</p>
+          </div>
+        ) : (
+          <div className="prediction-card-forecast">
+            {prediction ? (
+              <>
+                <span className="muted-text">Mi pronostico</span>
+                <strong>
+                  {prediction.predictedTeamAScore} : {prediction.predictedTeamBScore}
+                </strong>
+              </>
+            ) : null}
+          </div>
+        )}
         <div className="prediction-card-status">
           {prediction ? (
             <span className="prediction-points-chip">
@@ -1887,45 +1902,50 @@ function PredictionMatchCard({
           <StatusBadge label={statusLabel} tone={toneForMatchStatus(statusLabel)} />
         </div>
       </div>
-      <form
-        className="prediction-form"
-        onSubmit={async (event) => {
-          event.preventDefault();
-          await onSubmit(match, new FormData(event.currentTarget));
-        }}
-      >
-        <label>
-          {match.teamA}
-          <input
-            name={`teamA-${match.id}`}
-            type="number"
-            min={0}
-            defaultValue={prediction?.predictedTeamAScore ?? ''}
-            disabled={isLocked || isSubmitting}
-            required
-          />
-        </label>
-        <label>
-          {match.teamB}
-          <input
-            name={`teamB-${match.id}`}
-            type="number"
-            min={0}
-            defaultValue={prediction?.predictedTeamBScore ?? ''}
-            disabled={isLocked || isSubmitting}
-            required
-          />
-        </label>
-        {!isLocked ? (
-          <button className="primary-button" type="submit" disabled={isSubmitting}>
-            {isSubmitting
-              ? 'Guardando...'
-              : prediction
-                ? 'Actualizar pronostico'
-                : 'Guardar pronostico'}
-          </button>
-        ) : null}
-      </form>
+      {!showExternalScoreOnly ? (
+        <form
+          className="prediction-form"
+          onSubmit={async (event) => {
+            event.preventDefault();
+            await onSubmit(match, new FormData(event.currentTarget));
+          }}
+        >
+          <label>
+            {match.teamA}
+            <input
+              name={`teamA-${match.id}`}
+              type="number"
+              min={0}
+              defaultValue={prediction?.predictedTeamAScore ?? ''}
+              disabled={isLocked || isSubmitting}
+              required
+            />
+          </label>
+          <label>
+            {match.teamB}
+            <input
+              name={`teamB-${match.id}`}
+              type="number"
+              min={0}
+              defaultValue={prediction?.predictedTeamBScore ?? ''}
+              disabled={isLocked || isSubmitting}
+              required
+            />
+          </label>
+          {!isLocked ? (
+            <button className="primary-button" type="submit" disabled={isSubmitting}>
+              {isSubmitting
+                ? 'Guardando...'
+                : prediction
+                  ? 'Actualizar pronostico'
+                  : 'Guardar pronostico'}
+            </button>
+          ) : null}
+        </form>
+      ) : null}
+      {showExternalScoreOnly ? (
+        <InternalMatchScoreCard match={match} />
+      ) : null}
     </section>
   );
 }

@@ -719,6 +719,10 @@ select {
   margin-bottom: 0.85rem;
 }
 
+.prediction-card-header--compact {
+  justify-content: space-between;
+}
+
 .prediction-card h3 {
   font-size: 1.02rem;
 }
@@ -737,6 +741,85 @@ select {
 
 .prediction-card .prediction-form input {
   padding: 0.65rem 0.8rem;
+}
+
+.match-result-card {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+.prediction-card-forecast {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.92rem;
+  min-height: 40px;
+}
+
+.prediction-card-forecast strong {
+  color: var(--text);
+  font-size: 0.98rem;
+}
+
+.match-result-card__body {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--surface-soft);
+}
+
+.match-result-card__topline {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.match-result-card__resultline {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) auto minmax(120px, 1fr);
+  align-items: center;
+  justify-items: center;
+  column-gap: 1rem;
+  margin-top: 1rem;
+}
+
+.match-result-card__team {
+  color: var(--text);
+  font-weight: 700;
+  font-size: 1.28rem;
+  line-height: 1.1;
+}
+
+.match-result-card__team--home {
+  justify-self: end;
+  text-align: right;
+}
+
+.match-result-card__team--away {
+  justify-self: start;
+  text-align: left;
+}
+
+.match-result-card__scoreline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: var(--brand);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.match-result-card__separator {
+  color: var(--muted);
 }
 
 .room-prediction-card {
@@ -931,9 +1014,26 @@ select {
   .subsection-heading,
   .prediction-card-status,
   .summary-row,
-  .detail-summary {
+  .detail-summary,
+  .match-result-card__topline {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .prediction-card-forecast {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .match-result-card__resultline {
+    grid-template-columns: 1fr;
+    row-gap: 0.45rem;
+  }
+
+  .match-result-card__team--home,
+  .match-result-card__team--away {
+    justify-self: center;
+    text-align: center;
   }
 
   .prediction-cards-grid {
