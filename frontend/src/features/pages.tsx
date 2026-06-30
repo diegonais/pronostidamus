@@ -24,7 +24,7 @@ import {
   type User,
 } from '../types';
 
-type RoomDetailTab = 'matches' | 'predictions' | 'room-predictions';
+type RoomDetailTab = 'matches' | 'pending-predictions' | 'predictions' | 'room-predictions';
 type UserRoomSection = 'overview' | 'leaderboard' | 'explore';
 type AdminRoomMainSection = 'overview' | 'settings' | 'leaderboard' | 'manage';
 type AdminRoomSection = 'overview' | 'members' | 'matches';
@@ -85,6 +85,10 @@ function formatMatchDayMonth(matchDate: string) {
     month: 'short',
     timeZone: 'America/La_Paz',
   }).format(new Date(matchDate));
+}
+
+function getLatestMatchDayValue(options: MatchDayOption[]) {
+  return options.length > 0 ? options[options.length - 1].value : 'all';
 }
 
 function MatchDayCarousel({
@@ -1447,27 +1451,14 @@ function AdminRoomDetailPage() {
     }
   }
 
-  if (loading) {
-    return <AppLoadingScreen message="Cargando sala admin..." />;
-  }
-
-  if (!room) {
-    return (
-      <div className="page-stack">
-        <PageHeader title="Sala admin" description="No se encontro la sala solicitada." />
-        <StateCard tone="warning">La sala no existe o fue removida.</StateCard>
-      </div>
-    );
-  }
-
-  const roomMatches = sortMatchesByDate(matchesByRoom[room.id] ?? []);
+  const roomMatches = room ? sortMatchesByDate(matchesByRoom[room.id] ?? []) : [];
   const finishedMatches = roomMatches.filter((match) => match.status === MatchStatus.FINISHED);
-  const roomMemberIds = new Set((room.roomUsers ?? []).map((membership) => membership.userId));
+  const roomMemberIds = new Set((room?.roomUsers ?? []).map((membership) => membership.userId));
   const availableUsers = users.filter((user) => !roomMemberIds.has(user.id));
   const isEditingMatch = Boolean(editingMatch);
   const isMatchModalOpen = isEditingMatch || isAddMatchModalOpen;
   const leaderboard = buildLeaderboard(
-    getRoomMembers(room),
+    room ? getRoomMembers(room) : [],
     getCurrentRoomPredictions(roomMatches, predictionsByMatch),
     roomMatches,
   );
@@ -1492,6 +1483,32 @@ function AdminRoomDetailPage() {
     matchDayFilter === 'all'
       ? roomMatches
       : roomMatches.filter((match) => getMatchDayKey(match.matchDate) === matchDayFilter);
+
+  useEffect(() => {
+    if (matchDayOptions.length === 0) {
+      return;
+    }
+
+    const latestMatchDayValue = getLatestMatchDayValue(matchDayOptions);
+    const currentExists = matchDayOptions.some((option) => option.value === matchDayFilter);
+
+    if (matchDayFilter === 'all' || !currentExists) {
+      setMatchDayFilter(latestMatchDayValue);
+    }
+  }, [matchDayFilter, matchDayOptions]);
+
+  if (loading) {
+    return <AppLoadingScreen message="Cargando sala admin..." />;
+  }
+
+  if (!room) {
+    return (
+      <div className="page-stack">
+        <PageHeader title="Sala admin" description="No se encontro la sala solicitada." />
+        <StateCard tone="warning">La sala no existe o fue removida.</StateCard>
+      </div>
+    );
+  }
 
   return (
     <div className="page-stack">
@@ -2314,7 +2331,7 @@ function UserRoomDetailPage() {
   const { rooms, matchesByRoom, predictionsByMatch, loading, error, refresh } = useCatalogData();
   const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; message: string } | null>(null);
   const [activeSection, setActiveSection] = useState<UserRoomSection>('overview');
-  const [activeTab, setActiveTab] = useState<RoomDetailTab>('predictions');
+  const [activeTab, setActiveTab] = useState<RoomDetailTab>('pending-predictions');
   const [matchDayFilter, setMatchDayFilter] = useState('all');
   const [submittingMatchId, setSubmittingMatchId] = useState<string | null>(null);
   const myRooms = getAccessibleRooms(rooms, currentUser);
@@ -2364,27 +2381,14 @@ function UserRoomDetailPage() {
     }
   }
 
-  if (loading) {
-    return <AppLoadingScreen message="Cargando sala..." />;
-  }
-
-  if (!room) {
-    return (
-      <div className="page-stack">
-        <PageHeader title="Sala" description="No se encontro la sala solicitada." />
-        <StateCard tone="warning">La sala no existe o no pertenece a este usuario.</StateCard>
-      </div>
-    );
-  }
-
-  const matches = sortMatchesByDate(matchesByRoom[room.id] ?? []);
+  const matches = room ? sortMatchesByDate(matchesByRoom[room.id] ?? []) : [];
   const finishedMatches = matches.filter((match) => match.status === MatchStatus.FINISHED);
   const openMatches = matches.filter((match) => !isPredictionLocked(match.matchDate, match.status));
   const pendingPredictionMatches = matches.filter(
     (match) => !isPredictionLocked(match.matchDate, match.status),
   );
-  const lockedPredictionMatches = matches.filter((match) =>
-    isPredictionLocked(match.matchDate, match.status),
+  const myPredictedMatches = matches.filter((match) =>
+    (predictionsByMatch[match.id] ?? []).some((item) => item.userId === currentUser?.id),
   );
   const matchDayOptions = matches.reduce<Array<MatchDayOption>>(
     (options, match) => {
@@ -2414,19 +2418,46 @@ function UserRoomDetailPage() {
     matchDayFilter === 'all'
       ? pendingPredictionMatches
       : pendingPredictionMatches.filter((match) => getMatchDayKey(match.matchDate) === matchDayFilter);
-  const filteredLockedPredictionMatches =
+  const filteredMyPredictedMatches =
     matchDayFilter === 'all'
-      ? lockedPredictionMatches
-      : lockedPredictionMatches.filter((match) => getMatchDayKey(match.matchDate) === matchDayFilter);
+      ? myPredictedMatches
+      : myPredictedMatches.filter((match) => getMatchDayKey(match.matchDate) === matchDayFilter);
   const filteredFinishedMatches =
     matchDayFilter === 'all'
       ? finishedMatches
       : finishedMatches.filter((match) => getMatchDayKey(match.matchDate) === matchDayFilter);
   const leaderboard = buildLeaderboard(
-    getRoomMembers(room),
+    room ? getRoomMembers(room) : [],
     getCurrentRoomPredictions(matches, predictionsByMatch),
     matches,
   );
+  const myLeaderboardEntry = leaderboard.find((item) => item.userId === currentUser?.id);
+
+  useEffect(() => {
+    if (matchDayOptions.length === 0) {
+      return;
+    }
+
+    const latestMatchDayValue = getLatestMatchDayValue(matchDayOptions);
+    const currentExists = matchDayOptions.some((option) => option.value === matchDayFilter);
+
+    if (matchDayFilter === 'all' || !currentExists) {
+      setMatchDayFilter(latestMatchDayValue);
+    }
+  }, [matchDayFilter, matchDayOptions]);
+
+  if (loading) {
+    return <AppLoadingScreen message="Cargando sala..." />;
+  }
+
+  if (!room) {
+    return (
+      <div className="page-stack">
+        <PageHeader title="Sala" description="No se encontro la sala solicitada." />
+        <StateCard tone="warning">La sala no existe o no pertenece a este usuario.</StateCard>
+      </div>
+    );
+  }
 
   return (
     <div className={`page-stack page-with-overlay ${submittingMatchId ? 'is-loading' : ''}`}>
@@ -2490,12 +2521,10 @@ function UserRoomDetailPage() {
             </article>
             <article className="subsection-card compact-card">
               <div className="subsection-heading">
-                <h3>Competencia de la sala</h3>
+                <h3>Mis puntos</h3>
               </div>
               <strong className="summary-highlight">
-                {leaderboard.length > 0
-                  ? `${leaderboard[0]?.name ?? 'Sin datos'} · ${leaderboard[0]?.points ?? 0} pts`
-                  : 'Sin movimientos'}
+                {myLeaderboardEntry ? `${myLeaderboardEntry.points} pts` : '0 pts'}
               </strong>
               <button className="secondary-button" type="button" onClick={() => setActiveSection('leaderboard')}>
                 Ver tabla
@@ -2531,6 +2560,13 @@ function UserRoomDetailPage() {
                 onClick={() => setActiveTab('matches')}
               >
                 Partidos
+              </button>
+              <button
+                className={`tab-button ${activeTab === 'pending-predictions' ? 'active' : ''}`}
+                type="button"
+                onClick={() => setActiveTab('pending-predictions')}
+              >
+                Pronosticos pendientes
               </button>
               <button
                 className={`tab-button ${activeTab === 'predictions' ? 'active' : ''}`}
@@ -2583,65 +2619,57 @@ function UserRoomDetailPage() {
           </div>
           ) : null}
 
+          {activeTab === 'pending-predictions' ? (
+          <div className="tab-panel">
+            {filteredPendingPredictionMatches.length === 0 ? (
+              <StateCard>No hay partidos habilitados para pronosticar o actualizar en esta sala.</StateCard>
+            ) : (
+              <div className="prediction-cards-grid">
+                {filteredPendingPredictionMatches.map((match) => {
+                  const myPrediction = (predictionsByMatch[match.id] ?? []).find(
+                    (item) => item.userId === currentUser?.id,
+                  );
+
+                  return (
+                    <PredictionMatchCard
+                    key={match.id}
+                    match={match}
+                    prediction={myPrediction}
+                    isLocked={false}
+                    isSubmitting={submittingMatchId === match.id}
+                    onSubmit={submitPrediction}
+                  />
+                );
+                })}
+              </div>
+            )}
+          </div>
+          ) : null}
+
           {activeTab === 'predictions' ? (
-          <div className="tab-panel room-detail-sections">
-            <section className="subsection-card">
-              <div className="subsection-heading">
-                <h3>Habilitados para pronosticar</h3>
-                <span>{filteredPendingPredictionMatches.length}</span>
-              </div>
-              {filteredPendingPredictionMatches.length === 0 ? (
-                <StateCard>No hay partidos habilitados para pronosticar o actualizar en esta sala.</StateCard>
-              ) : (
-                <div className="prediction-cards-grid">
-                  {filteredPendingPredictionMatches.map((match) => {
-                    const myPrediction = (predictionsByMatch[match.id] ?? []).find(
-                      (item) => item.userId === currentUser?.id,
-                    );
-
-                    return (
-                      <PredictionMatchCard
-                      key={match.id}
-                      match={match}
-                      prediction={myPrediction}
-                      isLocked={false}
-                      isSubmitting={submittingMatchId === match.id}
-                      onSubmit={submitPrediction}
-                    />
+          <div className="tab-panel">
+            {filteredMyPredictedMatches.length === 0 ? (
+              <StateCard>No tienes pronosticos registrados para la fecha seleccionada.</StateCard>
+            ) : (
+              <div className="prediction-cards-grid">
+                {filteredMyPredictedMatches.map((match) => {
+                  const myPrediction = (predictionsByMatch[match.id] ?? []).find(
+                    (item) => item.userId === currentUser?.id,
                   );
-                  })}
-                </div>
-              )}
-            </section>
 
-            <section className="subsection-card">
-              <div className="subsection-heading">
-                <h3>Cerrados o finalizados</h3>
-                <span>{filteredLockedPredictionMatches.length}</span>
+                  return (
+                    <PredictionMatchCard
+                    key={match.id}
+                    match={match}
+                    prediction={myPrediction}
+                    isLocked={isPredictionLocked(match.matchDate, match.status)}
+                    isSubmitting={submittingMatchId === match.id}
+                    onSubmit={submitPrediction}
+                  />
+                );
+                })}
               </div>
-              {filteredLockedPredictionMatches.length === 0 ? (
-                <StateCard>Todavia no hay partidos cerrados o finalizados.</StateCard>
-              ) : (
-                <div className="prediction-cards-grid">
-                  {filteredLockedPredictionMatches.map((match) => {
-                    const myPrediction = (predictionsByMatch[match.id] ?? []).find(
-                      (item) => item.userId === currentUser?.id,
-                    );
-
-                    return (
-                      <PredictionMatchCard
-                      key={match.id}
-                      match={match}
-                      prediction={myPrediction}
-                      isLocked
-                      isSubmitting={submittingMatchId === match.id}
-                      onSubmit={submitPrediction}
-                    />
-                  );
-                  })}
-                </div>
-              )}
-            </section>
+            )}
           </div>
           ) : null}
 
