@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from '../layout/AppShell';
 import { useAuth } from '../context/AuthContext';
@@ -25,8 +25,15 @@ import {
 } from '../types';
 
 type RoomDetailTab = 'matches' | 'predictions' | 'room-predictions';
+type UserRoomSection = 'overview' | 'leaderboard' | 'explore';
 type AdminRoomSection = 'overview' | 'members' | 'matches';
 type AdminRoomDetailTab = 'members' | 'matches' | 'room-predictions';
+type MatchDayOption = {
+  value: string;
+  label: string;
+  dayNumber: string;
+  monthLabel: string;
+};
 
 function toneForMatchStatus(statusLabel: string) {
   if (statusLabel === 'Finalizado') {
@@ -63,6 +70,95 @@ function formatMatchDayLabel(matchDate: string) {
     year: 'numeric',
     timeZone: 'America/La_Paz',
   }).format(new Date(matchDate));
+}
+
+function formatMatchDayNumber(matchDate: string) {
+  return new Intl.DateTimeFormat('es-BO', {
+    day: '2-digit',
+    timeZone: 'America/La_Paz',
+  }).format(new Date(matchDate));
+}
+
+function formatMatchDayMonth(matchDate: string) {
+  return new Intl.DateTimeFormat('es-BO', {
+    month: 'short',
+    timeZone: 'America/La_Paz',
+  }).format(new Date(matchDate));
+}
+
+function MatchDayCarousel({
+  value,
+  options,
+  onChange,
+}: {
+  value: string;
+  options: MatchDayOption[];
+  onChange: (value: string) => void;
+}) {
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const activeChip = scrollRef.current?.querySelector<HTMLButtonElement>('[data-active="true"]');
+    activeChip?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }, [value]);
+
+  function scrollChips(direction: 'left' | 'right') {
+    const container = scrollRef.current;
+
+    if (!container) {
+      return;
+    }
+
+    const amount = Math.max(container.clientWidth * 0.75, 180);
+    container.scrollBy({
+      left: direction === 'left' ? -amount : amount,
+      behavior: 'smooth',
+    });
+  }
+
+  return (
+    <div className="matchday-carousel">
+      <button
+        className="matchday-arrow"
+        type="button"
+        aria-label="Desplazar fechas a la izquierda"
+        onClick={() => scrollChips('left')}
+      >
+        ‹
+      </button>
+      <div ref={scrollRef} className="matchday-scroll" role="tablist" aria-label="Fechas con partidos">
+        <button
+          className={`matchday-chip ${value === 'all' ? 'active' : ''}`}
+          data-active={value === 'all'}
+          type="button"
+          onClick={() => onChange('all')}
+        >
+          <strong>Todas</strong>
+        </button>
+        {options.map((option) => (
+          <button
+            key={option.value}
+            className={`matchday-chip ${value === option.value ? 'active' : ''}`}
+            data-active={value === option.value}
+            type="button"
+            title={option.label}
+            onClick={() => onChange(option.value)}
+          >
+            <strong>{option.dayNumber}</strong>
+            <span>{option.monthLabel}</span>
+          </button>
+        ))}
+      </div>
+      <button
+        className="matchday-arrow"
+        type="button"
+        aria-label="Desplazar fechas a la derecha"
+        onClick={() => scrollChips('right')}
+      >
+        ›
+      </button>
+    </div>
+  );
 }
 
 function getCurrentRoomPredictions(matches: Match[], allPredictions: Record<string, Prediction[]>) {
@@ -1373,14 +1469,22 @@ function AdminRoomDetailPage() {
     getCurrentRoomPredictions(roomMatches, predictionsByMatch),
     roomMatches,
   );
-  const matchDayOptions = roomMatches.reduce<Array<{ value: string; label: string }>>((options, match) => {
+  const matchDayOptions = roomMatches.reduce<Array<MatchDayOption>>((options, match) => {
     const value = getMatchDayKey(match.matchDate);
 
     if (options.some((option) => option.value === value)) {
       return options;
     }
 
-    return [...options, { value, label: formatMatchDayLabel(match.matchDate) }];
+    return [
+      ...options,
+      {
+        value,
+        label: formatMatchDayLabel(match.matchDate),
+        dayNumber: formatMatchDayNumber(match.matchDate),
+        monthLabel: formatMatchDayMonth(match.matchDate),
+      },
+    ];
   }, []);
   const filteredPredictionMatches =
     matchDayFilter === 'all'
@@ -1571,22 +1675,14 @@ function AdminRoomDetailPage() {
 
         {activeTab === 'room-predictions' ? (
           <div className="tab-panel">
-            <PageHeader
-              title="Pronosticos por partido"
-              description="Revisa que pronostico hizo cada usuario dentro de cada partido."
-              actions={
-                matchDayOptions.length > 0 ? (
-                  <select value={matchDayFilter} onChange={(event) => setMatchDayFilter(event.target.value)}>
-                    <option value="all">Todas las fechas</option>
-                    {matchDayOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                ) : null
-              }
-            />
+            <PageHeader title="Pronosticos por partido" />
+            {matchDayOptions.length > 0 ? (
+              <MatchDayCarousel
+                value={matchDayFilter}
+                options={matchDayOptions}
+                onChange={setMatchDayFilter}
+              />
+            ) : null}
             {roomMatches.length === 0 ? (
               <StateCard>No hay partidos registrados en esta sala todavia.</StateCard>
             ) : filteredPredictionMatches.length === 0 ? (
@@ -2137,8 +2233,9 @@ function UserRoomDetailPage() {
   const { roomId = '' } = useParams();
   const { rooms, matchesByRoom, predictionsByMatch, loading, error, refresh } = useCatalogData();
   const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; message: string } | null>(null);
+  const [activeSection, setActiveSection] = useState<UserRoomSection>('overview');
   const [activeTab, setActiveTab] = useState<RoomDetailTab>('predictions');
-  const [finishedMatchDayFilter, setFinishedMatchDayFilter] = useState('all');
+  const [matchDayFilter, setMatchDayFilter] = useState('all');
   const [submittingMatchId, setSubmittingMatchId] = useState<string | null>(null);
   const myRooms = getAccessibleRooms(rooms, currentUser);
   const room = myRooms.find((item) => item.id === roomId);
@@ -2209,7 +2306,7 @@ function UserRoomDetailPage() {
   const lockedPredictionMatches = matches.filter((match) =>
     isPredictionLocked(match.matchDate, match.status),
   );
-  const finishedMatchDayOptions = finishedMatches.reduce<Array<{ value: string; label: string }>>(
+  const matchDayOptions = matches.reduce<Array<MatchDayOption>>(
     (options, match) => {
       const value = getMatchDayKey(match.matchDate);
 
@@ -2217,14 +2314,34 @@ function UserRoomDetailPage() {
         return options;
       }
 
-      return [...options, { value, label: formatMatchDayLabel(match.matchDate) }];
+      return [
+        ...options,
+        {
+          value,
+          label: formatMatchDayLabel(match.matchDate),
+          dayNumber: formatMatchDayNumber(match.matchDate),
+          monthLabel: formatMatchDayMonth(match.matchDate),
+        },
+      ];
     },
     [],
   );
+  const filteredMatches =
+    matchDayFilter === 'all'
+      ? matches
+      : matches.filter((match) => getMatchDayKey(match.matchDate) === matchDayFilter);
+  const filteredPendingPredictionMatches =
+    matchDayFilter === 'all'
+      ? pendingPredictionMatches
+      : pendingPredictionMatches.filter((match) => getMatchDayKey(match.matchDate) === matchDayFilter);
+  const filteredLockedPredictionMatches =
+    matchDayFilter === 'all'
+      ? lockedPredictionMatches
+      : lockedPredictionMatches.filter((match) => getMatchDayKey(match.matchDate) === matchDayFilter);
   const filteredFinishedMatches =
-    finishedMatchDayFilter === 'all'
+    matchDayFilter === 'all'
       ? finishedMatches
-      : finishedMatches.filter((match) => getMatchDayKey(match.matchDate) === finishedMatchDayFilter);
+      : finishedMatches.filter((match) => getMatchDayKey(match.matchDate) === matchDayFilter);
   const leaderboard = buildLeaderboard(
     getRoomMembers(room),
     getCurrentRoomPredictions(matches, predictionsByMatch),
@@ -2234,60 +2351,136 @@ function UserRoomDetailPage() {
   return (
     <div className={`page-stack page-with-overlay ${submittingMatchId ? 'is-loading' : ''}`}>
       <PredictionLoadingOverlay visible={Boolean(submittingMatchId)} />
-      <PageHeader
-        title={room.name}
-        description="Consulta la tabla primero y luego navega por las secciones de la sala sin tener todo extendido."
-      />
+      <PageHeader title={room.name} />
       {error ? <StateCard tone="error">{error}</StateCard> : null}
       {feedback ? <StateCard tone={feedback.tone}>{feedback.message}</StateCard> : null}
-      <div className="stats-grid">
-        <StatTile label="Miembros" value={room.roomUsers?.length ?? 0} />
-        <StatTile label="Partidos" value={matches.length} />
-        <StatTile label="Pendientes" value={openMatches.length} />
-        <StatTile label="Finalizados" value={finishedMatches.length} />
-      </div>
 
       <section className="panel-card">
-        <PageHeader title="Tabla de la sala" description="Posiciones actuales dentro de esta sala." />
-        <LeaderboardTable items={leaderboard} />
-      </section>
-
-      <section className="panel-card">
-        <PageHeader
-          title="Explorar la sala"
-          description="Cambia entre partidos, tus pronosticos y los pronosticos del grupo."
-        />
-        <div className="tab-switcher" role="tablist" aria-label="Secciones de la sala">
+        <div className="room-section-nav">
           <button
-            className={`tab-button ${activeTab === 'matches' ? 'active' : ''}`}
+            className={`room-section-button ${activeSection === 'overview' ? 'active' : ''}`}
             type="button"
-            onClick={() => setActiveTab('matches')}
+            onClick={() => setActiveSection('overview')}
           >
-            Partidos
+            <span>Resumen</span>
           </button>
           <button
-            className={`tab-button ${activeTab === 'predictions' ? 'active' : ''}`}
+            className={`room-section-button ${activeSection === 'leaderboard' ? 'active' : ''}`}
             type="button"
-            onClick={() => setActiveTab('predictions')}
+            onClick={() => setActiveSection('leaderboard')}
           >
-            Mis pronosticos
+            <span>Tabla</span>
           </button>
           <button
-            className={`tab-button ${activeTab === 'room-predictions' ? 'active' : ''}`}
+            className={`room-section-button ${activeSection === 'explore' ? 'active' : ''}`}
             type="button"
-            onClick={() => setActiveTab('room-predictions')}
+            onClick={() => setActiveSection('explore')}
           >
-            Pronosticos de la sala
+            <span>Explorar</span>
           </button>
         </div>
+      </section>
 
-        {activeTab === 'matches' ? (
+      {activeSection === 'overview' ? (
+        <section className="panel-card">
+          <div className="section-heading">
+            <div>
+              <h3>Resumen de la sala</h3>
+            </div>
+          </div>
+          <div className="stats-grid room-summary-stats">
+            <StatTile label="Miembros" value={room.roomUsers?.length ?? 0} />
+            <StatTile label="Partidos" value={matches.length} />
+            <StatTile label="Pendientes" value={openMatches.length} />
+            <StatTile label="Finalizados" value={finishedMatches.length} />
+          </div>
+          <div className="room-summary-grid">
+            <article className="subsection-card compact-card">
+              <div className="subsection-heading">
+                <h3>Tu siguiente paso</h3>
+              </div>
+              <strong className="summary-highlight">
+                {openMatches.length > 0
+                  ? `${openMatches.length} pendiente${openMatches.length === 1 ? '' : 's'}`
+                  : 'Sin pendientes'}
+              </strong>
+              <button className="secondary-button" type="button" onClick={() => setActiveSection('explore')}>
+                Ir a explorar
+              </button>
+            </article>
+            <article className="subsection-card compact-card">
+              <div className="subsection-heading">
+                <h3>Competencia de la sala</h3>
+              </div>
+              <strong className="summary-highlight">
+                {leaderboard.length > 0
+                  ? `${leaderboard[0]?.name ?? 'Sin datos'} · ${leaderboard[0]?.points ?? 0} pts`
+                  : 'Sin movimientos'}
+              </strong>
+              <button className="secondary-button" type="button" onClick={() => setActiveSection('leaderboard')}>
+                Ver tabla
+              </button>
+            </article>
+          </div>
+        </section>
+      ) : null}
+
+      {activeSection === 'leaderboard' ? (
+        <section className="panel-card">
+          <div className="section-heading">
+            <div>
+              <h3>Tabla de la sala</h3>
+            </div>
+          </div>
+          <LeaderboardTable items={leaderboard} />
+        </section>
+      ) : null}
+
+      {activeSection === 'explore' ? (
+        <section className="panel-card">
+          <div className="section-heading">
+            <div>
+              <h3>Explorar la sala</h3>
+            </div>
+          </div>
+          <div className="explore-toolbar">
+            <div className="tab-switcher tab-switcher-scroll" role="tablist" aria-label="Secciones de la sala">
+              <button
+                className={`tab-button ${activeTab === 'matches' ? 'active' : ''}`}
+                type="button"
+                onClick={() => setActiveTab('matches')}
+              >
+                Partidos
+              </button>
+              <button
+                className={`tab-button ${activeTab === 'predictions' ? 'active' : ''}`}
+                type="button"
+                onClick={() => setActiveTab('predictions')}
+              >
+                Mis pronosticos
+              </button>
+              <button
+                className={`tab-button ${activeTab === 'room-predictions' ? 'active' : ''}`}
+                type="button"
+                onClick={() => setActiveTab('room-predictions')}
+              >
+                Pronosticos de la sala
+              </button>
+            </div>
+            {matchDayOptions.length > 0 ? (
+              <MatchDayCarousel value={matchDayFilter} options={matchDayOptions} onChange={setMatchDayFilter} />
+            ) : null}
+          </div>
+
+          {activeTab === 'matches' ? (
           <div className="tab-panel">
             {matches.length === 0 ? (
               <StateCard>No hay partidos cargados en esta sala.</StateCard>
+            ) : filteredMatches.length === 0 ? (
+              <StateCard>No hay partidos para la fecha seleccionada.</StateCard>
             ) : (
               <SectionTable headers={['Partido', 'Fecha Bolivia', 'Estado', 'Resultado']}>
-                {matches.map((match) => {
+                {filteredMatches.map((match) => {
                   const statusLabel = getMatchVisualStatus(match.matchDate, match.status);
 
                   return (
@@ -2308,20 +2501,20 @@ function UserRoomDetailPage() {
               </SectionTable>
             )}
           </div>
-        ) : null}
+          ) : null}
 
-        {activeTab === 'predictions' ? (
+          {activeTab === 'predictions' ? (
           <div className="tab-panel room-detail-sections">
             <section className="subsection-card">
               <div className="subsection-heading">
                 <h3>Habilitados para pronosticar</h3>
-                <span>{pendingPredictionMatches.length}</span>
+                <span>{filteredPendingPredictionMatches.length}</span>
               </div>
-              {pendingPredictionMatches.length === 0 ? (
+              {filteredPendingPredictionMatches.length === 0 ? (
                 <StateCard>No hay partidos habilitados para pronosticar o actualizar en esta sala.</StateCard>
               ) : (
                 <div className="prediction-cards-grid">
-                  {pendingPredictionMatches.map((match) => {
+                  {filteredPendingPredictionMatches.map((match) => {
                     const myPrediction = (predictionsByMatch[match.id] ?? []).find(
                       (item) => item.userId === currentUser?.id,
                     );
@@ -2344,13 +2537,13 @@ function UserRoomDetailPage() {
             <section className="subsection-card">
               <div className="subsection-heading">
                 <h3>Cerrados o finalizados</h3>
-                <span>{lockedPredictionMatches.length}</span>
+                <span>{filteredLockedPredictionMatches.length}</span>
               </div>
-              {lockedPredictionMatches.length === 0 ? (
+              {filteredLockedPredictionMatches.length === 0 ? (
                 <StateCard>Todavia no hay partidos cerrados o finalizados.</StateCard>
               ) : (
                 <div className="prediction-cards-grid">
-                  {lockedPredictionMatches.map((match) => {
+                  {filteredLockedPredictionMatches.map((match) => {
                     const myPrediction = (predictionsByMatch[match.id] ?? []).find(
                       (item) => item.userId === currentUser?.id,
                     );
@@ -2370,29 +2563,15 @@ function UserRoomDetailPage() {
               )}
             </section>
           </div>
-        ) : null}
+          ) : null}
 
-        {activeTab === 'room-predictions' ? (
+          {activeTab === 'room-predictions' ? (
           <div className="tab-panel">
-            <PageHeader
-              title="Pronosticos de la sala"
-              description="Filtra por fecha para revisar solo la jornada que te interesa."
-              actions={
-                finishedMatchDayOptions.length > 0 ? (
-                  <select
-                    value={finishedMatchDayFilter}
-                    onChange={(event) => setFinishedMatchDayFilter(event.target.value)}
-                  >
-                    <option value="all">Todas las fechas</option>
-                    {finishedMatchDayOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                ) : null
-              }
-            />
+            <div className="section-heading">
+              <div>
+                <h3>Pronosticos de la sala</h3>
+              </div>
+            </div>
             {finishedMatches.length === 0 ? (
               <StateCard>No hay partidos finalizados todavia.</StateCard>
             ) : filteredFinishedMatches.length === 0 ? (
@@ -2439,9 +2618,10 @@ function UserRoomDetailPage() {
               </div>
             )}
           </div>
-        ) : null}
-      </section>
-      </div>
+          ) : null}
+        </section>
+      ) : null}
+    </div>
   );
 }
 
