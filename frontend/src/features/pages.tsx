@@ -26,6 +26,7 @@ import {
 
 type RoomDetailTab = 'matches' | 'predictions' | 'room-predictions';
 type UserRoomSection = 'overview' | 'leaderboard' | 'explore';
+type AdminRoomMainSection = 'overview' | 'settings' | 'leaderboard' | 'manage';
 type AdminRoomSection = 'overview' | 'members' | 'matches';
 type AdminRoomDetailTab = 'members' | 'matches' | 'room-predictions';
 type MatchDayOption = {
@@ -1314,6 +1315,7 @@ function AdminRoomsPage() {
 function AdminRoomDetailPage() {
   const { roomId = '' } = useParams();
   const { rooms, users, matchesByRoom, predictionsByMatch, loading, error, refresh } = useCatalogData();
+  const [activeSection, setActiveSection] = useState<AdminRoomMainSection>('overview');
   const [activeTab, setActiveTab] = useState<AdminRoomDetailTab>('matches');
   const [roomForm, setRoomForm] = useState({ name: '', isActive: true });
   const [selectedUserId, setSelectedUserId] = useState('');
@@ -1493,70 +1495,145 @@ function AdminRoomDetailPage() {
 
   return (
     <div className="page-stack">
-      <PageHeader
-        title={room.name}
-        description="Entraste a la sala admin. Desde aqui la gestion ocurre dentro del contexto real de la sala."
-        actions={<Link className="secondary-button" to="/admin/rooms">Volver a salas</Link>}
-      />
+      <PageHeader title={room.name} actions={<Link className="secondary-button" to="/admin/rooms">Volver a salas</Link>} />
       {error ? <StateCard tone="error">{error}</StateCard> : null}
       {feedback ? <StateCard tone="success">{feedback}</StateCard> : null}
-      <div className="stats-grid">
-        <StatTile label="Miembros" value={room.roomUsers?.length ?? 0} />
-        <StatTile label="Partidos" value={roomMatches.length} />
-        <StatTile label="Finalizados" value={finishedMatches.length} />
-        <StatTile
-          label="Pronosticos"
-          value={roomMatches.flatMap((match) => predictionsByMatch[match.id] ?? []).length}
-        />
-      </div>
 
       <section className="panel-card">
-        <PageHeader
-          title="Configuracion de la sala"
-          description="Ajusta los datos base sin salir de la sala."
-        />
-        <form className="form-grid" onSubmit={saveRoom}>
-          <label>
-            Nombre
-            <input
-              required
-              minLength={2}
-              value={roomForm.name}
-              onChange={(event) => setRoomForm((current) => ({ ...current, name: event.target.value }))}
-            />
-          </label>
-          <label>
-            Estado
-            <select
-              value={String(roomForm.isActive)}
-              onChange={(event) =>
-                setRoomForm((current) => ({ ...current, isActive: event.target.value === 'true' }))
-              }
-            >
-              <option value="true">Activa</option>
-              <option value="false">Deshabilitada</option>
-            </select>
-          </label>
-          <button className="primary-button" type="submit">
-            Guardar sala
+        <div className="admin-room-section-nav">
+          <button
+            className={`room-section-button ${activeSection === 'overview' ? 'active' : ''}`}
+            type="button"
+            onClick={() => setActiveSection('overview')}
+          >
+            <span>Resumen</span>
           </button>
-        </form>
+          <button
+            className={`room-section-button ${activeSection === 'settings' ? 'active' : ''}`}
+            type="button"
+            onClick={() => setActiveSection('settings')}
+          >
+            <span>Configuracion</span>
+          </button>
+          <button
+            className={`room-section-button ${activeSection === 'leaderboard' ? 'active' : ''}`}
+            type="button"
+            onClick={() => setActiveSection('leaderboard')}
+          >
+            <span>Tabla</span>
+          </button>
+          <button
+            className={`room-section-button ${activeSection === 'manage' ? 'active' : ''}`}
+            type="button"
+            onClick={() => setActiveSection('manage')}
+          >
+            <span>Gestion</span>
+          </button>
+        </div>
       </section>
 
-      <section className="panel-card">
-        <PageHeader
-          title="Tabla de la sala"
-          description="La tabla vive dentro de la sala, igual que en la experiencia de usuario."
-        />
-        <LeaderboardTable items={leaderboard} />
-      </section>
+      {activeSection === 'overview' ? (
+        <section className="panel-card">
+          <div className="section-heading">
+            <div>
+              <h3>Resumen de la sala</h3>
+            </div>
+            <StatusBadge label={room.isActive ? 'Activa' : 'Deshabilitada'} tone={room.isActive ? 'success' : 'muted'} />
+          </div>
+          <div className="stats-grid room-summary-stats">
+            <StatTile label="Miembros" value={room.roomUsers?.length ?? 0} />
+            <StatTile label="Partidos" value={roomMatches.length} />
+            <StatTile label="Finalizados" value={finishedMatches.length} />
+            <StatTile
+              label="Pronosticos"
+              value={roomMatches.flatMap((match) => predictionsByMatch[match.id] ?? []).length}
+            />
+          </div>
+          <div className="room-summary-grid">
+            <article className="subsection-card compact-card">
+              <div className="subsection-heading">
+                <h3>Estado</h3>
+              </div>
+              <strong className="summary-highlight">
+                {room.isActive ? 'Sala activa' : 'Sala deshabilitada'}
+              </strong>
+              <button className="secondary-button" type="button" onClick={() => setActiveSection('settings')}>
+                Ir a configuracion
+              </button>
+            </article>
+            <article className="subsection-card compact-card">
+              <div className="subsection-heading">
+                <h3>Competencia</h3>
+              </div>
+              <strong className="summary-highlight">
+                {leaderboard.length > 0
+                  ? `${leaderboard[0]?.name ?? 'Sin datos'} - ${leaderboard[0]?.points ?? 0} pts`
+                  : 'Sin movimientos'}
+              </strong>
+              <button className="secondary-button" type="button" onClick={() => setActiveSection('leaderboard')}>
+                Ver tabla
+              </button>
+            </article>
+          </div>
+        </section>
+      ) : null}
 
-      <section className="panel-card">
-        <PageHeader
-          title="Gestion de la sala"
-          description="Cambia entre miembros, partidos y pronosticos por partido sin salir del contexto."
-        />
-        <div className="tab-switcher" role="tablist" aria-label="Secciones de gestion de la sala">
+      {activeSection === 'settings' ? (
+        <section className="panel-card">
+          <div className="section-heading">
+            <div>
+              <h3>Configuracion de la sala</h3>
+            </div>
+          </div>
+          <form className="form-grid" onSubmit={saveRoom}>
+            <label>
+              Nombre
+              <input
+                required
+                minLength={2}
+                value={roomForm.name}
+                onChange={(event) => setRoomForm((current) => ({ ...current, name: event.target.value }))}
+              />
+            </label>
+            <label>
+              Estado
+              <select
+                value={String(roomForm.isActive)}
+                onChange={(event) =>
+                  setRoomForm((current) => ({ ...current, isActive: event.target.value === 'true' }))
+                }
+              >
+                <option value="true">Activa</option>
+                <option value="false">Deshabilitada</option>
+              </select>
+            </label>
+            <button className="primary-button" type="submit">
+              Guardar sala
+            </button>
+          </form>
+        </section>
+      ) : null}
+
+      {activeSection === 'leaderboard' ? (
+        <section className="panel-card">
+          <div className="section-heading">
+            <div>
+              <h3>Tabla de la sala</h3>
+            </div>
+          </div>
+          <LeaderboardTable items={leaderboard} />
+        </section>
+      ) : null}
+
+      {activeSection === 'manage' ? (
+        <section className="panel-card">
+        <div className="section-heading">
+          <div>
+            <h3>Gestion de la sala</h3>
+          </div>
+        </div>
+        <div className="explore-toolbar">
+        <div className="tab-switcher tab-switcher-scroll" role="tablist" aria-label="Secciones de gestion de la sala">
           <button
             className={`tab-button ${activeTab === 'members' ? 'active' : ''}`}
             type="button"
@@ -1578,6 +1655,14 @@ function AdminRoomDetailPage() {
           >
             Pronosticos por partido
           </button>
+        </div>
+        {(activeTab === 'matches' || activeTab === 'room-predictions') && matchDayOptions.length > 0 ? (
+          <MatchDayCarousel
+            value={matchDayFilter}
+            options={matchDayOptions}
+            onChange={setMatchDayFilter}
+          />
+        ) : null}
         </div>
 
         {activeTab === 'members' ? (
@@ -1642,9 +1727,11 @@ function AdminRoomDetailPage() {
               </div>
               {roomMatches.length === 0 ? (
                 <StateCard>No hay partidos en esta sala.</StateCard>
+              ) : filteredPredictionMatches.length === 0 ? (
+                <StateCard>No hay partidos para la fecha seleccionada.</StateCard>
               ) : (
                 <SectionTable headers={['Partido', 'Fecha Bolivia', 'Estado', 'Resultado', 'Accion']}>
-                  {roomMatches.map((match) => {
+                  {filteredPredictionMatches.map((match) => {
                     const statusLabel = getMatchVisualStatus(match.matchDate, match.status);
 
                     return (
@@ -1675,14 +1762,6 @@ function AdminRoomDetailPage() {
 
         {activeTab === 'room-predictions' ? (
           <div className="tab-panel">
-            <PageHeader title="Pronosticos por partido" />
-            {matchDayOptions.length > 0 ? (
-              <MatchDayCarousel
-                value={matchDayFilter}
-                options={matchDayOptions}
-                onChange={setMatchDayFilter}
-              />
-            ) : null}
             {roomMatches.length === 0 ? (
               <StateCard>No hay partidos registrados en esta sala todavia.</StateCard>
             ) : filteredPredictionMatches.length === 0 ? (
@@ -1733,6 +1812,7 @@ function AdminRoomDetailPage() {
           </div>
         ) : null}
       </section>
+      ) : null}
 
       {isAddUserModalOpen ? (
         <div

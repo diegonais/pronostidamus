@@ -647,6 +647,12 @@ select {
   gap: 1rem;
 }
 
+.admin-room-section-nav {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
 .room-section-button {
   display: flex;
   align-items: center;
@@ -1217,6 +1223,7 @@ select {
   }
 
   .room-section-nav,
+  .admin-room-section-nav,
   .room-summary-grid {
     grid-template-columns: 1fr;
   }
