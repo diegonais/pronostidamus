@@ -438,7 +438,9 @@ function AdminDashboardPage() {
 function AdminUsersPage() {
   const { users, rooms, loading, error, refresh } = useCatalogData();
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [feedback, setFeedback] = useState('');
+  const [isUserFormOpen, setIsUserFormOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; message: string } | null>(null);
   const [form, setForm] = useState<UserPayload>({
     name: '',
     username: '',
@@ -447,6 +449,36 @@ function AdminUsersPage() {
     role: UserRole.USER,
     isActive: true,
   });
+
+  function resetUserForm() {
+    setForm({
+      name: '',
+      username: '',
+      email: '',
+      password: '',
+      role: UserRole.USER,
+      isActive: true,
+    });
+  }
+
+  function openCreateUserForm() {
+    setEditingUser(null);
+    resetUserForm();
+    setFeedback(null);
+    setIsUserFormOpen(true);
+  }
+
+  function openEditUserForm(user: User) {
+    setEditingUser(user);
+    setFeedback(null);
+    setIsUserFormOpen(true);
+  }
+
+  function closeUserForm() {
+    setIsUserFormOpen(false);
+    setEditingUser(null);
+    resetUserForm();
+  }
 
   useEffect(() => {
     if (!editingUser) {
@@ -467,6 +499,7 @@ function AdminUsersPage() {
     event.preventDefault();
 
     try {
+      setFeedback(null);
       const payload: UserPayload = {
         ...form,
         ...(form.password?.trim() ? { password: form.password } : {}),
@@ -474,188 +507,211 @@ function AdminUsersPage() {
 
       if (editingUser) {
         await usersService.update(editingUser.id, payload);
-        setFeedback('Usuario actualizado correctamente.');
+        setFeedback({ tone: 'success', message: 'Usuario actualizado correctamente.' });
       } else {
         await usersService.create(payload);
-        setFeedback('Usuario creado correctamente.');
+        setFeedback({ tone: 'success', message: 'Usuario creado correctamente.' });
       }
 
-      setEditingUser(null);
-      setForm({
-        name: '',
-        username: '',
-        email: '',
-        password: '',
-        role: UserRole.USER,
-        isActive: true,
-      });
+      closeUserForm();
       await refresh();
     } catch (requestError) {
-      setFeedback(extractErrorMessage(requestError));
+      setFeedback({ tone: 'error', message: extractErrorMessage(requestError) });
     }
   }
 
   const totalAdmins = users.filter((user) => user.role === UserRole.ADMIN).length;
   const activeUsers = users.filter((user) => user.isActive).length;
   const inactiveUsers = users.length - activeUsers;
+  const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+  const filteredUsers = normalizedSearchTerm
+    ? users.filter((user) =>
+        [user.name, user.username, user.email, user.role]
+          .join(' ')
+          .toLowerCase()
+          .includes(normalizedSearchTerm),
+      )
+    : users;
 
   if (loading) {
     return <AppLoadingScreen message="Cargando usuarios..." />;
   }
 
   return (
-    <div className="admin-workspace">
+    <div className="page-stack">
       <section className="panel-card">
         <PageHeader
           title="Gestion de usuarios"
-          description="Lista corta con lo esencial. El detalle completo aparece solo cuando eliges a quien editar."
+          description="Administra accesos desde una lista clara. Crea o edita usuarios en un unico panel contextual."
           actions={
-            <button
-              className="secondary-button"
-              type="button"
-              onClick={() => {
-                setEditingUser(null);
-                setForm({
-                  name: '',
-                  username: '',
-                  email: '',
-                  password: '',
-                  role: UserRole.USER,
-                  isActive: true,
-                });
-              }}
-            >
+            <button className="primary-button" type="button" onClick={openCreateUserForm}>
               Nuevo usuario
             </button>
           }
         />
         {error ? <StateCard tone="error">{error}</StateCard> : null}
-        {feedback ? <StateCard tone="success">{feedback}</StateCard> : null}
-        <div className="compact-metrics admin-metrics-row">
-          <span>{users.length} registrados</span>
-          <span>{totalAdmins} admins</span>
-          <span>{activeUsers} activos</span>
-          <span>{inactiveUsers} deshabilitados</span>
+        {feedback ? <StateCard tone={feedback.tone}>{feedback.message}</StateCard> : null}
+        <div className="stats-grid compact-stats-grid admin-user-stats">
+          <StatTile label="Registrados" value={users.length} />
+          <StatTile label="Administradores" value={totalAdmins} />
+          <StatTile label="Activos" value={activeUsers} />
+          <StatTile label="Deshabilitados" value={inactiveUsers} />
         </div>
-        <SectionTable headers={['Usuario', 'Rol', 'Salas', 'Estado', 'Accion']}>
-          {users.map((user) => (
-            <tr key={user.id}>
-              <td>
-                <strong>{user.name}</strong>
-                <div className="muted-text">@{user.username}</div>
-              </td>
-              <td>{user.role}</td>
-              <td>{getUserRoomCount(rooms, user.id)}</td>
-              <td>
-                <StatusBadge
-                  label={user.isActive ? 'Activo' : 'Deshabilitado'}
-                  tone={user.isActive ? 'success' : 'muted'}
-                />
-              </td>
-              <td>
-                <button className="table-button" type="button" onClick={() => setEditingUser(user)}>
-                  Editar
-                </button>
-              </td>
-            </tr>
-          ))}
-        </SectionTable>
       </section>
 
-      <aside className="page-stack admin-side-column">
-        <section className="panel-card">
-          <PageHeader
-            title={editingUser ? 'Editar usuario' : 'Crear usuario'}
-            description={
-              editingUser
-                ? 'Ajusta solo lo necesario. Dejamos la informacion extendida fuera de la tabla principal.'
-                : 'Completa los datos basicos para habilitar un nuevo acceso.'
-            }
-          />
-          {editingUser ? (
-            <div className="detail-summary">
+      <section className="panel-card">
+        <div className="users-toolbar">
+          <div>
+            <h3>Usuarios del sistema</h3>
+            <p className="page-description">
+              {filteredUsers.length} de {users.length} usuarios visibles
+            </p>
+          </div>
+          <label className="search-field">
+            Buscar usuario
+            <input
+              value={searchTerm}
+              placeholder="Nombre, username, email o rol"
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+          </label>
+        </div>
+        {filteredUsers.length === 0 ? (
+          <StateCard>No encontramos usuarios con ese criterio.</StateCard>
+        ) : (
+          <SectionTable headers={['Usuario', 'Contacto', 'Rol', 'Salas', 'Estado', 'Accion']}>
+            {filteredUsers.map((user) => (
+              <tr key={user.id}>
+                <td>
+                  <strong>{user.name}</strong>
+                  <div className="muted-text">@{user.username}</div>
+                </td>
+                <td>{user.email}</td>
+                <td>{user.role}</td>
+                <td>{getUserRoomCount(rooms, user.id)}</td>
+                <td>
+                  <StatusBadge
+                    label={user.isActive ? 'Activo' : 'Deshabilitado'}
+                    tone={user.isActive ? 'success' : 'muted'}
+                  />
+                </td>
+                <td>
+                  <button className="table-button" type="button" onClick={() => openEditUserForm(user)}>
+                    Editar
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </SectionTable>
+        )}
+      </section>
+
+      {isUserFormOpen ? (
+        <div className="modal-backdrop" role="presentation">
+          <section
+            className="modal-card user-form-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="user-form-title"
+          >
+            <div className="modal-header">
               <div>
-                <span className="muted-text">Email</span>
-                <strong>{editingUser.email}</strong>
+                <h3 id="user-form-title">{editingUser ? 'Editar usuario' : 'Crear usuario'}</h3>
+                <p className="page-description">
+                  {editingUser
+                    ? 'Actualiza los datos de acceso. La contrasena solo cambia si escribes una nueva.'
+                    : 'Registra los datos basicos para habilitar un nuevo acceso.'}
+                </p>
               </div>
-              <div>
-                <span className="muted-text">Salas</span>
-                <strong>{getUserRoomCount(rooms, editingUser.id)}</strong>
-              </div>
+              <button className="table-button" type="button" onClick={closeUserForm}>
+                Cerrar
+              </button>
             </div>
-          ) : null}
-          <form className="form-grid form-grid-balanced" onSubmit={handleSubmit}>
-            <label>
-              Nombre
-              <input
-                required
-                minLength={2}
-                value={form.name}
-                onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-              />
-            </label>
-            <label>
-              Username
-              <input
-                required
-                minLength={3}
-                value={form.username}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, username: event.target.value }))
-                }
-              />
-            </label>
-            <label>
-              Email
-              <input
-                type="email"
-                required
-                value={form.email}
-                onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-              />
-            </label>
-            <label>
-              Contrasena
-              <input
-                type="password"
-                required={!editingUser}
-                minLength={6}
-                value={form.password ?? ''}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, password: event.target.value }))
-                }
-              />
-            </label>
-            <label>
-              Rol
-              <select
-                value={form.role}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, role: event.target.value as UserRole }))
-                }
-              >
-                <option value={UserRole.USER}>USER</option>
-                <option value={UserRole.ADMIN}>ADMIN</option>
-              </select>
-            </label>
-            <label>
-              Estado
-              <select
-                value={String(form.isActive)}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, isActive: event.target.value === 'true' }))
-                }
-              >
-                <option value="true">Activo</option>
-                <option value="false">Deshabilitado</option>
-              </select>
-            </label>
-            <button className="primary-button form-submit" type="submit">
-              {editingUser ? 'Guardar cambios' : 'Crear usuario'}
-            </button>
-          </form>
-        </section>
-      </aside>
+            {editingUser ? (
+              <div className="detail-summary">
+                <div>
+                  <span className="muted-text">Email</span>
+                  <strong>{editingUser.email}</strong>
+                </div>
+                <div>
+                  <span className="muted-text">Salas</span>
+                  <strong>{getUserRoomCount(rooms, editingUser.id)}</strong>
+                </div>
+              </div>
+            ) : null}
+            <form className="form-grid form-grid-balanced" onSubmit={handleSubmit}>
+              <label>
+                Nombre
+                <input
+                  required
+                  minLength={2}
+                  value={form.name}
+                  onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+                />
+              </label>
+              <label>
+                Username
+                <input
+                  required
+                  minLength={3}
+                  value={form.username}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, username: event.target.value }))
+                  }
+                />
+              </label>
+              <label>
+                Email
+                <input
+                  type="email"
+                  required
+                  value={form.email}
+                  onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+                />
+              </label>
+              <label>
+                Contrasena
+                <input
+                  type="password"
+                  required={!editingUser}
+                  minLength={6}
+                  value={form.password ?? ''}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, password: event.target.value }))
+                  }
+                />
+              </label>
+              <label>
+                Rol
+                <select
+                  value={form.role}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, role: event.target.value as UserRole }))
+                  }
+                >
+                  <option value={UserRole.USER}>USER</option>
+                  <option value={UserRole.ADMIN}>ADMIN</option>
+                </select>
+              </label>
+              <label>
+                Estado
+                <select
+                  value={String(form.isActive)}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, isActive: event.target.value === 'true' }))
+                  }
+                >
+                  <option value="true">Activo</option>
+                  <option value="false">Deshabilitado</option>
+                </select>
+              </label>
+              <button className="primary-button form-submit" type="submit">
+                {editingUser ? 'Guardar cambios' : 'Crear usuario'}
+              </button>
+            </form>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -665,6 +721,8 @@ function AdminRoomsPage() {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [activeSection, setActiveSection] = useState<AdminRoomSection>('overview');
   const [roomForm, setRoomForm] = useState({ name: '', isActive: true });
+  const [isRoomFormOpen, setIsRoomFormOpen] = useState(false);
+  const [roomSearchTerm, setRoomSearchTerm] = useState('');
   const [selectedUserId, setSelectedUserId] = useState('');
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [isAddMatchModalOpen, setIsAddMatchModalOpen] = useState(false);
@@ -694,6 +752,18 @@ function AdminRoomsPage() {
     setRoomForm({ name: selectedRoom.name, isActive: selectedRoom.isActive });
     setActiveSection('overview');
   }, [selectedRoom]);
+
+  function openCreateRoomForm() {
+    setSelectedRoom(null);
+    setRoomForm({ name: '', isActive: true });
+    setIsRoomFormOpen(true);
+  }
+
+  function closeRoomForm() {
+    setIsRoomFormOpen(false);
+    setSelectedRoom(null);
+    setRoomForm({ name: '', isActive: true });
+  }
 
   useEffect(() => {
     if (!editingMatch) {
@@ -732,7 +802,7 @@ function AdminRoomsPage() {
         setFeedback('Sala creada correctamente.');
       }
 
-      setSelectedRoom(null);
+      closeRoomForm();
       await refresh();
     } catch (requestError) {
       setFeedback(extractErrorMessage(requestError));
@@ -809,6 +879,13 @@ function AdminRoomsPage() {
   const isEditingMatch = Boolean(editingMatch);
   const isMatchModalOpen = isEditingMatch || isAddMatchModalOpen;
   const roomFinishedMatches = roomMatches.filter((match) => match.status === MatchStatus.FINISHED).length;
+  const activeRooms = rooms.filter((room) => room.isActive).length;
+  const totalMembers = rooms.reduce((total, room) => total + (room.roomUsers?.length ?? 0), 0);
+  const totalMatches = Object.values(matchesByRoom).reduce((total, matches) => total + matches.length, 0);
+  const normalizedRoomSearchTerm = roomSearchTerm.trim().toLowerCase();
+  const filteredRooms = normalizedRoomSearchTerm
+    ? rooms.filter((room) => room.name.toLowerCase().includes(normalizedRoomSearchTerm))
+    : rooms;
 
   if (loading) {
     return <AppLoadingScreen message="Cargando salas..." />;
@@ -819,12 +896,45 @@ function AdminRoomsPage() {
       <section className="panel-card">
         <PageHeader
           title="Gestion de salas"
-          description="Entra a una sala para administrarla como espacio propio: miembros, partidos y pronosticos por partido."
+          description="Administra las salas desde una lista clara. La creacion se abre solo cuando la necesitas."
+          actions={
+            <button className="primary-button" type="button" onClick={openCreateRoomForm}>
+              Nueva sala
+            </button>
+          }
         />
         {error ? <StateCard tone="error">{error}</StateCard> : null}
         {feedback ? <StateCard tone="success">{feedback}</StateCard> : null}
-        <SectionTable headers={['Sala', 'Estado', 'Miembros', 'Actividad', 'Accion']}>
-          {rooms.map((room) => {
+        <div className="stats-grid compact-stats-grid admin-user-stats">
+          <StatTile label="Salas creadas" value={rooms.length} />
+          <StatTile label="Activas" value={activeRooms} />
+          <StatTile label="Miembros" value={totalMembers} />
+          <StatTile label="Partidos" value={totalMatches} />
+        </div>
+      </section>
+
+      <section className="panel-card">
+        <div className="users-toolbar">
+          <div>
+            <h3>Salas del sistema</h3>
+            <p className="page-description">
+              {filteredRooms.length} de {rooms.length} salas visibles
+            </p>
+          </div>
+          <label className="search-field">
+            Buscar sala
+            <input
+              value={roomSearchTerm}
+              placeholder="Nombre de la sala"
+              onChange={(event) => setRoomSearchTerm(event.target.value)}
+            />
+          </label>
+        </div>
+        {filteredRooms.length === 0 ? (
+          <StateCard>No encontramos salas con ese criterio.</StateCard>
+        ) : (
+          <SectionTable headers={['Sala', 'Estado', 'Miembros', 'Actividad', 'Accion']}>
+          {filteredRooms.map((room) => {
             const roomMatches = matchesByRoom[room.id] ?? [];
             const roomPredictions = roomMatches.flatMap((match) => predictionsByMatch[match.id] ?? []);
 
@@ -852,41 +962,58 @@ function AdminRoomsPage() {
               </tr>
             );
           })}
-        </SectionTable>
+          </SectionTable>
+        )}
       </section>
 
-      <section className="panel-card">
-        <PageHeader
-          title="Crear sala"
-          description="Primero la creas y luego entras a gestionarla desde su propia vista."
-        />
-        <form className="form-grid form-grid-balanced" onSubmit={saveRoom}>
-          <label>
-            Nombre
-            <input
-              required
-              minLength={2}
-              value={roomForm.name}
-              onChange={(event) => setRoomForm((current) => ({ ...current, name: event.target.value }))}
-            />
-          </label>
-          <label>
-            Estado
-            <select
-              value={String(roomForm.isActive)}
-              onChange={(event) =>
-                setRoomForm((current) => ({ ...current, isActive: event.target.value === 'true' }))
-              }
-            >
-              <option value="true">Activa</option>
-              <option value="false">Deshabilitada</option>
-            </select>
-          </label>
-          <button className="primary-button form-submit" type="submit">
-            Crear sala
-          </button>
-        </form>
-      </section>
+      {isRoomFormOpen ? (
+        <div className="modal-backdrop" role="presentation">
+          <section
+            className="modal-card user-form-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="room-form-title"
+          >
+            <div className="modal-header">
+              <div>
+                <h3 id="room-form-title">Crear sala</h3>
+                <p className="page-description">
+                  Crea el espacio y luego entra a gestionarlo para agregar miembros y partidos.
+                </p>
+              </div>
+              <button className="table-button" type="button" onClick={closeRoomForm}>
+                Cerrar
+              </button>
+            </div>
+            <form className="form-grid form-grid-balanced" onSubmit={saveRoom}>
+              <label>
+                Nombre
+                <input
+                  required
+                  minLength={2}
+                  value={roomForm.name}
+                  onChange={(event) => setRoomForm((current) => ({ ...current, name: event.target.value }))}
+                />
+              </label>
+              <label>
+                Estado
+                <select
+                  value={String(roomForm.isActive)}
+                  onChange={(event) =>
+                    setRoomForm((current) => ({ ...current, isActive: event.target.value === 'true' }))
+                  }
+                >
+                  <option value="true">Activa</option>
+                  <option value="false">Deshabilitada</option>
+                </select>
+              </label>
+              <button className="primary-button form-submit" type="submit">
+                Crear sala
+              </button>
+            </form>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 
@@ -2173,28 +2300,132 @@ function AppLoadingScreen({ message }: { message: string }) {
 
 function UserDashboardPage() {
   const { currentUser } = useAuth();
-  const { rooms, matchesByRoom, loading, error } = useCatalogData();
+  const { rooms, matchesByRoom, predictionsByMatch, loading, error } = useCatalogData();
   const myRooms = getAccessibleRooms(rooms, currentUser);
-  const upcomingMatches = myRooms
+  const pendingPredictions = myRooms
     .flatMap((room) => matchesByRoom[room.id] ?? [])
-    .filter((match) => !isPredictionLocked(match.matchDate, match.status));
+    .filter((match) => {
+      const hasPrediction = (predictionsByMatch[match.id] ?? []).some(
+        (prediction) => prediction.userId === currentUser?.id,
+      );
+
+      return !isPredictionLocked(match.matchDate, match.status) && !hasPrediction;
+    }).length;
+  const roomPerformance = myRooms.map((room) => {
+    const roomMatches = matchesByRoom[room.id] ?? [];
+    const leaderboard = buildLeaderboard(
+      getRoomMembers(room),
+      getCurrentRoomPredictions(roomMatches, predictionsByMatch),
+      roomMatches,
+    );
+    const myLeaderboardEntry = leaderboard.find((item) => item.userId === currentUser?.id);
+    const evaluatedPredictions = roomMatches.filter((match) => {
+      const hasResult = match.teamAScore !== null && match.teamBScore !== null;
+      const prediction = (predictionsByMatch[match.id] ?? []).find(
+        (item) => item.userId === currentUser?.id,
+      );
+
+      return hasResult && prediction;
+    }).length;
+    const totalHits = (myLeaderboardEntry?.exactHits ?? 0) + (myLeaderboardEntry?.outcomeHits ?? 0);
+    const accuracy = evaluatedPredictions > 0 ? Math.round((totalHits / evaluatedPredictions) * 100) : 0;
+
+    return {
+      room,
+      points: myLeaderboardEntry?.points ?? 0,
+      exactHits: myLeaderboardEntry?.exactHits ?? 0,
+      accuracy,
+      evaluatedPredictions,
+    };
+  });
 
   if (loading) {
     return <AppLoadingScreen message="Cargando panel..." />;
   }
 
   return (
-    <div className="page-stack">
-      <PageHeader
-        title="Panel"
-        description={`Bienvenido, ${currentUser?.name ?? ''}.`}
-      />
+    <div className="page-stack user-dashboard-page">
+      <header className="hero user-dashboard-hero">
+        <h1>Bienvenido, {currentUser?.name ?? 'usuario'}</h1>
+        <p className="page-description">
+          Revisa tu rendimiento por sala y entra directo a donde quieras pronosticar o consultar resultados.
+        </p>
+      </header>
       {error ? <StateCard tone="error">{error}</StateCard> : null}
-      <div className="stats-grid">
-        <StatTile label="Salas visibles" value={myRooms.length} />
-        <StatTile label="Partidos disponibles" value={upcomingMatches.length} />
-        <StatTile label="Puntaje exacto" value="3 pts" helper="Resultado exacto" />
-        <StatTile label="Ganador/empate" value="1 pt" helper="Coincidencia parcial" />
+
+      <div className="dashboard-grid">
+        <section className="panel-card dashboard-main-panel">
+          <div className="section-heading">
+            <div>
+              <h3>Mi rendimiento por sala</h3>
+            </div>
+          </div>
+          {roomPerformance.length === 0 ? (
+            <StateCard>Todavia no perteneces a ninguna sala.</StateCard>
+          ) : (
+            <div className="room-performance-list">
+              {roomPerformance.map(({ room, points, exactHits, accuracy, evaluatedPredictions }) => (
+                <article key={room.id} className="room-performance-card">
+                  <div className="room-performance-card__header">
+                    <div>
+                      <span className="eyebrow">Sala</span>
+                      <h3>{room.name}</h3>
+                    </div>
+                    <StatusBadge
+                      label={room.isActive ? 'Activa' : 'Deshabilitada'}
+                      tone={room.isActive ? 'success' : 'muted'}
+                    />
+                  </div>
+                  <div className="room-performance-main">
+                    <span className="muted-text">Puntos obtenidos</span>
+                    <strong>{points} pts</strong>
+                  </div>
+                  <div className="room-performance-metrics">
+                    <div>
+                      <span className="muted-text">Exactos</span>
+                      <strong>{exactHits}</strong>
+                    </div>
+                    <div>
+                      <span className="muted-text">Acierto</span>
+                      <strong>{accuracy}%</strong>
+                    </div>
+                    <div>
+                      <span className="muted-text">Evaluados</span>
+                      <strong>{evaluatedPredictions}</strong>
+                    </div>
+                  </div>
+                  <Link className="secondary-button" to={`/user/rooms/${room.id}`}>
+                    Ver sala
+                  </Link>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <aside className="dashboard-side-panel">
+          <section className="panel-card compact-card">
+            <div className="subsection-heading">
+              <h3>Siguiente paso</h3>
+            </div>
+            {pendingPredictions > 0 ? (
+              <>
+                <strong className="summary-highlight">{pendingPredictions} pendientes</strong>
+                <p className="page-description">
+                  Tienes pronosticos abiertos para completar antes de que cierren los partidos.
+                </p>
+                <Link className="secondary-button" to="/user/predictions">
+                  Ir a pronosticos
+                </Link>
+              </>
+            ) : (
+              <>
+                <strong className="summary-highlight">Todo al dia</strong>
+                <p className="page-description">No tienes pronosticos pendientes ahora mismo.</p>
+              </>
+            )}
+          </section>
+        </aside>
       </div>
     </div>
   );
@@ -2202,12 +2433,30 @@ function UserDashboardPage() {
 
 function UserProfilePage() {
   const { currentUser } = useAuth();
-  const [feedback, setFeedback] = useState('');
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; message: string } | null>(null);
+  const [profile, setProfile] = useState({
+    name: currentUser?.name ?? '',
+    username: currentUser?.username ?? '',
+    email: currentUser?.email ?? '',
+  });
   const [form, setForm] = useState({
     name: currentUser?.name ?? '',
     username: currentUser?.username ?? '',
     email: currentUser?.email ?? '',
   });
+
+  function startEditingProfile() {
+    setForm(profile);
+    setFeedback(null);
+    setIsEditingProfile(true);
+  }
+
+  function cancelEditingProfile() {
+    setForm(profile);
+    setFeedback(null);
+    setIsEditingProfile(false);
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -2217,9 +2466,11 @@ function UserProfilePage() {
 
     try {
       await usersService.update(currentUser.id, form);
-      setFeedback('Perfil actualizado correctamente.');
+      setProfile(form);
+      setIsEditingProfile(false);
+      setFeedback({ tone: 'success', message: 'Perfil actualizado correctamente.' });
     } catch (requestError) {
-      setFeedback(extractErrorMessage(requestError));
+      setFeedback({ tone: 'error', message: extractErrorMessage(requestError) });
     }
   }
 
@@ -2227,46 +2478,90 @@ function UserProfilePage() {
     <div className="page-stack">
       <PageHeader
         title="Perfil"
-        description="Actualiza tus datos personales."
+        description="Revisa tu informacion personal y edita solo cuando necesites cambiar algo."
       />
-      {feedback ? <StateCard tone="success">{feedback}</StateCard> : null}
+      {feedback ? <StateCard tone={feedback.tone}>{feedback.message}</StateCard> : null}
       <div className="profile-layout">
-        <form className="form-grid form-grid-balanced panel-card" onSubmit={handleSubmit}>
-          <label>
-            Nombre
-            <input
-              required
-              value={form.name}
-              onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-            />
-          </label>
-          <label>
-            Username
-            <input
-              required
-              value={form.username}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, username: event.target.value }))
-              }
-            />
-          </label>
-          <label className="form-submit">
-            Email
-            <input
-              type="email"
-              required
-              value={form.email}
-              onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-            />
-          </label>
-          <button className="primary-button form-submit" type="submit">
-            Guardar perfil
-          </button>
-        </form>
-        <aside className="panel-card profile-summary-card">
-          <span className="muted-text">Rol actual</span>
-          <strong>{currentUser?.role}</strong>
-          <p className="page-description">Este rol define los accesos disponibles en el menu lateral.</p>
+        <section className="panel-card profile-card">
+          <div className="profile-card-header">
+            <div className="profile-avatar" aria-hidden="true">
+              {profile.name.trim().charAt(0).toUpperCase() || profile.username.trim().charAt(0).toUpperCase() || 'U'}
+            </div>
+            <div>
+              <h3>{profile.name || 'Usuario'}</h3>
+              <p className="page-description">@{profile.username || 'username'}</p>
+            </div>
+            {!isEditingProfile ? (
+              <button className="primary-button" type="button" onClick={startEditingProfile}>
+                Editar perfil
+              </button>
+            ) : null}
+          </div>
+
+          {!isEditingProfile ? (
+            <div className="profile-read-grid">
+              <div>
+                <span className="muted-text">Nombre</span>
+                <strong>{profile.name}</strong>
+              </div>
+              <div>
+                <span className="muted-text">Username</span>
+                <strong>@{profile.username}</strong>
+              </div>
+              <div>
+                <span className="muted-text">Email</span>
+                <strong>{profile.email}</strong>
+              </div>
+            </div>
+          ) : (
+            <form className="form-grid form-grid-balanced profile-edit-form" onSubmit={handleSubmit}>
+              <label>
+                Nombre
+                <input
+                  required
+                  value={form.name}
+                  onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+                />
+              </label>
+              <label>
+                Username
+                <input
+                  required
+                  value={form.username}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, username: event.target.value }))
+                  }
+                />
+              </label>
+              <label className="form-submit">
+                Email
+                <input
+                  type="email"
+                  required
+                  value={form.email}
+                  onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+                />
+              </label>
+              <div className="modal-actions form-submit">
+                <button className="secondary-button" type="button" onClick={cancelEditingProfile}>
+                  Cancelar
+                </button>
+                <button className="primary-button" type="submit">
+                  Guardar cambios
+                </button>
+              </div>
+            </form>
+          )}
+        </section>
+        <aside className="panel-card profile-side-card">
+          <h3>Cuenta</h3>
+          <p className="page-description">
+            Mantén tus datos actualizados para que tu nombre y contacto aparezcan correctamente en tus salas.
+          </p>
+          <div className="compact-metrics">
+            <span>Perfil activo</span>
+            <span>Datos editables</span>
+          </div>
         </aside>
       </div>
     </div>
@@ -2277,6 +2572,15 @@ function UserRoomsPage() {
   const { currentUser } = useAuth();
   const { rooms, matchesByRoom, predictionsByMatch, loading, error } = useCatalogData();
   const myRooms = getAccessibleRooms(rooms, currentUser);
+  const activeRooms = myRooms.filter((room) => room.isActive).length;
+  const totalMatches = myRooms.reduce(
+    (total, room) => total + (matchesByRoom[room.id]?.length ?? 0),
+    0,
+  );
+  const totalPredictions = myRooms.reduce((total, room) => {
+    const roomMatches = matchesByRoom[room.id] ?? [];
+    return total + roomMatches.flatMap((match) => predictionsByMatch[match.id] ?? []).length;
+  }, 0);
 
   if (loading) {
     return <AppLoadingScreen message="Cargando salas..." />;
@@ -2284,19 +2588,38 @@ function UserRoomsPage() {
 
   return (
     <div className="page-stack">
-      <PageHeader
-        title="Mis salas"
-        description={
-          currentUser?.role === UserRole.ADMIN
-            ? 'Accede a cualquier sala para ver sus partidos y pronosticos.'
-            : 'Elige una sala para ver sus partidos y tus pronosticos.'
-        }
-      />
+      <section className="panel-card user-rooms-hero">
+        <div>
+          <span className="eyebrow">Mis salas</span>
+          <h2>Elige donde jugar</h2>
+          <p className="page-description">
+            Cada sala concentra sus partidos, pronosticos y tabla. Entra a una para continuar desde ahi.
+          </p>
+        </div>
+        <div className="user-rooms-summary">
+          <div>
+            <span className="muted-text">Salas</span>
+            <strong>{myRooms.length}</strong>
+          </div>
+          <div>
+            <span className="muted-text">Activas</span>
+            <strong>{activeRooms}</strong>
+          </div>
+          <div>
+            <span className="muted-text">Partidos</span>
+            <strong>{totalMatches}</strong>
+          </div>
+          <div>
+            <span className="muted-text">Pronosticos</span>
+            <strong>{totalPredictions}</strong>
+          </div>
+        </div>
+      </section>
       {error ? <StateCard tone="error">{error}</StateCard> : null}
       {myRooms.length === 0 ? (
         <StateCard>No hay salas registradas para este usuario.</StateCard>
       ) : (
-        <SectionTable headers={['Sala', 'Miembros', 'Actividad', 'Accion']}>
+        <div className="user-room-card-grid">
           {myRooms.map((room) => {
             const roomMatches = matchesByRoom[room.id] ?? [];
             const roomPredictions = roomMatches.flatMap(
@@ -2304,24 +2627,37 @@ function UserRoomsPage() {
             );
 
             return (
-              <tr key={room.id}>
-                <td>
-                  <strong>{room.name}</strong>
-                </td>
-                <td>{room.roomUsers?.length ?? 0}</td>
-                <td>
+              <article key={room.id} className="panel-card user-room-card">
+                <div className="user-room-card__header">
+                  <div>
+                    <span className="eyebrow">Sala</span>
+                    <strong>{room.name}</strong>
+                  </div>
+                  <StatusBadge
+                    label={room.isActive ? 'Activa' : 'Deshabilitada'}
+                    tone={room.isActive ? 'success' : 'muted'}
+                  />
+                </div>
+                <div className="user-room-card__metrics">
+                  <div>
+                    <span className="muted-text">Miembros</span>
+                    <strong>{room.roomUsers?.length ?? 0}</strong>
+                  </div>
+                  <div>
+                    <span className="muted-text">Actividad</span>
                   {roomMatches.length} partido{roomMatches.length === 1 ? '' : 's'} ·{' '}
                   {roomPredictions.length} pronostico{roomPredictions.length === 1 ? '' : 's'}
-                </td>
-                <td>
-                  <Link className="table-button" to={`/user/rooms/${room.id}`}>
+                </div>
+                </div>
+                <div className="user-room-card__footer">
+                  <Link className="secondary-button" to={`/user/rooms/${room.id}`}>
                     Entrar
                   </Link>
-                </td>
-              </tr>
+                </div>
+              </article>
             );
           })}
-        </SectionTable>
+        </div>
       )}
     </div>
   );
