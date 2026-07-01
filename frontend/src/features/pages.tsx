@@ -2410,6 +2410,29 @@ function UserRoomDetailPage() {
     },
     [],
   );
+  const pendingMatchDayOptions = pendingPredictionMatches.reduce<Array<MatchDayOption>>(
+    (options, match) => {
+      const value = getMatchDayKey(match.matchDate);
+
+      if (options.some((option) => option.value === value)) {
+        return options;
+      }
+
+      return [
+        ...options,
+        {
+          value,
+          label: formatMatchDayLabel(match.matchDate),
+          dayNumber: formatMatchDayNumber(match.matchDate),
+          monthLabel: formatMatchDayMonth(match.matchDate),
+        },
+      ];
+    },
+    [],
+  );
+  const visibleMatchDayOptions =
+    activeTab === 'pending-predictions' ? pendingMatchDayOptions : matchDayOptions;
+  const shouldShowMatchDayFilter = visibleMatchDayOptions.length > 0;
   const filteredMatches =
     matchDayFilter === 'all'
       ? matches
@@ -2434,17 +2457,17 @@ function UserRoomDetailPage() {
   const myLeaderboardEntry = leaderboard.find((item) => item.userId === currentUser?.id);
 
   useEffect(() => {
-    if (matchDayOptions.length === 0) {
+    if (visibleMatchDayOptions.length === 0) {
       return;
     }
 
-    const latestMatchDayValue = getLatestMatchDayValue(matchDayOptions);
-    const currentExists = matchDayOptions.some((option) => option.value === matchDayFilter);
+    const latestMatchDayValue = getLatestMatchDayValue(visibleMatchDayOptions);
+    const currentExists = visibleMatchDayOptions.some((option) => option.value === matchDayFilter);
 
     if (matchDayFilter === 'all' || !currentExists) {
       setMatchDayFilter(latestMatchDayValue);
     }
-  }, [matchDayFilter, matchDayOptions]);
+  }, [matchDayFilter, visibleMatchDayOptions]);
 
   if (loading) {
     return <AppLoadingScreen message="Cargando sala..." />;
@@ -2583,8 +2606,8 @@ function UserRoomDetailPage() {
                 Pronosticos de la sala
               </button>
             </div>
-            {matchDayOptions.length > 0 ? (
-              <MatchDayCarousel value={matchDayFilter} options={matchDayOptions} onChange={setMatchDayFilter} />
+            {shouldShowMatchDayFilter ? (
+              <MatchDayCarousel value={matchDayFilter} options={visibleMatchDayOptions} onChange={setMatchDayFilter} />
             ) : null}
           </div>
 
