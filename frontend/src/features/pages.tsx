@@ -2414,9 +2414,6 @@ function UserDashboardPage() {
                 <p className="page-description">
                   Tienes pronosticos abiertos para completar antes de que cierren los partidos.
                 </p>
-                <Link className="secondary-button" to="/user/predictions">
-                  Ir a pronosticos
-                </Link>
               </>
             ) : (
               <>
