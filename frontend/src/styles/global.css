@@ -336,7 +336,33 @@ img {
 }
 
 .dashboard-main-panel {
-  padding: 1.2rem;
+  padding: 0;
+}
+
+.dashboard-room-section {
+  display: grid;
+  gap: 1rem;
+}
+
+.dashboard-room-rows {
+  display: grid;
+  gap: 1rem;
+}
+
+.dashboard-room-headings,
+.dashboard-room-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) 360px;
+  gap: 24px;
+  align-items: start;
+}
+
+.dashboard-room-headings h3 {
+  margin: 0;
+}
+
+.room-pending-card {
+  align-self: start;
 }
 
 .admin-dashboard-layout,
@@ -1571,6 +1597,8 @@ select {
   }
 
   .dashboard-grid,
+  .dashboard-room-headings,
+  .dashboard-room-row,
   .profile-layout,
   .user-rooms-hero {
     grid-template-columns: 1fr;

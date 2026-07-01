@@ -2302,15 +2302,6 @@ function UserDashboardPage() {
   const { currentUser } = useAuth();
   const { rooms, matchesByRoom, predictionsByMatch, loading, error } = useCatalogData();
   const myRooms = getAccessibleRooms(rooms, currentUser);
-  const pendingPredictions = myRooms
-    .flatMap((room) => matchesByRoom[room.id] ?? [])
-    .filter((match) => {
-      const hasPrediction = (predictionsByMatch[match.id] ?? []).some(
-        (prediction) => prediction.userId === currentUser?.id,
-      );
-
-      return !isPredictionLocked(match.matchDate, match.status) && !hasPrediction;
-    }).length;
   const roomPerformance = myRooms.map((room) => {
     const roomMatches = matchesByRoom[room.id] ?? [];
     const leaderboard = buildLeaderboard(
@@ -2329,6 +2320,13 @@ function UserDashboardPage() {
     }).length;
     const totalHits = (myLeaderboardEntry?.exactHits ?? 0) + (myLeaderboardEntry?.outcomeHits ?? 0);
     const accuracy = evaluatedPredictions > 0 ? Math.round((totalHits / evaluatedPredictions) * 100) : 0;
+    const pendingCount = roomMatches.filter((match) => {
+      const hasPrediction = (predictionsByMatch[match.id] ?? []).some(
+        (prediction) => prediction.userId === currentUser?.id,
+      );
+
+      return !isPredictionLocked(match.matchDate, match.status) && !hasPrediction;
+    }).length;
 
     return {
       room,
@@ -2336,6 +2334,7 @@ function UserDashboardPage() {
       exactHits: myLeaderboardEntry?.exactHits ?? 0,
       accuracy,
       evaluatedPredictions,
+      pendingCount,
     };
   });
 
@@ -2353,19 +2352,18 @@ function UserDashboardPage() {
       </header>
       {error ? <StateCard tone="error">{error}</StateCard> : null}
 
-      <div className="dashboard-grid">
-        <section className="panel-card dashboard-main-panel">
-          <div className="section-heading">
-            <div>
-              <h3>Mi rendimiento por sala</h3>
-            </div>
-          </div>
-          {roomPerformance.length === 0 ? (
-            <StateCard>Todavia no perteneces a ninguna sala.</StateCard>
-          ) : (
-            <div className="room-performance-list">
-              {roomPerformance.map(({ room, points, exactHits, accuracy, evaluatedPredictions }) => (
-                <article key={room.id} className="room-performance-card">
+      <section className="dashboard-room-section">
+        <div className="dashboard-room-headings">
+          <h3>Mi rendimiento por sala</h3>
+          <h3>Siguiente paso</h3>
+        </div>
+        {roomPerformance.length === 0 ? (
+          <StateCard>Todavia no perteneces a ninguna sala.</StateCard>
+        ) : (
+          <div className="dashboard-room-rows">
+            {roomPerformance.map(({ room, points, exactHits, accuracy, evaluatedPredictions, pendingCount }) => (
+              <div key={room.id} className="dashboard-room-row">
+                <article className="panel-card room-performance-card">
                   <div className="room-performance-card__header">
                     <div>
                       <span className="eyebrow">Sala</span>
@@ -2398,32 +2396,29 @@ function UserDashboardPage() {
                     Ver sala
                   </Link>
                 </article>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <aside className="dashboard-side-panel">
-          <section className="panel-card compact-card">
-            <div className="subsection-heading">
-              <h3>Siguiente paso</h3>
-            </div>
-            {pendingPredictions > 0 ? (
-              <>
-                <strong className="summary-highlight">{pendingPredictions} pendientes</strong>
-                <p className="page-description">
-                  Tienes pronosticos abiertos para completar antes de que cierren los partidos.
-                </p>
-              </>
-            ) : (
-              <>
-                <strong className="summary-highlight">Todo al dia</strong>
-                <p className="page-description">No tienes pronosticos pendientes ahora mismo.</p>
-              </>
-            )}
-          </section>
-        </aside>
-      </div>
+                <section className="panel-card compact-card room-pending-card">
+                  <span className="eyebrow">{room.name}</span>
+                  {pendingCount > 0 ? (
+                    <>
+                      <strong className="summary-highlight">
+                        {pendingCount} pendiente{pendingCount === 1 ? '' : 's'}
+                      </strong>
+                      <p className="page-description">
+                        Tienes pronosticos abiertos para completar antes de que cierren los partidos.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <strong className="summary-highlight">Todo al dia</strong>
+                      <p className="page-description">No tienes pronosticos pendientes en esta sala.</p>
+                    </>
+                  )}
+                </section>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
