@@ -132,14 +132,6 @@ function MatchDayCarousel({
         ‹
       </button>
       <div ref={scrollRef} className="matchday-scroll" role="tablist" aria-label="Fechas con partidos">
-        <button
-          className={`matchday-chip ${value === 'all' ? 'active' : ''}`}
-          data-active={value === 'all'}
-          type="button"
-          onClick={() => onChange('all')}
-        >
-          <strong>Todas</strong>
-        </button>
         {options.map((option) => (
           <button
             key={option.value}
@@ -248,7 +240,9 @@ function SectionTable({
         <thead>
           <tr>
             {headers.map((header) => (
-              <th key={header}>{header}</th>
+              <th key={header} className={header === 'Puntos' ? 'points-column' : undefined}>
+                {header}
+              </th>
             ))}
           </tr>
         </thead>
@@ -590,7 +584,7 @@ function AdminUsersPage() {
               </div>
             </div>
           ) : null}
-          <form className="form-grid" onSubmit={handleSubmit}>
+          <form className="form-grid form-grid-balanced" onSubmit={handleSubmit}>
             <label>
               Nombre
               <input
@@ -656,7 +650,7 @@ function AdminUsersPage() {
                 <option value="false">Deshabilitado</option>
               </select>
             </label>
-            <button className="primary-button" type="submit">
+            <button className="primary-button form-submit" type="submit">
               {editingUser ? 'Guardar cambios' : 'Crear usuario'}
             </button>
           </form>
@@ -866,7 +860,7 @@ function AdminRoomsPage() {
           title="Crear sala"
           description="Primero la creas y luego entras a gestionarla desde su propia vista."
         />
-        <form className="form-grid" onSubmit={saveRoom}>
+        <form className="form-grid form-grid-balanced" onSubmit={saveRoom}>
           <label>
             Nombre
             <input
@@ -888,7 +882,7 @@ function AdminRoomsPage() {
               <option value="false">Deshabilitada</option>
             </select>
           </label>
-          <button className="primary-button" type="submit">
+          <button className="primary-button form-submit" type="submit">
             Crear sala
           </button>
         </form>
@@ -945,7 +939,7 @@ function AdminRoomsPage() {
             }
           />
 
-        <form className="form-grid" onSubmit={saveRoom}>
+        <form className="form-grid form-grid-balanced" onSubmit={saveRoom}>
           <label>
             Nombre
             <input
@@ -967,7 +961,7 @@ function AdminRoomsPage() {
               <option value="false">Deshabilitada</option>
             </select>
           </label>
-          <button className="primary-button" type="submit">
+          <button className="primary-button form-submit" type="submit">
             {selectedRoom ? 'Guardar sala' : 'Crear sala'}
           </button>
         </form>
@@ -1217,7 +1211,7 @@ function AdminRoomsPage() {
                 Cerrar
               </button>
             </div>
-            <form className="form-grid" onSubmit={saveMatch}>
+            <form className="form-grid form-grid-balanced" onSubmit={saveMatch}>
               <label>
                 Equipo A
                 <input
@@ -1293,7 +1287,7 @@ function AdminRoomsPage() {
                   <option value={MatchStatus.FINISHED}>FINISHED</option>
                 </select>
               </label>
-              <div className="modal-actions">
+              <div className="modal-actions form-submit">
                 <button
                   className="secondary-button"
                   type="button"
@@ -1602,7 +1596,7 @@ function AdminRoomDetailPage() {
               <h3>Configuracion de la sala</h3>
             </div>
           </div>
-          <form className="form-grid" onSubmit={saveRoom}>
+          <form className="form-grid form-grid-balanced constrained-form" onSubmit={saveRoom}>
             <label>
               Nombre
               <input
@@ -1624,7 +1618,7 @@ function AdminRoomDetailPage() {
                 <option value="false">Deshabilitada</option>
               </select>
             </label>
-            <button className="primary-button" type="submit">
+            <button className="primary-button form-submit" type="submit">
               Guardar sala
             </button>
           </form>
@@ -1926,7 +1920,7 @@ function AdminRoomDetailPage() {
                 Cerrar
               </button>
             </div>
-            <form className="form-grid" onSubmit={saveMatch}>
+            <form className="form-grid form-grid-balanced" onSubmit={saveMatch}>
               <label>
                 Equipo A
                 <input
@@ -2002,7 +1996,7 @@ function AdminRoomDetailPage() {
                   <option value={MatchStatus.FINISHED}>FINISHED</option>
                 </select>
               </label>
-              <div className="modal-actions">
+              <div className="modal-actions form-submit">
                 <button
                   className="secondary-button"
                   type="button"
@@ -2038,7 +2032,9 @@ function LeaderboardTable({ items }: { items: LeaderboardItem[] }) {
             <strong>{item.name}</strong>
             <div className="muted-text">@{item.username}</div>
           </td>
-          <td>{item.points}</td>
+          <td className="points-column">
+            <span className="points-value">{item.points}</span>
+          </td>
           <td>{item.predictionCount}</td>
           <td>{item.exactHits}</td>
           <td>{item.outcomeHits}</td>
@@ -2234,39 +2230,45 @@ function UserProfilePage() {
         description="Actualiza tus datos personales."
       />
       {feedback ? <StateCard tone="success">{feedback}</StateCard> : null}
-      <form className="form-grid panel-card" onSubmit={handleSubmit}>
-        <label>
-          Nombre
-          <input
-            required
-            value={form.name}
-            onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-          />
-        </label>
-        <label>
-          Username
-          <input
-            required
-            value={form.username}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, username: event.target.value }))
-            }
-          />
-        </label>
-        <label>
-          Email
-          <input
-            type="email"
-            required
-            value={form.email}
-            onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-          />
-        </label>
-        <StateCard>Rol actual: {currentUser?.role}</StateCard>
-        <button className="primary-button" type="submit">
-          Guardar perfil
-        </button>
-      </form>
+      <div className="profile-layout">
+        <form className="form-grid form-grid-balanced panel-card" onSubmit={handleSubmit}>
+          <label>
+            Nombre
+            <input
+              required
+              value={form.name}
+              onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+            />
+          </label>
+          <label>
+            Username
+            <input
+              required
+              value={form.username}
+              onChange={(event) =>
+                setForm((current) => ({ ...current, username: event.target.value }))
+              }
+            />
+          </label>
+          <label className="form-submit">
+            Email
+            <input
+              type="email"
+              required
+              value={form.email}
+              onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+            />
+          </label>
+          <button className="primary-button form-submit" type="submit">
+            Guardar perfil
+          </button>
+        </form>
+        <aside className="panel-card profile-summary-card">
+          <span className="muted-text">Rol actual</span>
+          <strong>{currentUser?.role}</strong>
+          <p className="page-description">Este rol define los accesos disponibles en el menu lateral.</p>
+        </aside>
+      </div>
     </div>
   );
 }

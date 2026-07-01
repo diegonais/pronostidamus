@@ -482,6 +482,23 @@ img {
   gap: 0.9rem;
 }
 
+.form-grid-balanced {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  align-items: end;
+}
+
+.form-submit {
+  grid-column: 1 / -1;
+}
+
+.form-grid > .primary-button.form-submit {
+  justify-self: start;
+}
+
+.constrained-form {
+  max-width: 720px;
+}
+
 .form-grid label,
 .prediction-form label {
   display: grid;
@@ -545,6 +562,24 @@ select {
   padding: 0.9rem 0.7rem;
   border-bottom: 1px solid var(--line);
   vertical-align: top;
+}
+
+.app-table th.points-column,
+.app-table td.points-column {
+  color: var(--brand);
+  font-weight: 800;
+}
+
+.points-value {
+  display: inline-flex;
+  min-width: 2.6rem;
+  justify-content: center;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--brand);
+  font-size: 1.05rem;
+  font-weight: 800;
 }
 
 .status-badge {
@@ -795,6 +830,24 @@ select {
 
 .matchday-chip.active span,
 .matchday-chip.active strong {
+  color: var(--brand);
+}
+
+.profile-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.38fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.profile-summary-card {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1.2rem;
+}
+
+.profile-summary-card strong {
+  font-size: 1.25rem;
   color: var(--brand);
 }
 
@@ -1169,7 +1222,8 @@ select {
   .app-shell,
   .two-column,
   .admin-dashboard-layout,
-  .admin-workspace {
+  .admin-workspace,
+  .profile-layout {
     grid-template-columns: 1fr;
   }
 
