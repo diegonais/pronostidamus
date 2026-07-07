@@ -35,6 +35,10 @@ type UserRoomSection = 'overview' | 'leaderboard' | 'explore';
 type AdminRoomMainSection = 'overview' | 'settings' | 'leaderboard' | 'manage';
 type AdminRoomSection = 'overview' | 'members' | 'matches';
 type AdminRoomDetailTab = 'members' | 'matches' | 'room-predictions';
+type FeedbackNotice = {
+  tone: 'success' | 'error';
+  message: string;
+};
 type MatchDayOption = {
   value: string;
   label: string;
@@ -107,6 +111,41 @@ function getInitialMatchForm(): MatchPayload {
     status: MatchStatus.SCHEDULED,
     isActive: true,
   };
+}
+
+function FeedbackToast({
+  feedback,
+  onClose,
+}: {
+  feedback: FeedbackNotice | null;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    if (!feedback) {
+      return;
+    }
+
+    const timeout = window.setTimeout(onClose, feedback.tone === 'error' ? 5200 : 3400);
+
+    return () => window.clearTimeout(timeout);
+  }, [feedback, onClose]);
+
+  if (!feedback) {
+    return null;
+  }
+
+  return (
+    <div className="feedback-toast" role="status" aria-live="polite">
+      <StateCard tone={feedback.tone}>
+        <div className="feedback-toast-content">
+          <span>{feedback.message}</span>
+          <button className="feedback-toast-close" type="button" onClick={onClose} aria-label="Cerrar mensaje">
+            Cerrar
+          </button>
+        </div>
+      </StateCard>
+    </div>
+  );
 }
 
 function MatchDayCarousel({
@@ -555,7 +594,7 @@ function AdminUsersPage() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isUserFormOpen, setIsUserFormOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; message: string } | null>(null);
+  const [feedback, setFeedback] = useState<FeedbackNotice | null>(null);
   const [form, setForm] = useState<UserPayload>({
     name: '',
     username: '',
@@ -668,7 +707,7 @@ function AdminUsersPage() {
           }
         />
         {error ? <StateCard tone="error">{error}</StateCard> : null}
-        {feedback ? <StateCard tone={feedback.tone}>{feedback.message}</StateCard> : null}
+        <FeedbackToast feedback={feedback} onClose={() => setFeedback(null)} />
         <div className="stats-grid compact-stats-grid admin-user-stats">
           <StatTile label="Registrados" value={users.length} />
           <StatTile label="Administradores" value={totalAdmins} />
@@ -854,7 +893,7 @@ function AdminRoomsPage() {
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
   const [roomPendingDeletion, setRoomPendingDeletion] = useState<Room | null>(null);
   const [memberPendingRemoval, setMemberPendingRemoval] = useState<RoomUser | null>(null);
-  const [feedback, setFeedback] = useState('');
+  const [feedback, setFeedback] = useState<FeedbackNotice | null>(null);
   const [matchForm, setMatchForm] = useState<MatchPayload>(getInitialMatchForm);
 
   useEffect(() => {
@@ -907,16 +946,16 @@ function AdminRoomsPage() {
     try {
       if (selectedRoom) {
         await roomsService.update(selectedRoom.id, roomForm);
-        setFeedback('Sala actualizada correctamente.');
+        setFeedback({ tone: 'success', message: 'Sala actualizada correctamente.' });
       } else {
         await roomsService.create(roomForm);
-        setFeedback('Sala creada correctamente.');
+        setFeedback({ tone: 'success', message: 'Sala creada correctamente.' });
       }
 
       closeRoomForm();
       await refresh();
     } catch (requestError) {
-      setFeedback(extractErrorMessage(requestError));
+      setFeedback({ tone: 'error', message: extractErrorMessage(requestError) });
     }
   }
 
@@ -928,10 +967,10 @@ function AdminRoomsPage() {
     try {
       await roomsService.addUser(selectedRoom.id, selectedUserId);
       setSelectedUserId('');
-      setFeedback('Usuario anadido a la sala.');
+      setFeedback({ tone: 'success', message: 'Usuario anadido a la sala.' });
       await refresh();
     } catch (requestError) {
-      setFeedback(extractErrorMessage(requestError));
+      setFeedback({ tone: 'error', message: extractErrorMessage(requestError) });
     }
   }
 
@@ -939,10 +978,10 @@ function AdminRoomsPage() {
     try {
       await roomsService.removeUser(roomId, userId);
       setMemberPendingRemoval(null);
-      setFeedback('Usuario retirado de la sala.');
+      setFeedback({ tone: 'success', message: 'Usuario retirado de la sala.' });
       await refresh();
     } catch (requestError) {
-      setFeedback(extractErrorMessage(requestError));
+      setFeedback({ tone: 'error', message: extractErrorMessage(requestError) });
     }
   }
 
@@ -950,10 +989,10 @@ function AdminRoomsPage() {
     try {
       await roomsService.remove(room.id);
       setRoomPendingDeletion(null);
-      setFeedback('Sala eliminada correctamente.');
+      setFeedback({ tone: 'success', message: 'Sala eliminada correctamente.' });
       await refresh();
     } catch (requestError) {
-      setFeedback(extractErrorMessage(requestError));
+      setFeedback({ tone: 'error', message: extractErrorMessage(requestError) });
     }
   }
 
@@ -961,12 +1000,12 @@ function AdminRoomsPage() {
     event.preventDefault();
 
     if (!selectedRoom) {
-      setFeedback('Selecciona una sala para registrar partidos.');
+      setFeedback({ tone: 'error', message: 'Selecciona una sala para registrar partidos.' });
       return;
     }
 
     if (matchForm.teamA.trim().toLowerCase() === matchForm.teamB.trim().toLowerCase()) {
-      setFeedback('Los equipos no pueden ser iguales.');
+      setFeedback({ tone: 'error', message: 'Los equipos no pueden ser iguales.' });
       return;
     }
 
@@ -978,17 +1017,17 @@ function AdminRoomsPage() {
 
       if (editingMatch) {
         await matchesService.update(editingMatch.id, payload);
-        setFeedback('Partido actualizado correctamente.');
+        setFeedback({ tone: 'success', message: 'Partido actualizado correctamente.' });
       } else {
         await matchesService.create(selectedRoom.id, payload);
-        setFeedback('Partido agregado a la sala.');
+        setFeedback({ tone: 'success', message: 'Partido agregado a la sala.' });
         setIsAddMatchModalOpen(false);
       }
 
       setEditingMatch(null);
       await refresh();
     } catch (requestError) {
-      setFeedback(extractErrorMessage(requestError));
+      setFeedback({ tone: 'error', message: extractErrorMessage(requestError) });
     }
   }
 
@@ -1023,7 +1062,7 @@ function AdminRoomsPage() {
           }
         />
         {error ? <StateCard tone="error">{error}</StateCard> : null}
-        {feedback ? <StateCard tone="success">{feedback}</StateCard> : null}
+        <FeedbackToast feedback={feedback} onClose={() => setFeedback(null)} />
         <div className="stats-grid compact-stats-grid admin-user-stats">
           <StatTile label="Salas creadas" value={rooms.length} />
           <StatTile label="Activas" value={activeRooms} />
@@ -1175,7 +1214,7 @@ function AdminRoomsPage() {
           }
         />
         {error ? <StateCard tone="error">{error}</StateCard> : null}
-        {feedback ? <StateCard tone="success">{feedback}</StateCard> : null}
+        <FeedbackToast feedback={feedback} onClose={() => setFeedback(null)} />
         <SectionTable headers={['Sala', 'Estado', 'Miembros', 'Partidos', 'Accion']}>
           {rooms.map((room) => (
             <tr key={room.id}>
@@ -1625,7 +1664,7 @@ function AdminRoomDetailPage() {
   const [isDeleteRoomModalOpen, setIsDeleteRoomModalOpen] = useState(false);
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
   const [memberPendingRemoval, setMemberPendingRemoval] = useState<RoomUser | null>(null);
-  const [feedback, setFeedback] = useState('');
+  const [feedback, setFeedback] = useState<FeedbackNotice | null>(null);
   const [matchDayFilter, setMatchDayFilter] = useState('all');
   const [matchForm, setMatchForm] = useState<MatchPayload>(getInitialMatchForm);
   const room = rooms.find((item) => item.id === roomId);
@@ -1664,10 +1703,10 @@ function AdminRoomDetailPage() {
 
     try {
       await roomsService.update(room.id, roomForm);
-      setFeedback('Sala actualizada correctamente.');
+      setFeedback({ tone: 'success', message: 'Sala actualizada correctamente.' });
       await refresh();
     } catch (requestError) {
-      setFeedback(extractErrorMessage(requestError));
+      setFeedback({ tone: 'error', message: extractErrorMessage(requestError) });
     }
   }
 
@@ -1679,10 +1718,10 @@ function AdminRoomDetailPage() {
     try {
       await roomsService.addUser(room.id, selectedUserId);
       setSelectedUserId('');
-      setFeedback('Usuario anadido a la sala.');
+      setFeedback({ tone: 'success', message: 'Usuario anadido a la sala.' });
       await refresh();
     } catch (requestError) {
-      setFeedback(extractErrorMessage(requestError));
+      setFeedback({ tone: 'error', message: extractErrorMessage(requestError) });
     }
   }
 
@@ -1694,10 +1733,10 @@ function AdminRoomDetailPage() {
     try {
       await roomsService.removeUser(room.id, userId);
       setMemberPendingRemoval(null);
-      setFeedback('Usuario retirado de la sala.');
+      setFeedback({ tone: 'success', message: 'Usuario retirado de la sala.' });
       await refresh();
     } catch (requestError) {
-      setFeedback(extractErrorMessage(requestError));
+      setFeedback({ tone: 'error', message: extractErrorMessage(requestError) });
     }
   }
 
@@ -1711,7 +1750,7 @@ function AdminRoomDetailPage() {
       setIsDeleteRoomModalOpen(false);
       navigate('/admin/rooms');
     } catch (requestError) {
-      setFeedback(extractErrorMessage(requestError));
+      setFeedback({ tone: 'error', message: extractErrorMessage(requestError) });
     }
   }
 
@@ -1723,7 +1762,7 @@ function AdminRoomDetailPage() {
     }
 
     if (matchForm.teamA.trim().toLowerCase() === matchForm.teamB.trim().toLowerCase()) {
-      setFeedback('Los equipos no pueden ser iguales.');
+      setFeedback({ tone: 'error', message: 'Los equipos no pueden ser iguales.' });
       return;
     }
 
@@ -1735,17 +1774,17 @@ function AdminRoomDetailPage() {
 
       if (editingMatch) {
         await matchesService.update(editingMatch.id, payload);
-        setFeedback('Partido actualizado correctamente.');
+        setFeedback({ tone: 'success', message: 'Partido actualizado correctamente.' });
       } else {
         await matchesService.create(room.id, payload);
-        setFeedback('Partido agregado a la sala.');
+        setFeedback({ tone: 'success', message: 'Partido agregado a la sala.' });
         setIsAddMatchModalOpen(false);
       }
 
       setEditingMatch(null);
       await refresh();
     } catch (requestError) {
-      setFeedback(extractErrorMessage(requestError));
+      setFeedback({ tone: 'error', message: extractErrorMessage(requestError) });
     }
   }
 
@@ -1812,7 +1851,7 @@ function AdminRoomDetailPage() {
     <div className="page-stack">
       <PageHeader title={room.name} actions={<Link className="secondary-button" to="/admin/rooms">Volver a salas</Link>} />
       {error ? <StateCard tone="error">{error}</StateCard> : null}
-      {feedback ? <StateCard tone="success">{feedback}</StateCard> : null}
+      <FeedbackToast feedback={feedback} onClose={() => setFeedback(null)} />
 
       <section className="panel-card">
         <div className="admin-room-section-nav">
@@ -2657,7 +2696,7 @@ function UserDashboardPage() {
 function UserProfilePage() {
   const { currentUser } = useAuth();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; message: string } | null>(null);
+  const [feedback, setFeedback] = useState<FeedbackNotice | null>(null);
   const [profile, setProfile] = useState({
     name: currentUser?.name ?? '',
     username: currentUser?.username ?? '',
@@ -2703,7 +2742,7 @@ function UserProfilePage() {
         title="Perfil"
         description="Revisa tu informacion personal y edita solo cuando necesites cambiar algo."
       />
-      {feedback ? <StateCard tone={feedback.tone}>{feedback.message}</StateCard> : null}
+      <FeedbackToast feedback={feedback} onClose={() => setFeedback(null)} />
       <div className="profile-layout">
         <section className="panel-card profile-card">
           <div className="profile-card-header">
@@ -2890,7 +2929,7 @@ function UserRoomDetailPage() {
   const { currentUser } = useAuth();
   const { roomId = '' } = useParams();
   const { rooms, matchesByRoom, predictionsByMatch, loading, error, refresh } = useCatalogData();
-  const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; message: string } | null>(null);
+  const [feedback, setFeedback] = useState<FeedbackNotice | null>(null);
   const [activeSection, setActiveSection] = useState<UserRoomSection>('overview');
   const [activeTab, setActiveTab] = useState<RoomDetailTab>('pending-predictions');
   const [matchDayFilter, setMatchDayFilter] = useState('all');
@@ -3056,7 +3095,7 @@ function UserRoomDetailPage() {
       <PredictionLoadingOverlay visible={Boolean(submittingMatchId)} />
       <PageHeader title={room.name} />
       {error ? <StateCard tone="error">{error}</StateCard> : null}
-      {feedback ? <StateCard tone={feedback.tone}>{feedback.message}</StateCard> : null}
+      <FeedbackToast feedback={feedback} onClose={() => setFeedback(null)} />
       {!roomAllowsPredictions ? (
         <StateCard tone="warning">
           Esta sala esta inactiva. Puedes consultar su informacion, pero los pronosticos estan deshabilitados.
@@ -3333,7 +3372,7 @@ function UserRoomDetailPage() {
 function UserPredictionsPage() {
   const { currentUser } = useAuth();
   const { rooms, matchesByRoom, predictionsByMatch, loading, error, refresh } = useCatalogData();
-  const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; message: string } | null>(null);
+  const [feedback, setFeedback] = useState<FeedbackNotice | null>(null);
   const [submittingMatchId, setSubmittingMatchId] = useState<string | null>(null);
   const myRooms = getActiveAccessibleRooms(rooms, currentUser);
   const matches = sortMatchesByDate(myRooms.flatMap((room) => matchesByRoom[room.id] ?? []));
@@ -3394,7 +3433,7 @@ function UserPredictionsPage() {
         description="Edicion disponible mientras el partido no este cerrado por tiempo o estado."
       />
       {error ? <StateCard tone="error">{error}</StateCard> : null}
-      {feedback ? <StateCard tone={feedback.tone}>{feedback.message}</StateCard> : null}
+      <FeedbackToast feedback={feedback} onClose={() => setFeedback(null)} />
       {matches.length === 0 ? (
         <StateCard>Todavia no hay partidos disponibles para pronosticar.</StateCard>
       ) : (
