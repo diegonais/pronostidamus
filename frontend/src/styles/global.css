@@ -558,6 +558,18 @@ img {
   align-items: end;
 }
 
+.match-form-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  align-items: end;
+}
+
+.match-score-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(96px, 0.8fr) minmax(0, 2fr) minmax(96px, 0.8fr);
+  gap: 0.9rem;
+  align-items: end;
+}
+
 .form-submit {
   grid-column: 1 / -1;
 }
@@ -1600,7 +1612,8 @@ select {
   .dashboard-room-headings,
   .dashboard-room-row,
   .profile-layout,
-  .user-rooms-hero {
+  .user-rooms-hero,
+  .match-score-editor {
     grid-template-columns: 1fr;
   }
 

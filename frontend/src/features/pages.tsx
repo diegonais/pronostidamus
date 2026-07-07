@@ -12,7 +12,12 @@ import { ThemeToggle } from '../components/ThemeToggle';
 import { InternalMatchScoreCard } from '../components/InternalMatchScoreCard';
 import { PageHeader, StateCard, StatTile, StatusBadge } from '../components/common';
 import { buildLeaderboard, getRoomMembers } from '../utils/leaderboard';
-import { formatDateTime, fromDateTimeLocalValue, toDateTimeLocalValue } from '../utils/date';
+import {
+  formatDateTime,
+  fromDateTimeLocalValue,
+  getCurrentBoliviaDateTimeLocalValue,
+  toDateTimeLocalValue,
+} from '../utils/date';
 import { getMatchVisualStatus, isPredictionLocked } from '../utils/predictions';
 import {
   MatchStatus,
@@ -89,6 +94,18 @@ function formatMatchDayMonth(matchDate: string) {
 
 function getLatestMatchDayValue(options: MatchDayOption[]) {
   return options.length > 0 ? options[options.length - 1].value : 'all';
+}
+
+function getInitialMatchForm(): MatchPayload {
+  return {
+    teamA: '',
+    teamB: '',
+    matchDate: getCurrentBoliviaDateTimeLocalValue(),
+    teamAScore: null,
+    teamBScore: null,
+    status: MatchStatus.SCHEDULED,
+    isActive: true,
+  };
 }
 
 function MatchDayCarousel({
@@ -728,15 +745,7 @@ function AdminRoomsPage() {
   const [isAddMatchModalOpen, setIsAddMatchModalOpen] = useState(false);
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
   const [feedback, setFeedback] = useState('');
-  const [matchForm, setMatchForm] = useState<MatchPayload>({
-    teamA: '',
-    teamB: '',
-    matchDate: '',
-    teamAScore: null,
-    teamBScore: null,
-    status: MatchStatus.SCHEDULED,
-    isActive: true,
-  });
+  const [matchForm, setMatchForm] = useState<MatchPayload>(getInitialMatchForm);
 
   useEffect(() => {
     if (!selectedRoom) {
@@ -767,15 +776,7 @@ function AdminRoomsPage() {
 
   useEffect(() => {
     if (!editingMatch) {
-      setMatchForm({
-        teamA: '',
-        teamB: '',
-        matchDate: '',
-        teamAScore: null,
-        teamBScore: null,
-        status: MatchStatus.SCHEDULED,
-        isActive: true,
-      });
+      setMatchForm(getInitialMatchForm());
       return;
     }
 
@@ -1202,6 +1203,7 @@ function AdminRoomsPage() {
                     type="button"
                     onClick={() => {
                       setEditingMatch(null);
+                      setMatchForm(getInitialMatchForm());
                       setIsAddMatchModalOpen(true);
                     }}
                   >
@@ -1338,27 +1340,82 @@ function AdminRoomsPage() {
                 Cerrar
               </button>
             </div>
-            <form className="form-grid form-grid-balanced" onSubmit={saveMatch}>
-              <label>
-                Equipo A
-                <input
-                  required
-                  value={matchForm.teamA}
-                  onChange={(event) =>
-                    setMatchForm((current) => ({ ...current, teamA: event.target.value }))
-                  }
-                />
-              </label>
-              <label>
-                Equipo B
-                <input
-                  required
-                  value={matchForm.teamB}
-                  onChange={(event) =>
-                    setMatchForm((current) => ({ ...current, teamB: event.target.value }))
-                  }
-                />
-              </label>
+            <form className="form-grid match-form-grid" onSubmit={saveMatch}>
+              {isEditingMatch ? (
+                <div className="match-score-editor form-submit">
+                  <label>
+                    Equipo A
+                    <input
+                      required
+                      value={matchForm.teamA}
+                      onChange={(event) =>
+                        setMatchForm((current) => ({ ...current, teamA: event.target.value }))
+                      }
+                    />
+                  </label>
+                  <label>
+                    Goles A
+                    <input
+                      type="number"
+                      min={0}
+                      value={matchForm.teamAScore ?? ''}
+                      onChange={(event) =>
+                        setMatchForm((current) => ({
+                          ...current,
+                          teamAScore: event.target.value === '' ? null : Number(event.target.value),
+                        }))
+                      }
+                    />
+                  </label>
+                  <label>
+                    Equipo B
+                    <input
+                      required
+                      value={matchForm.teamB}
+                      onChange={(event) =>
+                        setMatchForm((current) => ({ ...current, teamB: event.target.value }))
+                      }
+                    />
+                  </label>
+                  <label>
+                    Goles B
+                    <input
+                      type="number"
+                      min={0}
+                      value={matchForm.teamBScore ?? ''}
+                      onChange={(event) =>
+                        setMatchForm((current) => ({
+                          ...current,
+                          teamBScore: event.target.value === '' ? null : Number(event.target.value),
+                        }))
+                      }
+                    />
+                  </label>
+                </div>
+              ) : (
+                <>
+                  <label>
+                    Equipo A
+                    <input
+                      required
+                      value={matchForm.teamA}
+                      onChange={(event) =>
+                        setMatchForm((current) => ({ ...current, teamA: event.target.value }))
+                      }
+                    />
+                  </label>
+                  <label>
+                    Equipo B
+                    <input
+                      required
+                      value={matchForm.teamB}
+                      onChange={(event) =>
+                        setMatchForm((current) => ({ ...current, teamB: event.target.value }))
+                      }
+                    />
+                  </label>
+                </>
+              )}
               <label>
                 Fecha y hora
                 <input
@@ -1370,50 +1427,24 @@ function AdminRoomsPage() {
                   }
                 />
               </label>
-              <label>
-                Goles A
-                <input
-                  type="number"
-                  min={0}
-                  value={matchForm.teamAScore ?? ''}
-                  onChange={(event) =>
-                    setMatchForm((current) => ({
-                      ...current,
-                      teamAScore: event.target.value === '' ? null : Number(event.target.value),
-                    }))
-                  }
-                />
-              </label>
-              <label>
-                Goles B
-                <input
-                  type="number"
-                  min={0}
-                  value={matchForm.teamBScore ?? ''}
-                  onChange={(event) =>
-                    setMatchForm((current) => ({
-                      ...current,
-                      teamBScore: event.target.value === '' ? null : Number(event.target.value),
-                    }))
-                  }
-                />
-              </label>
-              <label>
-                Estado
-                <select
-                  value={matchForm.status}
-                  onChange={(event) =>
-                    setMatchForm((current) => ({
-                      ...current,
-                      status: event.target.value as MatchStatus,
-                    }))
-                  }
-                >
-                  <option value={MatchStatus.SCHEDULED}>SCHEDULED</option>
-                  <option value={MatchStatus.CLOSED}>CLOSED</option>
-                  <option value={MatchStatus.FINISHED}>FINISHED</option>
-                </select>
-              </label>
+              {isEditingMatch ? (
+                <label>
+                  Estado
+                  <select
+                    value={matchForm.status}
+                    onChange={(event) =>
+                      setMatchForm((current) => ({
+                        ...current,
+                        status: event.target.value as MatchStatus,
+                      }))
+                    }
+                  >
+                    <option value={MatchStatus.SCHEDULED}>SCHEDULED</option>
+                    <option value={MatchStatus.CLOSED}>CLOSED</option>
+                    <option value={MatchStatus.FINISHED}>FINISHED</option>
+                  </select>
+                </label>
+              ) : null}
               <div className="modal-actions form-submit">
                 <button
                   className="secondary-button"
@@ -1449,15 +1480,7 @@ function AdminRoomDetailPage() {
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
   const [feedback, setFeedback] = useState('');
   const [matchDayFilter, setMatchDayFilter] = useState('all');
-  const [matchForm, setMatchForm] = useState<MatchPayload>({
-    teamA: '',
-    teamB: '',
-    matchDate: '',
-    teamAScore: null,
-    teamBScore: null,
-    status: MatchStatus.SCHEDULED,
-    isActive: true,
-  });
+  const [matchForm, setMatchForm] = useState<MatchPayload>(getInitialMatchForm);
   const room = rooms.find((item) => item.id === roomId);
 
   useEffect(() => {
@@ -1470,15 +1493,7 @@ function AdminRoomDetailPage() {
 
   useEffect(() => {
     if (!editingMatch) {
-      setMatchForm({
-        teamA: '',
-        teamB: '',
-        matchDate: '',
-        teamAScore: null,
-        teamBScore: null,
-        status: MatchStatus.SCHEDULED,
-        isActive: true,
-      });
+      setMatchForm(getInitialMatchForm());
       return;
     }
 
@@ -1857,6 +1872,7 @@ function AdminRoomDetailPage() {
                   type="button"
                   onClick={() => {
                     setEditingMatch(null);
+                    setMatchForm(getInitialMatchForm());
                     setIsAddMatchModalOpen(true);
                   }}
                 >
@@ -2047,27 +2063,82 @@ function AdminRoomDetailPage() {
                 Cerrar
               </button>
             </div>
-            <form className="form-grid form-grid-balanced" onSubmit={saveMatch}>
-              <label>
-                Equipo A
-                <input
-                  required
-                  value={matchForm.teamA}
-                  onChange={(event) =>
-                    setMatchForm((current) => ({ ...current, teamA: event.target.value }))
-                  }
-                />
-              </label>
-              <label>
-                Equipo B
-                <input
-                  required
-                  value={matchForm.teamB}
-                  onChange={(event) =>
-                    setMatchForm((current) => ({ ...current, teamB: event.target.value }))
-                  }
-                />
-              </label>
+            <form className="form-grid match-form-grid" onSubmit={saveMatch}>
+              {isEditingMatch ? (
+                <div className="match-score-editor form-submit">
+                  <label>
+                    Equipo A
+                    <input
+                      required
+                      value={matchForm.teamA}
+                      onChange={(event) =>
+                        setMatchForm((current) => ({ ...current, teamA: event.target.value }))
+                      }
+                    />
+                  </label>
+                  <label>
+                    Goles A
+                    <input
+                      type="number"
+                      min={0}
+                      value={matchForm.teamAScore ?? ''}
+                      onChange={(event) =>
+                        setMatchForm((current) => ({
+                          ...current,
+                          teamAScore: event.target.value === '' ? null : Number(event.target.value),
+                        }))
+                      }
+                    />
+                  </label>
+                  <label>
+                    Equipo B
+                    <input
+                      required
+                      value={matchForm.teamB}
+                      onChange={(event) =>
+                        setMatchForm((current) => ({ ...current, teamB: event.target.value }))
+                      }
+                    />
+                  </label>
+                  <label>
+                    Goles B
+                    <input
+                      type="number"
+                      min={0}
+                      value={matchForm.teamBScore ?? ''}
+                      onChange={(event) =>
+                        setMatchForm((current) => ({
+                          ...current,
+                          teamBScore: event.target.value === '' ? null : Number(event.target.value),
+                        }))
+                      }
+                    />
+                  </label>
+                </div>
+              ) : (
+                <>
+                  <label>
+                    Equipo A
+                    <input
+                      required
+                      value={matchForm.teamA}
+                      onChange={(event) =>
+                        setMatchForm((current) => ({ ...current, teamA: event.target.value }))
+                      }
+                    />
+                  </label>
+                  <label>
+                    Equipo B
+                    <input
+                      required
+                      value={matchForm.teamB}
+                      onChange={(event) =>
+                        setMatchForm((current) => ({ ...current, teamB: event.target.value }))
+                      }
+                    />
+                  </label>
+                </>
+              )}
               <label>
                 Fecha y hora
                 <input
@@ -2079,50 +2150,24 @@ function AdminRoomDetailPage() {
                   }
                 />
               </label>
-              <label>
-                Goles A
-                <input
-                  type="number"
-                  min={0}
-                  value={matchForm.teamAScore ?? ''}
-                  onChange={(event) =>
-                    setMatchForm((current) => ({
-                      ...current,
-                      teamAScore: event.target.value === '' ? null : Number(event.target.value),
-                    }))
-                  }
-                />
-              </label>
-              <label>
-                Goles B
-                <input
-                  type="number"
-                  min={0}
-                  value={matchForm.teamBScore ?? ''}
-                  onChange={(event) =>
-                    setMatchForm((current) => ({
-                      ...current,
-                      teamBScore: event.target.value === '' ? null : Number(event.target.value),
-                    }))
-                  }
-                />
-              </label>
-              <label>
-                Estado
-                <select
-                  value={matchForm.status}
-                  onChange={(event) =>
-                    setMatchForm((current) => ({
-                      ...current,
-                      status: event.target.value as MatchStatus,
-                    }))
-                  }
-                >
-                  <option value={MatchStatus.SCHEDULED}>SCHEDULED</option>
-                  <option value={MatchStatus.CLOSED}>CLOSED</option>
-                  <option value={MatchStatus.FINISHED}>FINISHED</option>
-                </select>
-              </label>
+              {isEditingMatch ? (
+                <label>
+                  Estado
+                  <select
+                    value={matchForm.status}
+                    onChange={(event) =>
+                      setMatchForm((current) => ({
+                        ...current,
+                        status: event.target.value as MatchStatus,
+                      }))
+                    }
+                  >
+                    <option value={MatchStatus.SCHEDULED}>SCHEDULED</option>
+                    <option value={MatchStatus.CLOSED}>CLOSED</option>
+                    <option value={MatchStatus.FINISHED}>FINISHED</option>
+                  </select>
+                </label>
+              ) : null}
               <div className="modal-actions form-submit">
                 <button
                   className="secondary-button"
