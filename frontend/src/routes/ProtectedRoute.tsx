@@ -14,7 +14,7 @@ export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
     return <div className="state-card">Cargando sesion...</div>;
   }
 
-  if (!currentUser) {
+  if (!currentUser || !currentUser.isActive) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 

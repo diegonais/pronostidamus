@@ -72,6 +72,14 @@ export class RoomsService {
     return this.roomsRepository.save(room);
   }
 
+  async remove(id: string): Promise<{ message: string }> {
+    await this.findOne(id);
+
+    await this.roomsRepository.delete(id);
+
+    return { message: 'Room removed successfully' };
+  }
+
   async addUser(roomId: string, userId: string): Promise<RoomUser> {
     await this.findOne(roomId);
     await this.usersService.findOne(userId);
@@ -117,6 +125,16 @@ export class RoomsService {
     if (!roomUser) {
       throw new ConflictException(
         'User must belong to the room before creating a prediction',
+      );
+    }
+  }
+
+  async ensureRoomIsActive(roomId: string): Promise<void> {
+    const room = await this.findOne(roomId);
+
+    if (!room.isActive) {
+      throw new ConflictException(
+        'Predictions are disabled because this room is inactive',
       );
     }
   }

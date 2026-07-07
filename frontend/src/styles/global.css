@@ -635,6 +635,13 @@ select {
   overflow-x: auto;
 }
 
+.table-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 .app-table {
   width: 100%;
   border-collapse: collapse;
@@ -1551,6 +1558,14 @@ select {
   border: 1px solid var(--line);
   border-radius: 20px;
   box-shadow: 0 24px 60px rgba(23, 32, 51, 0.26);
+}
+
+.destructive-modal {
+  width: min(560px, 100%);
+}
+
+.destructive-modal-actions {
+  margin-top: 1rem;
 }
 
 .modal-header,

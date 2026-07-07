@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { hashPassword } from '../auth/password.util';
+import { UserRole } from '../common/enums/user-role.enum';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -55,6 +56,7 @@ export class UsersService {
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id);
+    await this.ensureLastActiveAdminIsPreserved(user, updateUserDto);
 
     if (updateUserDto.email || updateUserDto.username) {
       await this.ensureUniqueFields(
@@ -85,14 +87,61 @@ export class UsersService {
   async findActiveByUsername(
     username: string,
   ): Promise<User | null> {
+    const user = await this.findByUsernameWithPassword(username);
+
+    return user?.isActive ? user : null;
+  }
+
+  async findByUsernameWithPassword(username: string): Promise<User | null> {
     return this.usersRepository
       .createQueryBuilder('user')
       .addSelect('user.passwordHash')
       .where('LOWER(user.username) = :username', {
         username: username.trim().toLowerCase(),
       })
-      .andWhere('user.isActive = :isActive', { isActive: true })
       .getOne();
+  }
+
+  async ensureUserIsActive(userId: string): Promise<void> {
+    const user = await this.findOne(userId);
+
+    if (!user.isActive) {
+      throw new ConflictException('El usuario esta deshabilitado.');
+    }
+  }
+
+  private async ensureLastActiveAdminIsPreserved(
+    user: User,
+    updateUserDto: UpdateUserDto,
+  ): Promise<void> {
+    const isCurrentlyActiveAdmin =
+      user.role === UserRole.ADMIN && user.isActive;
+
+    if (!isCurrentlyActiveAdmin) {
+      return;
+    }
+
+    const nextRole = updateUserDto.role ?? user.role;
+    const nextIsActive = updateUserDto.isActive ?? user.isActive;
+    const remainsActiveAdmin =
+      nextRole === UserRole.ADMIN && nextIsActive;
+
+    if (remainsActiveAdmin) {
+      return;
+    }
+
+    const otherActiveAdmins = await this.usersRepository.count({
+      where: {
+        role: UserRole.ADMIN,
+        isActive: true,
+      },
+    });
+
+    if (otherActiveAdmins <= 1) {
+      throw new ConflictException(
+        'No se puede deshabilitar o cambiar el rol del unico administrador activo.',
+      );
+    }
   }
 
   private async ensureUniqueFields(

@@ -23,6 +23,10 @@ export const roomsService = {
     const { data } = await api.patch<Room>(`/rooms/${roomId}`, payload);
     return data;
   },
+  async remove(roomId: string) {
+    const { data } = await api.delete(`/rooms/${roomId}`);
+    return data;
+  },
   async addUser(roomId: string, userId: string) {
     const { data } = await api.post(`/rooms/${roomId}/users/${userId}`);
     return data;

@@ -47,6 +47,16 @@ export class RoomsController {
     return this.roomsService.update(id, updateRoomDto);
   }
 
+  @Delete(':id')
+  @ApiOkResponse({
+    schema: {
+      example: { message: 'Room removed successfully' },
+    },
+  })
+  remove(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.roomsService.remove(id);
+  }
+
   @Post(':roomId/users/:userId')
   @ApiCreatedResponse({ type: RoomUser })
   addUser(

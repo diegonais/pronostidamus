@@ -8,13 +8,19 @@ export class AuthService {
   constructor(private readonly usersService: UsersService) {}
 
   async previewLogin(previewLoginDto: PreviewLoginDto) {
-    const user = await this.usersService.findActiveByUsername(
+    const user = await this.usersService.findByUsernameWithPassword(
       previewLoginDto.username,
     );
 
     if (!user || !verifyPassword(previewLoginDto.password, user.passwordHash)) {
       throw new UnauthorizedException(
         'Invalid username or password',
+      );
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException(
+        'Tu usuario esta deshabilitado. Contacta al administrador.',
       );
     }
 

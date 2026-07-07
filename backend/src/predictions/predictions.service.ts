@@ -28,7 +28,8 @@ export class PredictionsService {
   ): Promise<Prediction> {
     const match = await this.matchesService.findOne(matchId);
     this.ensurePredictionsOpen(match);
-    await this.usersService.findOne(createPredictionDto.userId);
+    await this.roomsService.ensureRoomIsActive(match.roomId);
+    await this.usersService.ensureUserIsActive(createPredictionDto.userId);
     await this.roomsService.ensureUserBelongsToRoom(
       match.roomId,
       createPredictionDto.userId,
@@ -89,6 +90,8 @@ export class PredictionsService {
   ): Promise<Prediction> {
     const prediction = await this.findOne(id);
     this.ensurePredictionsOpen(prediction.match);
+    await this.roomsService.ensureRoomIsActive(prediction.match.roomId);
+    await this.usersService.ensureUserIsActive(prediction.userId);
 
     Object.assign(prediction, updatePredictionDto);
 

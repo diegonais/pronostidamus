@@ -8,6 +8,7 @@ import {
 } from 'react';
 import { authService } from '../services/authService';
 import { extractErrorMessage } from '../services/api';
+import { usersService } from '../services/usersService';
 import type { LoginRequest, User } from '../types';
 
 interface AuthContextValue {
@@ -26,13 +27,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedValue = window.localStorage.getItem(STORAGE_KEY);
+    let isMounted = true;
 
-    if (storedValue) {
-      setCurrentUser(JSON.parse(storedValue) as User);
+    async function restoreSession() {
+      const storedValue = window.localStorage.getItem(STORAGE_KEY);
+
+      if (!storedValue) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const storedUser = JSON.parse(storedValue) as User;
+        const freshUser = await usersService.getById(storedUser.id);
+
+        if (!freshUser.isActive) {
+          window.localStorage.removeItem(STORAGE_KEY);
+
+          if (isMounted) {
+            setCurrentUser(null);
+          }
+
+          return;
+        }
+
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(freshUser));
+
+        if (isMounted) {
+          setCurrentUser(freshUser);
+        }
+      } catch {
+        window.localStorage.removeItem(STORAGE_KEY);
+
+        if (isMounted) {
+          setCurrentUser(null);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
     }
 
-    setIsLoading(false);
+    void restoreSession();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const value = useMemo<AuthContextValue>(

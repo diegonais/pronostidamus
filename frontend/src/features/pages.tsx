@@ -26,6 +26,7 @@ import {
   type Match,
   type Prediction,
   type Room,
+  type RoomUser,
   type User,
 } from '../types';
 
@@ -276,6 +277,103 @@ function getAccessibleRooms(rooms: Room[], currentUser: User | null) {
 
   return rooms.filter((room) =>
     room.roomUsers?.some((membership) => membership.userId === currentUser?.id),
+  );
+}
+
+function getActiveAccessibleRooms(rooms: Room[], currentUser: User | null) {
+  return getAccessibleRooms(rooms, currentUser).filter((room) => room.isActive);
+}
+
+function ConfirmationModal({
+  eyebrow,
+  title,
+  children,
+  confirmLabel,
+  onCancel,
+  onConfirm,
+}: {
+  eyebrow: string;
+  title: string;
+  children: ReactNode;
+  confirmLabel: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <div className="modal-backdrop" onClick={onCancel} role="presentation">
+      <section
+        className="modal-card destructive-modal"
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirmation-modal-title"
+      >
+        <div className="modal-header">
+          <div>
+            <p className="eyebrow">{eyebrow}</p>
+            <h3 id="confirmation-modal-title">{title}</h3>
+          </div>
+          <button className="table-button" type="button" onClick={onCancel}>
+            Cerrar
+          </button>
+        </div>
+        <StateCard tone="warning">{children}</StateCard>
+        <div className="modal-actions destructive-modal-actions">
+          <button className="secondary-button" type="button" onClick={onCancel}>
+            Cancelar
+          </button>
+          <button className="table-button danger" type="button" onClick={onConfirm}>
+            {confirmLabel}
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function RoomDeletionModal({
+  room,
+  onCancel,
+  onConfirm,
+}: {
+  room: Room;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <ConfirmationModal
+      eyebrow="Eliminar sala"
+      title={room.name}
+      confirmLabel="Eliminar sala"
+      onCancel={onCancel}
+      onConfirm={onConfirm}
+    >
+      Esta accion eliminara la sala junto con sus miembros, partidos y pronosticos registrados.
+    </ConfirmationModal>
+  );
+}
+
+function RemoveRoomMemberModal({
+  memberName,
+  roomName,
+  onCancel,
+  onConfirm,
+}: {
+  memberName: string;
+  roomName: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <ConfirmationModal
+      eyebrow="Quitar miembro"
+      title={memberName}
+      confirmLabel="Quitar miembro"
+      onCancel={onCancel}
+      onConfirm={onConfirm}
+    >
+      El usuario dejara de pertenecer a la sala {roomName}. Sus pronosticos registrados se conservaran.
+    </ConfirmationModal>
   );
 }
 
@@ -538,6 +636,9 @@ function AdminUsersPage() {
   }
 
   const totalAdmins = users.filter((user) => user.role === UserRole.ADMIN).length;
+  const activeAdmins = users.filter((user) => user.role === UserRole.ADMIN && user.isActive).length;
+  const isEditingOnlyActiveAdmin =
+    editingUser?.role === UserRole.ADMIN && editingUser.isActive && activeAdmins === 1;
   const activeUsers = users.filter((user) => user.isActive).length;
   const inactiveUsers = users.length - activeUsers;
   const normalizedSearchTerm = searchTerm.trim().toLowerCase();
@@ -656,6 +757,11 @@ function AdminUsersPage() {
                 </div>
               </div>
             ) : null}
+            {isEditingOnlyActiveAdmin ? (
+              <StateCard tone="warning">
+                Este usuario es el unico administrador activo. Para deshabilitarlo o cambiar su rol, primero crea o activa otro administrador.
+              </StateCard>
+            ) : null}
             <form className="form-grid form-grid-balanced" onSubmit={handleSubmit}>
               <label>
                 Nombre
@@ -702,6 +808,7 @@ function AdminUsersPage() {
                 Rol
                 <select
                   value={form.role}
+                  disabled={isEditingOnlyActiveAdmin}
                   onChange={(event) =>
                     setForm((current) => ({ ...current, role: event.target.value as UserRole }))
                   }
@@ -714,6 +821,7 @@ function AdminUsersPage() {
                 Estado
                 <select
                   value={String(form.isActive)}
+                  disabled={isEditingOnlyActiveAdmin}
                   onChange={(event) =>
                     setForm((current) => ({ ...current, isActive: event.target.value === 'true' }))
                   }
@@ -744,6 +852,8 @@ function AdminRoomsPage() {
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [isAddMatchModalOpen, setIsAddMatchModalOpen] = useState(false);
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
+  const [roomPendingDeletion, setRoomPendingDeletion] = useState<Room | null>(null);
+  const [memberPendingRemoval, setMemberPendingRemoval] = useState<RoomUser | null>(null);
   const [feedback, setFeedback] = useState('');
   const [matchForm, setMatchForm] = useState<MatchPayload>(getInitialMatchForm);
 
@@ -826,13 +936,21 @@ function AdminRoomsPage() {
   }
 
   async function detachUser(roomId: string, userId: string) {
-    if (!window.confirm('¿Quitar usuario de la sala?')) {
-      return;
-    }
-
     try {
       await roomsService.removeUser(roomId, userId);
+      setMemberPendingRemoval(null);
       setFeedback('Usuario retirado de la sala.');
+      await refresh();
+    } catch (requestError) {
+      setFeedback(extractErrorMessage(requestError));
+    }
+  }
+
+  async function deleteRoom(room: Room) {
+    try {
+      await roomsService.remove(room.id);
+      setRoomPendingDeletion(null);
+      setFeedback('Sala eliminada correctamente.');
       await refresh();
     } catch (requestError) {
       setFeedback(extractErrorMessage(requestError));
@@ -956,9 +1074,14 @@ function AdminRoomsPage() {
                   pronostico{roomPredictions.length === 1 ? '' : 's'}
                 </td>
                 <td>
-                  <Link className="table-button" to={`/admin/rooms/${room.id}`}>
-                    Gestionar
-                  </Link>
+                  <div className="table-actions">
+                    <Link className="table-button" to={`/admin/rooms/${room.id}`}>
+                      Gestionar
+                    </Link>
+                    <button className="table-button danger" type="button" onClick={() => setRoomPendingDeletion(room)}>
+                      Eliminar
+                    </button>
+                  </div>
                 </td>
               </tr>
             );
@@ -1014,6 +1137,27 @@ function AdminRoomsPage() {
             </form>
           </section>
         </div>
+      ) : null}
+
+      {roomPendingDeletion ? (
+        <RoomDeletionModal
+          room={roomPendingDeletion}
+          onCancel={() => setRoomPendingDeletion(null)}
+          onConfirm={() => {
+            void deleteRoom(roomPendingDeletion);
+          }}
+        />
+      ) : null}
+
+      {selectedRoom && memberPendingRemoval ? (
+        <RemoveRoomMemberModal
+          memberName={memberPendingRemoval.user.name}
+          roomName={selectedRoom.name}
+          onCancel={() => setMemberPendingRemoval(null)}
+          onConfirm={() => {
+            void detachUser(selectedRoom.id, memberPendingRemoval.user.id);
+          }}
+        />
       ) : null}
     </div>
   );
@@ -1182,7 +1326,7 @@ function AdminRoomsPage() {
                           <button
                             className="table-button danger"
                             type="button"
-                            onClick={() => detachUser(selectedRoom!.id, membership.user.id)}
+                            onClick={() => setMemberPendingRemoval(membership)}
                           >
                             Quitar
                           </button>
@@ -1469,6 +1613,7 @@ function AdminRoomsPage() {
 }
 
 function AdminRoomDetailPage() {
+  const navigate = useNavigate();
   const { roomId = '' } = useParams();
   const { rooms, users, matchesByRoom, predictionsByMatch, loading, error, refresh } = useCatalogData();
   const [activeSection, setActiveSection] = useState<AdminRoomMainSection>('overview');
@@ -1477,7 +1622,9 @@ function AdminRoomDetailPage() {
   const [selectedUserId, setSelectedUserId] = useState('');
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [isAddMatchModalOpen, setIsAddMatchModalOpen] = useState(false);
+  const [isDeleteRoomModalOpen, setIsDeleteRoomModalOpen] = useState(false);
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
+  const [memberPendingRemoval, setMemberPendingRemoval] = useState<RoomUser | null>(null);
   const [feedback, setFeedback] = useState('');
   const [matchDayFilter, setMatchDayFilter] = useState('all');
   const [matchForm, setMatchForm] = useState<MatchPayload>(getInitialMatchForm);
@@ -1540,14 +1687,29 @@ function AdminRoomDetailPage() {
   }
 
   async function detachUser(userId: string) {
-    if (!room || !window.confirm('¿Quitar usuario de la sala?')) {
+    if (!room) {
       return;
     }
 
     try {
       await roomsService.removeUser(room.id, userId);
+      setMemberPendingRemoval(null);
       setFeedback('Usuario retirado de la sala.');
       await refresh();
+    } catch (requestError) {
+      setFeedback(extractErrorMessage(requestError));
+    }
+  }
+
+  async function deleteRoom() {
+    if (!room) {
+      return;
+    }
+
+    try {
+      await roomsService.remove(room.id);
+      setIsDeleteRoomModalOpen(false);
+      navigate('/admin/rooms');
     } catch (requestError) {
       setFeedback(extractErrorMessage(requestError));
     }
@@ -1737,6 +1899,9 @@ function AdminRoomDetailPage() {
             <div>
               <h3>Configuracion de la sala</h3>
             </div>
+            <button className="table-button danger" type="button" onClick={() => setIsDeleteRoomModalOpen(true)}>
+              Eliminar sala
+            </button>
           </div>
           <form className="form-grid form-grid-balanced constrained-form" onSubmit={saveRoom}>
             <label>
@@ -1849,7 +2014,7 @@ function AdminRoomDetailPage() {
                         <button
                           className="table-button danger"
                           type="button"
-                          onClick={() => detachUser(membership.user.id)}
+                          onClick={() => setMemberPendingRemoval(membership)}
                         >
                           Quitar
                         </button>
@@ -2187,6 +2352,27 @@ function AdminRoomDetailPage() {
           </section>
         </div>
       ) : null}
+
+      {isDeleteRoomModalOpen ? (
+        <RoomDeletionModal
+          room={room}
+          onCancel={() => setIsDeleteRoomModalOpen(false)}
+          onConfirm={() => {
+            void deleteRoom();
+          }}
+        />
+      ) : null}
+
+      {memberPendingRemoval ? (
+        <RemoveRoomMemberModal
+          memberName={memberPendingRemoval.user.name}
+          roomName={room.name}
+          onCancel={() => setMemberPendingRemoval(null)}
+          onConfirm={() => {
+            void detachUser(memberPendingRemoval.user.id);
+          }}
+        />
+      ) : null}
     </div>
   );
 }
@@ -2346,7 +2532,7 @@ function AppLoadingScreen({ message }: { message: string }) {
 function UserDashboardPage() {
   const { currentUser } = useAuth();
   const { rooms, matchesByRoom, predictionsByMatch, loading, error } = useCatalogData();
-  const myRooms = getAccessibleRooms(rooms, currentUser);
+  const myRooms = getActiveAccessibleRooms(rooms, currentUser);
   const roomPerformance = myRooms.map((room) => {
     const roomMatches = matchesByRoom[room.id] ?? [];
     const leaderboard = buildLeaderboard(
@@ -2608,7 +2794,7 @@ function UserProfilePage() {
 function UserRoomsPage() {
   const { currentUser } = useAuth();
   const { rooms, matchesByRoom, predictionsByMatch, loading, error } = useCatalogData();
-  const myRooms = getAccessibleRooms(rooms, currentUser);
+  const myRooms = getActiveAccessibleRooms(rooms, currentUser);
   const activeRooms = myRooms.filter((room) => room.isActive).length;
   const totalMatches = myRooms.reduce(
     (total, room) => total + (matchesByRoom[room.id]?.length ?? 0),
@@ -2711,9 +2897,15 @@ function UserRoomDetailPage() {
   const [submittingMatchId, setSubmittingMatchId] = useState<string | null>(null);
   const myRooms = getAccessibleRooms(rooms, currentUser);
   const room = myRooms.find((item) => item.id === roomId);
+  const roomAllowsPredictions = room?.isActive ?? false;
 
   async function submitPrediction(match: Match, formData: FormData) {
     if (!currentUser) {
+      return;
+    }
+
+    if (!roomAllowsPredictions) {
+      setFeedback({ tone: 'error', message: 'No se pueden registrar pronosticos en una sala inactiva.' });
       return;
     }
 
@@ -2758,9 +2950,11 @@ function UserRoomDetailPage() {
 
   const matches = room ? sortMatchesByDate(matchesByRoom[room.id] ?? []) : [];
   const finishedMatches = matches.filter((match) => match.status === MatchStatus.FINISHED);
-  const openMatches = matches.filter((match) => !isPredictionLocked(match.matchDate, match.status));
+  const openMatches = roomAllowsPredictions
+    ? matches.filter((match) => !isPredictionLocked(match.matchDate, match.status))
+    : [];
   const pendingPredictionMatches = matches.filter(
-    (match) => !isPredictionLocked(match.matchDate, match.status),
+    (match) => roomAllowsPredictions && !isPredictionLocked(match.matchDate, match.status),
   );
   const myPredictedMatches = matches.filter((match) =>
     (predictionsByMatch[match.id] ?? []).some((item) => item.userId === currentUser?.id),
@@ -2863,6 +3057,11 @@ function UserRoomDetailPage() {
       <PageHeader title={room.name} />
       {error ? <StateCard tone="error">{error}</StateCard> : null}
       {feedback ? <StateCard tone={feedback.tone}>{feedback.message}</StateCard> : null}
+      {!roomAllowsPredictions ? (
+        <StateCard tone="warning">
+          Esta sala esta inactiva. Puedes consultar su informacion, pero los pronosticos estan deshabilitados.
+        </StateCard>
+      ) : null}
 
       <section className="panel-card">
         <div className="room-section-nav">
@@ -3060,7 +3259,7 @@ function UserRoomDetailPage() {
                     key={match.id}
                     match={match}
                     prediction={myPrediction}
-                    isLocked={isPredictionLocked(match.matchDate, match.status)}
+                    isLocked={!roomAllowsPredictions || isPredictionLocked(match.matchDate, match.status)}
                     isSubmitting={submittingMatchId === match.id}
                     onSubmit={submitPrediction}
                   />
@@ -3136,7 +3335,7 @@ function UserPredictionsPage() {
   const { rooms, matchesByRoom, predictionsByMatch, loading, error, refresh } = useCatalogData();
   const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; message: string } | null>(null);
   const [submittingMatchId, setSubmittingMatchId] = useState<string | null>(null);
-  const myRooms = getAccessibleRooms(rooms, currentUser);
+  const myRooms = getActiveAccessibleRooms(rooms, currentUser);
   const matches = sortMatchesByDate(myRooms.flatMap((room) => matchesByRoom[room.id] ?? []));
 
   async function submitPrediction(match: Match, formData: FormData) {
@@ -3226,7 +3425,7 @@ function UserPredictionsPage() {
 function UserLeaderboardPage() {
   const { currentUser } = useAuth();
   const { rooms, matchesByRoom, predictionsByMatch, loading, error } = useCatalogData();
-  const myRooms = getAccessibleRooms(rooms, currentUser);
+  const myRooms = getActiveAccessibleRooms(rooms, currentUser);
   const [roomId, setRoomId] = useState('');
 
   useEffect(() => {

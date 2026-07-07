@@ -15,6 +15,10 @@ export const usersService = {
     const { data } = await api.get<User[]>('/users');
     return data;
   },
+  async getById(userId: string) {
+    const { data } = await api.get<User>(`/users/${userId}`);
+    return data;
+  },
   async create(payload: UserPayload) {
     const { data } = await api.post<User>('/users', payload);
     return data;
