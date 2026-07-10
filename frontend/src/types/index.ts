@@ -37,9 +37,24 @@ export interface Room {
   updatedAt: string;
 }
 
+export interface Team {
+  id: string;
+  externalId: string;
+  name: string;
+  nameEn: string;
+  fifaCode: string | null;
+  iso2: string | null;
+  group: string | null;
+  flagUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Match {
   id: string;
   roomId: string;
+  teamAId: string | null;
+  teamBId: string | null;
   teamA: string;
   teamB: string;
   matchDate: string;
@@ -48,6 +63,8 @@ export interface Match {
   status: MatchStatus;
   isActive: boolean;
   room?: Room;
+  teamAInfo?: Team | null;
+  teamBInfo?: Team | null;
   predictions?: Prediction[];
   createdAt: string;
   updatedAt: string;

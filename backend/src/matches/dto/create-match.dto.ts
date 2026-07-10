@@ -6,6 +6,7 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  IsUUID,
   Length,
   Min,
 } from 'class-validator';
@@ -13,6 +14,16 @@ import { MatchStatus } from '../../common/enums/match-status.enum';
 import { IsDifferentFrom } from '../../common/validators/is-different-from.validator';
 
 export class CreateMatchDto {
+  @ApiProperty({ required: false, nullable: true })
+  @IsOptional()
+  @IsUUID()
+  teamAId?: string | null;
+
+  @ApiProperty({ required: false, nullable: true })
+  @IsOptional()
+  @IsUUID()
+  teamBId?: string | null;
+
   @ApiProperty()
   @IsString()
   @Length(1, 80)

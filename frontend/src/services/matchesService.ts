@@ -2,6 +2,8 @@ import api from './api';
 import type { Match, MatchStatus } from '../types';
 
 export interface MatchPayload {
+  teamAId?: string | null;
+  teamBId?: string | null;
   teamA: string;
   teamB: string;
   matchDate: string;

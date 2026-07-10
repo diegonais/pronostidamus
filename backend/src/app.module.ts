@@ -9,6 +9,7 @@ import { UsersModule } from './users/users.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { MatchesModule } from './matches/matches.module';
 import { PredictionsModule } from './predictions/predictions.module';
+import { TeamsModule } from './teams/teams.module';
 
 @Module({
   controllers: [AppController],
@@ -59,6 +60,7 @@ import { PredictionsModule } from './predictions/predictions.module';
     RoomsModule,
     MatchesModule,
     PredictionsModule,
+    TeamsModule,
   ],
 })
 export class AppModule {}

@@ -4,11 +4,20 @@ import { BaseEntity } from '../../common/entities/base.entity';
 import { MatchStatus } from '../../common/enums/match-status.enum';
 import { Prediction } from '../../predictions/entities/prediction.entity';
 import { Room } from '../../rooms/entities/room.entity';
+import { Team } from '../../teams/entities/team.entity';
 
 @Entity({ name: 'matches' })
 export class Match extends BaseEntity {
   @Column({ type: 'uuid' })
   roomId: string;
+
+  @ApiProperty({ required: false, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
+  teamAId: string | null;
+
+  @ApiProperty({ required: false, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
+  teamBId: string | null;
 
   @ApiProperty()
   @Column({ type: 'varchar', length: 80 })
@@ -51,6 +60,20 @@ export class Match extends BaseEntity {
   })
   @JoinColumn({ name: 'roomId' })
   room: Room;
+
+  @ManyToOne(() => Team, (team) => team.homeMatches, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'teamAId' })
+  teamAInfo: Team | null;
+
+  @ManyToOne(() => Team, (team) => team.awayMatches, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'teamBId' })
+  teamBInfo: Team | null;
 
   @OneToMany(() => Prediction, (prediction) => prediction.match)
   predictions: Prediction[];

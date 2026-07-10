@@ -9,6 +9,8 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "seed": "node -r ts-node/register -r tsconfig-paths/register src/database/seeds/seed.ts",
+    "seed:teams": "node -r ts-node/register -r tsconfig-paths/register src/database/seeds/import-worldcup-teams.ts",
+    "seed:realistic": "node -r ts-node/register -r tsconfig-paths/register src/database/seeds/seed-realistic.ts",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",

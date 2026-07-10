@@ -7,6 +7,7 @@ import { matchesService, type MatchPayload } from '../services/matchesService';
 import { predictionsService } from '../services/predictionsService';
 import { roomsService } from '../services/roomsService';
 import { extractErrorMessage } from '../services/api';
+import { teamsService } from '../services/teamsService';
 import { usersService, type UserPayload } from '../services/usersService';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { InternalMatchScoreCard } from '../components/InternalMatchScoreCard';
@@ -27,6 +28,7 @@ import {
   type Prediction,
   type Room,
   type RoomUser,
+  type Team,
   type User,
 } from '../types';
 
@@ -103,6 +105,8 @@ function getLatestMatchDayValue(options: MatchDayOption[]) {
 
 function getInitialMatchForm(): MatchPayload {
   return {
+    teamAId: null,
+    teamBId: null,
     teamA: '',
     teamB: '',
     matchDate: getCurrentBoliviaDateTimeLocalValue(),
@@ -111,6 +115,148 @@ function getInitialMatchForm(): MatchPayload {
     status: MatchStatus.SCHEDULED,
     isActive: true,
   };
+}
+
+function getTeamOptionLabel(team: Team) {
+  return `${team.name}${team.group ? ` - Grupo ${team.group}` : ''}`;
+}
+
+function selectMatchTeam(
+  current: MatchPayload,
+  teams: Team[],
+  side: 'A' | 'B',
+  teamId: string,
+): MatchPayload {
+  const selectedTeam = teams.find((team) => team.id === teamId);
+
+  if (side === 'A') {
+    return {
+      ...current,
+      teamAId: selectedTeam?.id ?? null,
+      teamA: selectedTeam?.name ?? '',
+    };
+  }
+
+  return {
+    ...current,
+    teamBId: selectedTeam?.id ?? null,
+    teamB: selectedTeam?.name ?? '',
+  };
+}
+
+function TeamSelectField({
+  label,
+  value,
+  teams,
+  onChange,
+}: {
+  label: string;
+  value: string | null | undefined;
+  teams: Team[];
+  onChange: (teamId: string) => void;
+}) {
+  const selectedTeam = teams.find((team) => team.id === value);
+
+  return (
+    <label className="team-select-field">
+      {label}
+      <select required value={value ?? ''} onChange={(event) => onChange(event.target.value)}>
+        <option value="">Selecciona un equipo</option>
+        {teams.map((team) => (
+          <option key={team.id} value={team.id}>
+            {getTeamOptionLabel(team)}
+          </option>
+        ))}
+      </select>
+      {selectedTeam ? (
+        <span className="team-select-preview">
+          {selectedTeam.flagUrl ? (
+            <img src={selectedTeam.flagUrl} alt={`Bandera de ${selectedTeam.name}`} loading="lazy" />
+          ) : null}
+          <span>{selectedTeam.name}</span>
+        </span>
+      ) : null}
+    </label>
+  );
+}
+
+function getMatchTeamName(match: Match, side: 'A' | 'B') {
+  return side === 'A'
+    ? (match.teamAInfo?.name ?? match.teamA)
+    : (match.teamBInfo?.name ?? match.teamB);
+}
+
+function getMatchTeamFlagUrl(match: Match, side: 'A' | 'B') {
+  return side === 'A' ? match.teamAInfo?.flagUrl : match.teamBInfo?.flagUrl;
+}
+
+function MatchTeamBadge({ match, side }: { match: Match; side: 'A' | 'B' }) {
+  const teamName = getMatchTeamName(match, side);
+  const flagUrl = getMatchTeamFlagUrl(match, side);
+
+  return (
+    <span className="match-team-badge">
+      {flagUrl ? (
+        <img src={flagUrl} alt={`Bandera de ${teamName}`} loading="lazy" />
+      ) : (
+        <span className="match-team-badge__fallback" aria-hidden="true">
+          {teamName.slice(0, 2).toUpperCase()}
+        </span>
+      )}
+      <span>{teamName}</span>
+    </span>
+  );
+}
+
+function TeamFlag({ match, side }: { match: Match; side: 'A' | 'B' }) {
+  const teamName = getMatchTeamName(match, side);
+  const flagUrl = getMatchTeamFlagUrl(match, side);
+
+  if (flagUrl) {
+    return <img src={flagUrl} alt={`Bandera de ${teamName}`} loading="lazy" />;
+  }
+
+  return (
+    <span className="match-team-badge__fallback" aria-hidden="true">
+      {teamName.slice(0, 2).toUpperCase()}
+    </span>
+  );
+}
+
+function MatchTeamsInline({ match }: { match: Match }) {
+  return (
+    <span className="match-teams-inline">
+      <span className="match-team-name match-team-name--home">{getMatchTeamName(match, 'A')}</span>
+      <span className="match-team-flag">
+        <TeamFlag match={match} side="A" />
+      </span>
+      <span className="match-teams-inline__versus">vs</span>
+      <span className="match-team-flag">
+        <TeamFlag match={match} side="B" />
+      </span>
+      <span className="match-team-name match-team-name--away">{getMatchTeamName(match, 'B')}</span>
+    </span>
+  );
+}
+
+function MatchupCard({
+  match,
+  resultLabel,
+}: {
+  match: Match;
+  resultLabel?: string;
+}) {
+  const hasScore = match.teamAScore !== null && match.teamBScore !== null;
+  const displayResult =
+    resultLabel ?? (hasScore ? `${match.teamAScore} - ${match.teamBScore}` : 'vs');
+
+  return (
+    <div className="matchup-card">
+      <MatchTeamBadge match={match} side="A" />
+      <strong>{displayResult}</strong>
+      <MatchTeamBadge match={match} side="B" />
+    </div>
+  );
 }
 
 function FeedbackToast({
@@ -231,6 +377,7 @@ function getUserRoomCount(rooms: Room[], userId: string) {
 function useCatalogData() {
   const [users, setUsers] = useState<User[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [matchesByRoom, setMatchesByRoom] = useState<Record<string, Match[]>>({});
   const [predictionsByMatch, setPredictionsByMatch] = useState<Record<string, Prediction[]>>({});
   const [loading, setLoading] = useState(true);
@@ -241,13 +388,15 @@ function useCatalogData() {
       setLoading(true);
       setError('');
 
-      const [usersResponse, roomsResponse] = await Promise.all([
+      const [usersResponse, roomsResponse, teamsResponse] = await Promise.all([
         usersService.getAll(),
         roomsService.getAll(),
+        teamsService.getAll(),
       ]);
 
       setUsers(usersResponse);
       setRooms(roomsResponse);
+      setTeams(teamsResponse);
 
       const roomMatchesEntries = await Promise.all(
         roomsResponse.map(async (room) => [room.id, await matchesService.getByRoom(room.id)] as const),
@@ -276,6 +425,7 @@ function useCatalogData() {
   return {
     users,
     rooms,
+    teams,
     matchesByRoom,
     predictionsByMatch,
     loading,
@@ -881,7 +1031,8 @@ function AdminUsersPage() {
 }
 
 function AdminRoomsPage() {
-  const { rooms, users, matchesByRoom, predictionsByMatch, loading, error, refresh } = useCatalogData();
+  const { rooms, users, teams, matchesByRoom, predictionsByMatch, loading, error, refresh } =
+    useCatalogData();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [activeSection, setActiveSection] = useState<AdminRoomSection>('overview');
   const [roomForm, setRoomForm] = useState({ name: '', isActive: true });
@@ -930,6 +1081,8 @@ function AdminRoomsPage() {
     }
 
     setMatchForm({
+      teamAId: editingMatch.teamAId,
+      teamBId: editingMatch.teamBId,
       teamA: editingMatch.teamA,
       teamB: editingMatch.teamB,
       matchDate: toDateTimeLocalValue(editingMatch.matchDate),
@@ -1004,7 +1157,10 @@ function AdminRoomsPage() {
       return;
     }
 
-    if (matchForm.teamA.trim().toLowerCase() === matchForm.teamB.trim().toLowerCase()) {
+    if (
+      (matchForm.teamAId && matchForm.teamAId === matchForm.teamBId) ||
+      matchForm.teamA.trim().toLowerCase() === matchForm.teamB.trim().toLowerCase()
+    ) {
       setFeedback({ tone: 'error', message: 'Los equipos no pueden ser iguales.' });
       return;
     }
@@ -1402,7 +1558,7 @@ function AdminRoomsPage() {
                       return (
                         <tr key={match.id}>
                           <td>
-                            {match.teamA} vs {match.teamB}
+                            <MatchTeamsInline match={match} />
                           </td>
                           <td>{formatDateTime(match.matchDate)}</td>
                           <td>
@@ -1526,16 +1682,14 @@ function AdminRoomsPage() {
             <form className="form-grid match-form-grid" onSubmit={saveMatch}>
               {isEditingMatch ? (
                 <div className="match-score-editor form-submit">
-                  <label>
-                    Equipo A
-                    <input
-                      required
-                      value={matchForm.teamA}
-                      onChange={(event) =>
-                        setMatchForm((current) => ({ ...current, teamA: event.target.value }))
-                      }
-                    />
-                  </label>
+                  <TeamSelectField
+                    label="Equipo A"
+                    value={matchForm.teamAId}
+                    teams={teams}
+                    onChange={(teamId) =>
+                      setMatchForm((current) => selectMatchTeam(current, teams, 'A', teamId))
+                    }
+                  />
                   <label>
                     Goles A
                     <input
@@ -1550,16 +1704,14 @@ function AdminRoomsPage() {
                       }
                     />
                   </label>
-                  <label>
-                    Equipo B
-                    <input
-                      required
-                      value={matchForm.teamB}
-                      onChange={(event) =>
-                        setMatchForm((current) => ({ ...current, teamB: event.target.value }))
-                      }
-                    />
-                  </label>
+                  <TeamSelectField
+                    label="Equipo B"
+                    value={matchForm.teamBId}
+                    teams={teams}
+                    onChange={(teamId) =>
+                      setMatchForm((current) => selectMatchTeam(current, teams, 'B', teamId))
+                    }
+                  />
                   <label>
                     Goles B
                     <input
@@ -1577,26 +1729,22 @@ function AdminRoomsPage() {
                 </div>
               ) : (
                 <>
-                  <label>
-                    Equipo A
-                    <input
-                      required
-                      value={matchForm.teamA}
-                      onChange={(event) =>
-                        setMatchForm((current) => ({ ...current, teamA: event.target.value }))
-                      }
-                    />
-                  </label>
-                  <label>
-                    Equipo B
-                    <input
-                      required
-                      value={matchForm.teamB}
-                      onChange={(event) =>
-                        setMatchForm((current) => ({ ...current, teamB: event.target.value }))
-                      }
-                    />
-                  </label>
+                  <TeamSelectField
+                    label="Equipo A"
+                    value={matchForm.teamAId}
+                    teams={teams}
+                    onChange={(teamId) =>
+                      setMatchForm((current) => selectMatchTeam(current, teams, 'A', teamId))
+                    }
+                  />
+                  <TeamSelectField
+                    label="Equipo B"
+                    value={matchForm.teamBId}
+                    teams={teams}
+                    onChange={(teamId) =>
+                      setMatchForm((current) => selectMatchTeam(current, teams, 'B', teamId))
+                    }
+                  />
                 </>
               )}
               <label>
@@ -1654,7 +1802,8 @@ function AdminRoomsPage() {
 function AdminRoomDetailPage() {
   const navigate = useNavigate();
   const { roomId = '' } = useParams();
-  const { rooms, users, matchesByRoom, predictionsByMatch, loading, error, refresh } = useCatalogData();
+  const { rooms, users, teams, matchesByRoom, predictionsByMatch, loading, error, refresh } =
+    useCatalogData();
   const [activeSection, setActiveSection] = useState<AdminRoomMainSection>('overview');
   const [activeTab, setActiveTab] = useState<AdminRoomDetailTab>('matches');
   const [roomForm, setRoomForm] = useState({ name: '', isActive: true });
@@ -1684,6 +1833,8 @@ function AdminRoomDetailPage() {
     }
 
     setMatchForm({
+      teamAId: editingMatch.teamAId,
+      teamBId: editingMatch.teamBId,
       teamA: editingMatch.teamA,
       teamB: editingMatch.teamB,
       matchDate: toDateTimeLocalValue(editingMatch.matchDate),
@@ -1761,7 +1912,10 @@ function AdminRoomDetailPage() {
       return;
     }
 
-    if (matchForm.teamA.trim().toLowerCase() === matchForm.teamB.trim().toLowerCase()) {
+    if (
+      (matchForm.teamAId && matchForm.teamAId === matchForm.teamBId) ||
+      matchForm.teamA.trim().toLowerCase() === matchForm.teamB.trim().toLowerCase()
+    ) {
       setFeedback({ tone: 'error', message: 'Los equipos no pueden ser iguales.' });
       return;
     }
@@ -2095,7 +2249,7 @@ function AdminRoomDetailPage() {
                     return (
                       <tr key={match.id}>
                         <td>
-                          {match.teamA} vs {match.teamB}
+                          <MatchTeamsInline match={match} />
                         </td>
                         <td>{formatDateTime(match.matchDate)}</td>
                         <td>
@@ -2134,13 +2288,8 @@ function AdminRoomDetailPage() {
                     <section key={match.id} className="subsection-card room-prediction-card">
                       <div className="match-row">
                         <div>
-                          <h3>
-                            {match.teamA} vs {match.teamB}
-                          </h3>
+                          <MatchupCard match={match} />
                           <p className="page-description">{formatDateTime(match.matchDate)}</p>
-                          <p className="page-description">
-                            Resultado: {match.teamAScore ?? '-'} - {match.teamBScore ?? '-'}
-                          </p>
                         </div>
                         <StatusBadge label={statusLabel} tone={toneForMatchStatus(statusLabel)} />
                       </div>
@@ -2270,16 +2419,14 @@ function AdminRoomDetailPage() {
             <form className="form-grid match-form-grid" onSubmit={saveMatch}>
               {isEditingMatch ? (
                 <div className="match-score-editor form-submit">
-                  <label>
-                    Equipo A
-                    <input
-                      required
-                      value={matchForm.teamA}
-                      onChange={(event) =>
-                        setMatchForm((current) => ({ ...current, teamA: event.target.value }))
-                      }
-                    />
-                  </label>
+                  <TeamSelectField
+                    label="Equipo A"
+                    value={matchForm.teamAId}
+                    teams={teams}
+                    onChange={(teamId) =>
+                      setMatchForm((current) => selectMatchTeam(current, teams, 'A', teamId))
+                    }
+                  />
                   <label>
                     Goles A
                     <input
@@ -2294,16 +2441,14 @@ function AdminRoomDetailPage() {
                       }
                     />
                   </label>
-                  <label>
-                    Equipo B
-                    <input
-                      required
-                      value={matchForm.teamB}
-                      onChange={(event) =>
-                        setMatchForm((current) => ({ ...current, teamB: event.target.value }))
-                      }
-                    />
-                  </label>
+                  <TeamSelectField
+                    label="Equipo B"
+                    value={matchForm.teamBId}
+                    teams={teams}
+                    onChange={(teamId) =>
+                      setMatchForm((current) => selectMatchTeam(current, teams, 'B', teamId))
+                    }
+                  />
                   <label>
                     Goles B
                     <input
@@ -2321,26 +2466,22 @@ function AdminRoomDetailPage() {
                 </div>
               ) : (
                 <>
-                  <label>
-                    Equipo A
-                    <input
-                      required
-                      value={matchForm.teamA}
-                      onChange={(event) =>
-                        setMatchForm((current) => ({ ...current, teamA: event.target.value }))
-                      }
-                    />
-                  </label>
-                  <label>
-                    Equipo B
-                    <input
-                      required
-                      value={matchForm.teamB}
-                      onChange={(event) =>
-                        setMatchForm((current) => ({ ...current, teamB: event.target.value }))
-                      }
-                    />
-                  </label>
+                  <TeamSelectField
+                    label="Equipo A"
+                    value={matchForm.teamAId}
+                    teams={teams}
+                    onChange={(teamId) =>
+                      setMatchForm((current) => selectMatchTeam(current, teams, 'A', teamId))
+                    }
+                  />
+                  <TeamSelectField
+                    label="Equipo B"
+                    value={matchForm.teamBId}
+                    teams={teams}
+                    onChange={(teamId) =>
+                      setMatchForm((current) => selectMatchTeam(current, teams, 'B', teamId))
+                    }
+                  />
                 </>
               )}
               <label>
@@ -2461,10 +2602,8 @@ function PredictionMatchCard({
     <section className={`panel-card prediction-card ${isSubmitting ? 'is-submitting' : ''}`}>
       <div className={`match-row prediction-card-header ${showExternalScoreOnly ? 'prediction-card-header--compact' : ''}`}>
         {!showExternalScoreOnly ? (
-          <div>
-            <h3>
-              {match.teamA} vs {match.teamB}
-            </h3>
+          <div className="prediction-card-matchup">
+            <MatchupCard match={match} resultLabel="vs" />
             <p className="page-description">{formatDateTime(match.matchDate)}</p>
           </div>
         ) : (
@@ -2497,7 +2636,7 @@ function PredictionMatchCard({
           }}
         >
           <label>
-            {match.teamA}
+            <MatchTeamBadge match={match} side="A" />
             <input
               name={`teamA-${match.id}`}
               type="number"
@@ -2508,7 +2647,7 @@ function PredictionMatchCard({
             />
           </label>
           <label>
-            {match.teamB}
+            <MatchTeamBadge match={match} side="B" />
             <input
               name={`teamB-${match.id}`}
               type="number"
@@ -3238,7 +3377,7 @@ function UserRoomDetailPage() {
                   return (
                     <tr key={match.id}>
                       <td>
-                        {match.teamA} vs {match.teamB}
+                        <MatchTeamsInline match={match} />
                       </td>
                       <td>{formatDateTime(match.matchDate)}</td>
                       <td>
@@ -3329,12 +3468,7 @@ function UserRoomDetailPage() {
                     <section key={match.id} className="subsection-card room-prediction-card">
                       <div className="match-row">
                         <div>
-                          <h3>
-                            {match.teamA} vs {match.teamB}
-                          </h3>
-                          <p className="page-description">
-                            Resultado final: {match.teamAScore ?? '-'} - {match.teamBScore ?? '-'}
-                          </p>
+                          <MatchupCard match={match} />
                         </div>
                         <StatusBadge label="Finalizado" tone="info" />
                       </div>

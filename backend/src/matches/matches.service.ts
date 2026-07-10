@@ -42,6 +42,10 @@ export class MatchesService {
 
     return this.matchesRepository.find({
       where: { roomId },
+      relations: {
+        teamAInfo: true,
+        teamBInfo: true,
+      },
       order: {
         matchDate: 'ASC',
       },
@@ -56,6 +60,8 @@ export class MatchesService {
       relations: {
         room: true,
         predictions: true,
+        teamAInfo: true,
+        teamBInfo: true,
       },
     });
 
