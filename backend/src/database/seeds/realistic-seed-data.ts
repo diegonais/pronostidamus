@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-/* Generated from production with sanitized credentials. Do not add real password hashes here. */
+/* Generated from Supabase production data with sanitized credentials. Do not add real password hashes here. */
 
 export const realisticSeedData = {
   "users": [
@@ -55,13 +55,6 @@ export const realisticSeedData = {
       "isActive": true,
       "createdAt": "2026-06-17T15:12:04.312Z",
       "updatedAt": "2026-06-17T15:12:04.312Z"
-    },
-    {
-      "id": "377dd8dc-19e4-43a5-850e-20765b354cce",
-      "name": "diegoprueba",
-      "isActive": false,
-      "createdAt": "2026-07-01T21:19:03.688Z",
-      "updatedAt": "2026-07-01T21:36:01.068Z"
     }
   ],
   "roomUsers": [
@@ -88,18 +81,592 @@ export const realisticSeedData = {
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
       "userId": "3fecfc69-64c8-43ca-94ee-8c9c41717c0c",
       "createdAt": "2026-06-17T15:12:04.332Z"
+    }
+  ],
+  "teams": [
+    {
+      "id": "36becd8c-61b2-4b30-a06e-c1f819b6fc75",
+      "externalId": "1",
+      "name": "México",
+      "nameEn": "Mexico",
+      "fifaCode": "MEX",
+      "iso2": "MX",
+      "group": "A",
+      "flagUrl": "https://flagcdn.com/w80/mx.png",
+      "createdAt": "2026-07-10T22:49:26.114Z",
+      "updatedAt": "2026-07-10T22:49:26.114Z"
     },
     {
-      "id": "065d2bbc-bd70-42e7-b514-f5abf92d8c22",
-      "roomId": "377dd8dc-19e4-43a5-850e-20765b354cce",
-      "userId": "c97ab333-7b11-4c4c-b125-7e4754438fe4",
-      "createdAt": "2026-07-01T21:19:18.048Z"
+      "id": "54e029a1-1670-4f68-ab54-3b276af7c9bb",
+      "externalId": "2",
+      "name": "Sudáfrica",
+      "nameEn": "South Africa",
+      "fifaCode": "RSA",
+      "iso2": "ZA",
+      "group": "A",
+      "flagUrl": "https://flagcdn.com/w80/za.png",
+      "createdAt": "2026-07-10T22:49:26.622Z",
+      "updatedAt": "2026-07-10T22:49:26.622Z"
+    },
+    {
+      "id": "5078271f-e037-4911-b864-fe3f793f8d54",
+      "externalId": "3",
+      "name": "Corea del Sur",
+      "nameEn": "South Korea",
+      "fifaCode": "KOR",
+      "iso2": "KR",
+      "group": "A",
+      "flagUrl": "https://flagcdn.com/w80/kr.png",
+      "createdAt": "2026-07-10T22:49:27.124Z",
+      "updatedAt": "2026-07-10T22:49:27.124Z"
+    },
+    {
+      "id": "97e13bdb-79c3-4aeb-bec7-e1d0f92907bd",
+      "externalId": "4",
+      "name": "República Checa",
+      "nameEn": "Czech Republic",
+      "fifaCode": "CZE",
+      "iso2": "CZ",
+      "group": "A",
+      "flagUrl": "https://flagcdn.com/w80/cz.png",
+      "createdAt": "2026-07-10T22:49:27.627Z",
+      "updatedAt": "2026-07-10T22:49:27.627Z"
+    },
+    {
+      "id": "81ffb623-68d4-43d7-b5fd-df37e68b114d",
+      "externalId": "5",
+      "name": "Canadá",
+      "nameEn": "Canada",
+      "fifaCode": "CAN",
+      "iso2": "CA",
+      "group": "B",
+      "flagUrl": "https://flagcdn.com/w80/ca.png",
+      "createdAt": "2026-07-10T22:49:28.129Z",
+      "updatedAt": "2026-07-10T22:49:28.129Z"
+    },
+    {
+      "id": "09387fcf-619e-48eb-83ea-268c23f99b26",
+      "externalId": "6",
+      "name": "Bosnia y Herzegovina",
+      "nameEn": "Bosnia and Herzegovina",
+      "fifaCode": "BIH",
+      "iso2": "BA",
+      "group": "B",
+      "flagUrl": "https://flagcdn.com/w80/ba.png",
+      "createdAt": "2026-07-10T22:49:28.632Z",
+      "updatedAt": "2026-07-10T22:49:28.632Z"
+    },
+    {
+      "id": "d7ae91db-6e96-4030-a603-d92d1d184bec",
+      "externalId": "7",
+      "name": "Qatar",
+      "nameEn": "Qatar",
+      "fifaCode": "QAT",
+      "iso2": "QA",
+      "group": "B",
+      "flagUrl": "https://flagcdn.com/w80/qa.png",
+      "createdAt": "2026-07-10T22:49:29.134Z",
+      "updatedAt": "2026-07-10T22:49:29.134Z"
+    },
+    {
+      "id": "a24ca4e2-4afd-4b60-a1f4-7baa1097c0d1",
+      "externalId": "8",
+      "name": "Suiza",
+      "nameEn": "Switzerland",
+      "fifaCode": "SUI",
+      "iso2": "CH",
+      "group": "B",
+      "flagUrl": "https://flagcdn.com/w80/ch.png",
+      "createdAt": "2026-07-10T22:49:29.637Z",
+      "updatedAt": "2026-07-10T22:49:29.637Z"
+    },
+    {
+      "id": "44925936-5bf4-4291-8114-9c483b27e98e",
+      "externalId": "9",
+      "name": "Brasil",
+      "nameEn": "Brazil",
+      "fifaCode": "BRA",
+      "iso2": "BR",
+      "group": "C",
+      "flagUrl": "https://flagcdn.com/w80/br.png",
+      "createdAt": "2026-07-10T22:49:30.137Z",
+      "updatedAt": "2026-07-10T22:49:30.137Z"
+    },
+    {
+      "id": "e29ba491-392c-4299-88b7-d51b3eec39ca",
+      "externalId": "10",
+      "name": "Marruecos",
+      "nameEn": "Morocco",
+      "fifaCode": "MAR",
+      "iso2": "MA",
+      "group": "C",
+      "flagUrl": "https://flagcdn.com/w80/ma.png",
+      "createdAt": "2026-07-10T22:49:30.645Z",
+      "updatedAt": "2026-07-10T22:49:30.645Z"
+    },
+    {
+      "id": "d3a15fa9-1df3-419a-8ec3-1a9f10a89277",
+      "externalId": "11",
+      "name": "Haití",
+      "nameEn": "Haiti",
+      "fifaCode": "HAI",
+      "iso2": "HT",
+      "group": "C",
+      "flagUrl": "https://flagcdn.com/w80/ht.png",
+      "createdAt": "2026-07-10T22:49:31.148Z",
+      "updatedAt": "2026-07-10T22:49:31.148Z"
+    },
+    {
+      "id": "059677a2-c2ee-4893-a104-c34ad60c9f5d",
+      "externalId": "12",
+      "name": "Escocia",
+      "nameEn": "Scotland",
+      "fifaCode": "SCO",
+      "iso2": "SCO",
+      "group": "C",
+      "flagUrl": "https://flagcdn.com/w80/gb-sct.png",
+      "createdAt": "2026-07-10T22:49:31.649Z",
+      "updatedAt": "2026-07-10T22:49:31.649Z"
+    },
+    {
+      "id": "18e62a1a-181c-422a-a5d1-f801e961675c",
+      "externalId": "13",
+      "name": "Estados Unidos",
+      "nameEn": "United States",
+      "fifaCode": "USA",
+      "iso2": "US",
+      "group": "D",
+      "flagUrl": "https://flagcdn.com/w80/us.png",
+      "createdAt": "2026-07-10T22:49:32.150Z",
+      "updatedAt": "2026-07-10T22:49:32.150Z"
+    },
+    {
+      "id": "27940613-5dec-4a04-a254-665c1d7333cf",
+      "externalId": "14",
+      "name": "Paraguay",
+      "nameEn": "Paraguay",
+      "fifaCode": "PAR",
+      "iso2": "PY",
+      "group": "D",
+      "flagUrl": "https://flagcdn.com/w80/py.png",
+      "createdAt": "2026-07-10T22:49:32.652Z",
+      "updatedAt": "2026-07-10T22:49:32.652Z"
+    },
+    {
+      "id": "610cb3e4-4333-4380-9d02-660410b52f83",
+      "externalId": "15",
+      "name": "Australia",
+      "nameEn": "Australia",
+      "fifaCode": "AUS",
+      "iso2": "AU",
+      "group": "D",
+      "flagUrl": "https://flagcdn.com/w80/au.png",
+      "createdAt": "2026-07-10T22:49:33.154Z",
+      "updatedAt": "2026-07-10T22:49:33.154Z"
+    },
+    {
+      "id": "b93ce5a1-f99e-44d5-a933-7698d9b13560",
+      "externalId": "16",
+      "name": "Turquía",
+      "nameEn": "Turkey",
+      "fifaCode": "TUR",
+      "iso2": "TR",
+      "group": "D",
+      "flagUrl": "https://flagcdn.com/w80/tr.png",
+      "createdAt": "2026-07-10T22:49:33.657Z",
+      "updatedAt": "2026-07-10T22:49:33.657Z"
+    },
+    {
+      "id": "abde7543-c3c5-4ca9-965a-345cb20b3131",
+      "externalId": "17",
+      "name": "Alemania",
+      "nameEn": "Germany",
+      "fifaCode": "GER",
+      "iso2": "DE",
+      "group": "E",
+      "flagUrl": "https://flagcdn.com/w80/de.png",
+      "createdAt": "2026-07-10T22:49:34.158Z",
+      "updatedAt": "2026-07-10T22:49:34.158Z"
+    },
+    {
+      "id": "8f263ae6-e1cc-48a2-baf0-33d1e4526213",
+      "externalId": "18",
+      "name": "Curazao",
+      "nameEn": "Curaçao",
+      "fifaCode": "CUW",
+      "iso2": "CW",
+      "group": "E",
+      "flagUrl": "https://flagcdn.com/w80/cw.png",
+      "createdAt": "2026-07-10T22:49:34.664Z",
+      "updatedAt": "2026-07-10T22:49:34.664Z"
+    },
+    {
+      "id": "be214be7-aa72-49b2-bf10-4fff5be5e5b5",
+      "externalId": "19",
+      "name": "Costa de Marfil",
+      "nameEn": "Ivory Coast",
+      "fifaCode": "CIV",
+      "iso2": "CI",
+      "group": "E",
+      "flagUrl": "https://flagcdn.com/w80/ci.png",
+      "createdAt": "2026-07-10T22:49:35.166Z",
+      "updatedAt": "2026-07-10T22:49:35.166Z"
+    },
+    {
+      "id": "2a0c3486-bf17-46a0-a7ca-29d07d93f8ac",
+      "externalId": "20",
+      "name": "Ecuador",
+      "nameEn": "Ecuador",
+      "fifaCode": "ECU",
+      "iso2": "EC",
+      "group": "E",
+      "flagUrl": "https://flagcdn.com/w80/ec.png",
+      "createdAt": "2026-07-10T22:49:35.667Z",
+      "updatedAt": "2026-07-10T22:49:35.667Z"
+    },
+    {
+      "id": "c5cf45e4-e0e6-47f0-a315-d5bb006a1898",
+      "externalId": "21",
+      "name": "Países Bajos",
+      "nameEn": "Netherlands",
+      "fifaCode": "NED",
+      "iso2": "NL",
+      "group": "F",
+      "flagUrl": "https://flagcdn.com/w80/nl.png",
+      "createdAt": "2026-07-10T22:49:36.168Z",
+      "updatedAt": "2026-07-10T22:49:36.168Z"
+    },
+    {
+      "id": "9bab0d33-1149-463b-ab44-9b5ddbcba50b",
+      "externalId": "22",
+      "name": "Japón",
+      "nameEn": "Japan",
+      "fifaCode": "JPN",
+      "iso2": "JP",
+      "group": "F",
+      "flagUrl": "https://flagcdn.com/w80/jp.png",
+      "createdAt": "2026-07-10T22:49:36.673Z",
+      "updatedAt": "2026-07-10T22:49:36.673Z"
+    },
+    {
+      "id": "893a0d23-1088-4ff6-a503-83799a4adfba",
+      "externalId": "23",
+      "name": "Suecia",
+      "nameEn": "Sweden",
+      "fifaCode": "SWE",
+      "iso2": "SE",
+      "group": "F",
+      "flagUrl": "https://flagcdn.com/w80/se.png",
+      "createdAt": "2026-07-10T22:49:37.177Z",
+      "updatedAt": "2026-07-10T22:49:37.177Z"
+    },
+    {
+      "id": "2fe0bb9c-c5a3-40dc-b327-e247a65e0863",
+      "externalId": "24",
+      "name": "Túnez",
+      "nameEn": "Tunisia",
+      "fifaCode": "TUN",
+      "iso2": "TN",
+      "group": "F",
+      "flagUrl": "https://flagcdn.com/w80/tn.png",
+      "createdAt": "2026-07-10T22:49:37.678Z",
+      "updatedAt": "2026-07-10T22:49:37.678Z"
+    },
+    {
+      "id": "063607d9-841a-4355-84b3-a385783fc225",
+      "externalId": "25",
+      "name": "Bélgica",
+      "nameEn": "Belgium",
+      "fifaCode": "BEL",
+      "iso2": "BE",
+      "group": "G",
+      "flagUrl": "https://flagcdn.com/w80/be.png",
+      "createdAt": "2026-07-10T22:49:38.179Z",
+      "updatedAt": "2026-07-10T22:49:38.179Z"
+    },
+    {
+      "id": "5c0c3cbf-2832-45a4-8017-62151fbde324",
+      "externalId": "26",
+      "name": "Egipto",
+      "nameEn": "Egypt",
+      "fifaCode": "EGY",
+      "iso2": "EG",
+      "group": "G",
+      "flagUrl": "https://flagcdn.com/w80/eg.png",
+      "createdAt": "2026-07-10T22:49:38.681Z",
+      "updatedAt": "2026-07-10T22:49:38.681Z"
+    },
+    {
+      "id": "b75bcdf6-a975-4992-8dfe-e85ea3934c4c",
+      "externalId": "27",
+      "name": "Irán",
+      "nameEn": "Iran",
+      "fifaCode": "IRN",
+      "iso2": "IR",
+      "group": "G",
+      "flagUrl": "https://flagcdn.com/w80/ir.png",
+      "createdAt": "2026-07-10T22:49:39.182Z",
+      "updatedAt": "2026-07-10T22:49:39.182Z"
+    },
+    {
+      "id": "8c6508e9-80a3-4430-89bc-c8e4a570591f",
+      "externalId": "28",
+      "name": "Nueva Zelanda",
+      "nameEn": "New Zealand",
+      "fifaCode": "NZL",
+      "iso2": "NZ",
+      "group": "G",
+      "flagUrl": "https://flagcdn.com/w80/nz.png",
+      "createdAt": "2026-07-10T22:49:39.689Z",
+      "updatedAt": "2026-07-10T22:49:39.689Z"
+    },
+    {
+      "id": "9711c2fc-0ebe-4c3e-be2c-8d3b97c73999",
+      "externalId": "29",
+      "name": "España",
+      "nameEn": "Spain",
+      "fifaCode": "ESP",
+      "iso2": "ES",
+      "group": "H",
+      "flagUrl": "https://flagcdn.com/w80/es.png",
+      "createdAt": "2026-07-10T22:49:40.192Z",
+      "updatedAt": "2026-07-10T22:49:40.192Z"
+    },
+    {
+      "id": "7f8f3515-aebd-4bbd-9f2f-2cc7837fa837",
+      "externalId": "30",
+      "name": "Cabo Verde",
+      "nameEn": "Cape Verde",
+      "fifaCode": "CPV",
+      "iso2": "CV",
+      "group": "H",
+      "flagUrl": "https://flagcdn.com/w80/cv.png",
+      "createdAt": "2026-07-10T22:49:40.691Z",
+      "updatedAt": "2026-07-10T22:49:40.691Z"
+    },
+    {
+      "id": "8c4fc0c3-d12d-4e92-944e-7d411e99d019",
+      "externalId": "31",
+      "name": "Arabia Saudita",
+      "nameEn": "Saudi Arabia",
+      "fifaCode": "KSA",
+      "iso2": "SA",
+      "group": "H",
+      "flagUrl": "https://flagcdn.com/w80/sa.png",
+      "createdAt": "2026-07-10T22:49:41.192Z",
+      "updatedAt": "2026-07-10T22:49:41.192Z"
+    },
+    {
+      "id": "b13b2cc0-f112-4f4a-ac56-baaeeea36532",
+      "externalId": "32",
+      "name": "Uruguay",
+      "nameEn": "Uruguay",
+      "fifaCode": "URU",
+      "iso2": "UY",
+      "group": "H",
+      "flagUrl": "https://flagcdn.com/w80/uy.png",
+      "createdAt": "2026-07-10T22:49:41.694Z",
+      "updatedAt": "2026-07-10T22:49:41.694Z"
+    },
+    {
+      "id": "23acb586-9794-459e-a0f2-8aad31bfe891",
+      "externalId": "33",
+      "name": "Francia",
+      "nameEn": "France",
+      "fifaCode": "FRA",
+      "iso2": "FR",
+      "group": "I",
+      "flagUrl": "https://flagcdn.com/w80/fr.png",
+      "createdAt": "2026-07-10T22:49:42.197Z",
+      "updatedAt": "2026-07-10T22:49:42.197Z"
+    },
+    {
+      "id": "c3b33fa6-471f-4ec7-8ebb-65730d6b39fe",
+      "externalId": "34",
+      "name": "Senegal",
+      "nameEn": "Senegal",
+      "fifaCode": "SEN",
+      "iso2": "SN",
+      "group": "I",
+      "flagUrl": "https://flagcdn.com/w80/sn.png",
+      "createdAt": "2026-07-10T22:49:42.698Z",
+      "updatedAt": "2026-07-10T22:49:42.698Z"
+    },
+    {
+      "id": "03e4e71e-9a7c-4fff-b983-9fca0395d4fb",
+      "externalId": "35",
+      "name": "Irak",
+      "nameEn": "Iraq",
+      "fifaCode": "IRQ",
+      "iso2": "IQ",
+      "group": "I",
+      "flagUrl": "https://flagcdn.com/w80/iq.png",
+      "createdAt": "2026-07-10T22:49:43.200Z",
+      "updatedAt": "2026-07-10T22:49:43.200Z"
+    },
+    {
+      "id": "3e412a70-0fd7-42b6-b22c-fa946cc4ba74",
+      "externalId": "36",
+      "name": "Noruega",
+      "nameEn": "Norway",
+      "fifaCode": "NOR",
+      "iso2": "NO",
+      "group": "I",
+      "flagUrl": "https://flagcdn.com/w80/no.png",
+      "createdAt": "2026-07-10T22:49:43.703Z",
+      "updatedAt": "2026-07-10T22:49:43.703Z"
+    },
+    {
+      "id": "baea7dbf-5c38-4399-b590-4f25387041a2",
+      "externalId": "37",
+      "name": "Argentina",
+      "nameEn": "Argentina",
+      "fifaCode": "ARG",
+      "iso2": "AR",
+      "group": "J",
+      "flagUrl": "https://flagcdn.com/w80/ar.png",
+      "createdAt": "2026-07-10T22:49:44.208Z",
+      "updatedAt": "2026-07-10T22:49:44.208Z"
+    },
+    {
+      "id": "25f3f955-4342-4730-a7ff-f42c722e8152",
+      "externalId": "38",
+      "name": "Argelia",
+      "nameEn": "Algeria",
+      "fifaCode": "ALG",
+      "iso2": "DZ",
+      "group": "J",
+      "flagUrl": "https://flagcdn.com/w80/dz.png",
+      "createdAt": "2026-07-10T22:49:44.710Z",
+      "updatedAt": "2026-07-10T22:49:44.710Z"
+    },
+    {
+      "id": "150f33f2-e5eb-48e4-a796-3a88f7f917e0",
+      "externalId": "39",
+      "name": "Austria",
+      "nameEn": "Austria",
+      "fifaCode": "AUT",
+      "iso2": "AT",
+      "group": "J",
+      "flagUrl": "https://flagcdn.com/w80/at.png",
+      "createdAt": "2026-07-10T22:49:45.211Z",
+      "updatedAt": "2026-07-10T22:49:45.211Z"
+    },
+    {
+      "id": "fb62dec3-4d50-45cb-a81d-bfbbe4822cb8",
+      "externalId": "40",
+      "name": "Jordania",
+      "nameEn": "Jordan",
+      "fifaCode": "JOR",
+      "iso2": "JO",
+      "group": "J",
+      "flagUrl": "https://flagcdn.com/w80/jo.png",
+      "createdAt": "2026-07-10T22:49:45.712Z",
+      "updatedAt": "2026-07-10T22:49:45.712Z"
+    },
+    {
+      "id": "a95ac104-ac29-4ff3-9360-2f09de0cf109",
+      "externalId": "41",
+      "name": "Portugal",
+      "nameEn": "Portugal",
+      "fifaCode": "POR",
+      "iso2": "PT",
+      "group": "K",
+      "flagUrl": "https://flagcdn.com/w80/pt.png",
+      "createdAt": "2026-07-10T22:49:46.213Z",
+      "updatedAt": "2026-07-10T22:49:46.213Z"
+    },
+    {
+      "id": "4777d02e-3b1b-4901-83b2-59ede1c89575",
+      "externalId": "42",
+      "name": "Congo",
+      "nameEn": "Democratic Republic of the Congo",
+      "fifaCode": "COD",
+      "iso2": "CD",
+      "group": "K",
+      "flagUrl": "https://flagcdn.com/w80/cd.png",
+      "createdAt": "2026-07-10T22:49:46.716Z",
+      "updatedAt": "2026-07-10T22:49:46.716Z"
+    },
+    {
+      "id": "1b274b0a-4141-4832-9ce2-520355c72b24",
+      "externalId": "43",
+      "name": "Uzbekistán",
+      "nameEn": "Uzbekistan",
+      "fifaCode": "UZB",
+      "iso2": "UZ",
+      "group": "K",
+      "flagUrl": "https://flagcdn.com/w80/uz.png",
+      "createdAt": "2026-07-10T22:49:47.218Z",
+      "updatedAt": "2026-07-10T22:49:47.218Z"
+    },
+    {
+      "id": "d98082e4-932e-4c74-a29d-98373bf6f3e3",
+      "externalId": "44",
+      "name": "Colombia",
+      "nameEn": "Colombia",
+      "fifaCode": "COL",
+      "iso2": "CO",
+      "group": "K",
+      "flagUrl": "https://flagcdn.com/w80/co.png",
+      "createdAt": "2026-07-10T22:49:47.720Z",
+      "updatedAt": "2026-07-10T22:49:47.720Z"
+    },
+    {
+      "id": "2d2fd332-41d2-460b-b75b-7f7251bbbd0f",
+      "externalId": "45",
+      "name": "Inglaterra",
+      "nameEn": "England",
+      "fifaCode": "ENG",
+      "iso2": "ENG",
+      "group": "L",
+      "flagUrl": "https://flagcdn.com/w80/gb-eng.png",
+      "createdAt": "2026-07-10T22:49:48.221Z",
+      "updatedAt": "2026-07-10T22:49:48.221Z"
+    },
+    {
+      "id": "85ca6afc-39fa-4165-8c0f-c13c9025e436",
+      "externalId": "46",
+      "name": "Croacia",
+      "nameEn": "Croatia",
+      "fifaCode": "CRO",
+      "iso2": "HR",
+      "group": "L",
+      "flagUrl": "https://flagcdn.com/w80/hr.png",
+      "createdAt": "2026-07-10T22:49:48.769Z",
+      "updatedAt": "2026-07-10T22:49:48.769Z"
+    },
+    {
+      "id": "1965f7f7-112b-41e5-9915-4d22949851ff",
+      "externalId": "47",
+      "name": "Ghana",
+      "nameEn": "Ghana",
+      "fifaCode": "GHA",
+      "iso2": "GH",
+      "group": "L",
+      "flagUrl": "https://flagcdn.com/w80/gh.png",
+      "createdAt": "2026-07-10T22:49:49.270Z",
+      "updatedAt": "2026-07-10T22:49:49.270Z"
+    },
+    {
+      "id": "1be98291-d55d-46ac-b276-2bb3e3b51da6",
+      "externalId": "48",
+      "name": "Panamá",
+      "nameEn": "Panama",
+      "fifaCode": "PAN",
+      "iso2": "PA",
+      "group": "L",
+      "flagUrl": "https://flagcdn.com/w80/pa.png",
+      "createdAt": "2026-07-10T22:49:49.771Z",
+      "updatedAt": "2026-07-10T22:49:49.771Z"
     }
   ],
   "matches": [
     {
       "id": "7fae944f-e928-4855-b27c-492eb093559f",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "9711c2fc-0ebe-4c3e-be2c-8d3b97c73999",
+      "teamBId": "7f8f3515-aebd-4bbd-9f2f-2cc7837fa837",
       "teamA": "España",
       "teamB": "Cabo Verde",
       "matchDate": "2026-06-15T16:00:00.000Z",
@@ -108,11 +675,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-17T15:12:04.340Z",
-      "updatedAt": "2026-06-17T15:12:04.340Z"
+      "updatedAt": "2026-07-10T22:49:50.532Z"
     },
     {
       "id": "ad3f65b9-af3e-4962-ba83-bd7818d31503",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "063607d9-841a-4355-84b3-a385783fc225",
+      "teamBId": "5c0c3cbf-2832-45a4-8017-62151fbde324",
       "teamA": "Bélgica",
       "teamB": "Egipto",
       "matchDate": "2026-06-15T19:00:00.000Z",
@@ -121,11 +690,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-17T15:12:04.355Z",
-      "updatedAt": "2026-06-17T15:12:04.355Z"
+      "updatedAt": "2026-07-10T22:49:51.037Z"
     },
     {
       "id": "b17d2903-9a05-4e1b-b675-2139fbad4933",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "8c4fc0c3-d12d-4e92-944e-7d411e99d019",
+      "teamBId": "b13b2cc0-f112-4f4a-ac56-baaeeea36532",
       "teamA": "Arabia Saudita",
       "teamB": "Uruguay",
       "matchDate": "2026-06-15T22:00:00.000Z",
@@ -134,11 +705,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-17T15:12:04.367Z",
-      "updatedAt": "2026-06-17T15:12:04.367Z"
+      "updatedAt": "2026-07-10T22:49:51.539Z"
     },
     {
       "id": "30929505-369c-4fcf-af82-b309f5aa5210",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "b75bcdf6-a975-4992-8dfe-e85ea3934c4c",
+      "teamBId": "8c6508e9-80a3-4430-89bc-c8e4a570591f",
       "teamA": "Irán",
       "teamB": "Nueva Zelanda",
       "matchDate": "2026-06-16T01:00:00.000Z",
@@ -147,11 +720,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-17T15:12:04.379Z",
-      "updatedAt": "2026-06-17T15:12:04.379Z"
+      "updatedAt": "2026-07-10T22:49:52.042Z"
     },
     {
       "id": "d528f9ba-f96a-485a-8192-e5f2cd72393e",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "23acb586-9794-459e-a0f2-8aad31bfe891",
+      "teamBId": "c3b33fa6-471f-4ec7-8ebb-65730d6b39fe",
       "teamA": "Francia",
       "teamB": "Senegal",
       "matchDate": "2026-06-16T19:00:00.000Z",
@@ -160,11 +735,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-17T15:12:04.395Z",
-      "updatedAt": "2026-06-17T15:12:04.395Z"
+      "updatedAt": "2026-07-10T22:49:52.546Z"
     },
     {
       "id": "26192e8e-3b69-46fd-b83f-f4899aca2175",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "03e4e71e-9a7c-4fff-b983-9fca0395d4fb",
+      "teamBId": "3e412a70-0fd7-42b6-b22c-fa946cc4ba74",
       "teamA": "Irak",
       "teamB": "Noruega",
       "matchDate": "2026-06-16T22:00:00.000Z",
@@ -173,11 +750,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-17T15:12:04.407Z",
-      "updatedAt": "2026-06-17T15:12:04.407Z"
+      "updatedAt": "2026-07-10T22:49:53.048Z"
     },
     {
       "id": "efb77160-e74b-4993-8f4b-0926bba1574e",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "baea7dbf-5c38-4399-b590-4f25387041a2",
+      "teamBId": "25f3f955-4342-4730-a7ff-f42c722e8152",
       "teamA": "Argentina",
       "teamB": "Argelia",
       "matchDate": "2026-06-17T01:00:00.000Z",
@@ -186,11 +765,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-17T15:12:04.419Z",
-      "updatedAt": "2026-06-17T15:12:04.419Z"
+      "updatedAt": "2026-07-10T22:49:53.564Z"
     },
     {
       "id": "dd79e743-3374-4f2d-ab50-5136fb4bf31e",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "150f33f2-e5eb-48e4-a796-3a88f7f917e0",
+      "teamBId": "fb62dec3-4d50-45cb-a81d-bfbbe4822cb8",
       "teamA": "Austria",
       "teamB": "Jordania",
       "matchDate": "2026-06-17T04:00:00.000Z",
@@ -199,11 +780,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-17T15:12:04.431Z",
-      "updatedAt": "2026-06-17T15:12:04.431Z"
+      "updatedAt": "2026-07-10T22:49:54.067Z"
     },
     {
       "id": "e4f98c50-ddf6-45f4-9ac5-3afd52bbba29",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "a95ac104-ac29-4ff3-9360-2f09de0cf109",
+      "teamBId": "4777d02e-3b1b-4901-83b2-59ede1c89575",
       "teamA": "Portugal",
       "teamB": "Congo",
       "matchDate": "2026-06-17T17:00:00.000Z",
@@ -212,11 +795,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-17T15:12:04.443Z",
-      "updatedAt": "2026-06-17T19:03:39.557Z"
+      "updatedAt": "2026-07-10T22:49:55.072Z"
     },
     {
       "id": "cbc472bb-e396-44da-8f0a-a63964c69c17",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "2d2fd332-41d2-460b-b75b-7f7251bbbd0f",
+      "teamBId": "85ca6afc-39fa-4165-8c0f-c13c9025e436",
       "teamA": "Inglaterra",
       "teamB": "Croacia",
       "matchDate": "2026-06-17T20:00:00.000Z",
@@ -225,11 +810,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-17T15:12:04.457Z",
-      "updatedAt": "2026-06-17T22:01:16.731Z"
+      "updatedAt": "2026-07-10T22:49:55.573Z"
     },
     {
       "id": "84eff5a7-af78-417c-ab48-609cd2bf005b",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "1965f7f7-112b-41e5-9915-4d22949851ff",
+      "teamBId": "1be98291-d55d-46ac-b276-2bb3e3b51da6",
       "teamA": "Ghana",
       "teamB": "Panamá",
       "matchDate": "2026-06-17T23:00:00.000Z",
@@ -238,11 +825,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-17T15:12:04.474Z",
-      "updatedAt": "2026-06-18T01:03:14.463Z"
+      "updatedAt": "2026-07-10T22:49:56.075Z"
     },
     {
       "id": "51deb371-b432-460f-bf46-ae030453d249",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "1b274b0a-4141-4832-9ce2-520355c72b24",
+      "teamBId": "d98082e4-932e-4c74-a29d-98373bf6f3e3",
       "teamA": "Uzbekistan",
       "teamB": "Colombia",
       "matchDate": "2026-06-18T02:00:00.000Z",
@@ -251,11 +840,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-17T15:12:04.488Z",
-      "updatedAt": "2026-06-18T12:44:52.357Z"
+      "updatedAt": "2026-07-10T22:49:56.577Z"
     },
     {
       "id": "b83d4962-1ccf-4aec-8be1-15f8503ba0d0",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "97e13bdb-79c3-4aeb-bec7-e1d0f92907bd",
+      "teamBId": "54e029a1-1670-4f68-ab54-3b276af7c9bb",
       "teamA": "Chequia",
       "teamB": "Sudáfrica",
       "matchDate": "2026-06-18T16:00:00.000Z",
@@ -264,11 +855,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-18T02:09:25.603Z",
-      "updatedAt": "2026-06-18T18:01:08.740Z"
+      "updatedAt": "2026-07-10T22:49:57.582Z"
     },
     {
       "id": "ff2576b6-1960-451e-8eee-1f0b05fecf5f",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "a24ca4e2-4afd-4b60-a1f4-7baa1097c0d1",
+      "teamBId": "09387fcf-619e-48eb-83ea-268c23f99b26",
       "teamA": "Suiza",
       "teamB": "Bosnia y Herzegovina",
       "matchDate": "2026-06-18T19:00:00.000Z",
@@ -277,11 +870,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-18T02:10:07.563Z",
-      "updatedAt": "2026-06-18T20:59:00.775Z"
+      "updatedAt": "2026-07-10T22:49:58.586Z"
     },
     {
       "id": "a0b55dd7-2595-4ff8-8fae-6f04e6004eae",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "81ffb623-68d4-43d7-b5fd-df37e68b114d",
+      "teamBId": "d7ae91db-6e96-4030-a603-d92d1d184bec",
       "teamA": "Canadá",
       "teamB": "Catar",
       "matchDate": "2026-06-18T22:00:00.000Z",
@@ -290,11 +885,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-18T02:11:23.243Z",
-      "updatedAt": "2026-06-19T00:13:31.686Z"
+      "updatedAt": "2026-07-10T22:49:59.590Z"
     },
     {
       "id": "58626f0e-27ab-4ccf-b97c-d97464783607",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "36becd8c-61b2-4b30-a06e-c1f819b6fc75",
+      "teamBId": "5078271f-e037-4911-b864-fe3f793f8d54",
       "teamA": "México",
       "teamB": "Corea del Sur",
       "matchDate": "2026-06-19T01:00:00.000Z",
@@ -303,11 +900,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-18T02:11:55.301Z",
-      "updatedAt": "2026-06-19T02:56:21.711Z"
+      "updatedAt": "2026-07-10T22:50:00.594Z"
     },
     {
       "id": "5d89bbf4-e2af-4ca3-b57f-c8d3720954c0",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "18e62a1a-181c-422a-a5d1-f801e961675c",
+      "teamBId": "610cb3e4-4333-4380-9d02-660410b52f83",
       "teamA": "Estados Unidos",
       "teamB": "Australia",
       "matchDate": "2026-06-19T19:00:00.000Z",
@@ -316,11 +915,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-19T12:48:47.890Z",
-      "updatedAt": "2026-06-19T21:32:58.688Z"
+      "updatedAt": "2026-07-10T22:50:01.098Z"
     },
     {
       "id": "3d40d8f3-cf15-4e30-bf9f-81a079d330f8",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "059677a2-c2ee-4893-a104-c34ad60c9f5d",
+      "teamBId": "e29ba491-392c-4299-88b7-d51b3eec39ca",
       "teamA": "Escocia",
       "teamB": "Marruecos",
       "matchDate": "2026-06-19T22:00:00.000Z",
@@ -329,11 +930,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-19T12:49:44.510Z",
-      "updatedAt": "2026-06-20T00:04:27.096Z"
+      "updatedAt": "2026-07-10T22:50:01.600Z"
     },
     {
       "id": "15adbd59-1b84-43a3-8c93-6de6a1569d4b",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "44925936-5bf4-4291-8114-9c483b27e98e",
+      "teamBId": "d3a15fa9-1df3-419a-8ec3-1a9f10a89277",
       "teamA": "Brasil",
       "teamB": "Haití",
       "matchDate": "2026-06-20T00:30:00.000Z",
@@ -342,11 +945,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-19T12:50:07.515Z",
-      "updatedAt": "2026-06-20T02:31:08.047Z"
+      "updatedAt": "2026-07-10T22:50:02.102Z"
     },
     {
       "id": "852614d6-6ad1-43e0-a363-8f4f7400faa7",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "b93ce5a1-f99e-44d5-a933-7698d9b13560",
+      "teamBId": "27940613-5dec-4a04-a254-665c1d7333cf",
       "teamA": "Turquía",
       "teamB": "Paraguay",
       "matchDate": "2026-06-20T03:00:00.000Z",
@@ -355,11 +960,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-19T12:50:44.532Z",
-      "updatedAt": "2026-06-20T05:11:23.110Z"
+      "updatedAt": "2026-07-10T22:50:02.605Z"
     },
     {
       "id": "3464b3b6-cce0-49ee-a7cd-c3dd9251c49a",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "c5cf45e4-e0e6-47f0-a315-d5bb006a1898",
+      "teamBId": "893a0d23-1088-4ff6-a503-83799a4adfba",
       "teamA": "Países Bajos",
       "teamB": "Suecia",
       "matchDate": "2026-06-20T17:00:00.000Z",
@@ -368,11 +975,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-20T05:29:36.258Z",
-      "updatedAt": "2026-06-20T19:33:12.678Z"
+      "updatedAt": "2026-07-10T22:50:03.608Z"
     },
     {
       "id": "b30323e4-6cf2-4b4e-9b24-d81a205437e1",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "abde7543-c3c5-4ca9-965a-345cb20b3131",
+      "teamBId": "be214be7-aa72-49b2-bf10-4fff5be5e5b5",
       "teamA": "Alemania",
       "teamB": "Costa de Marfil",
       "matchDate": "2026-06-20T20:00:00.000Z",
@@ -381,11 +990,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-20T05:30:32.019Z",
-      "updatedAt": "2026-06-21T01:30:58.629Z"
+      "updatedAt": "2026-07-10T22:50:05.113Z"
     },
     {
       "id": "b177ae39-b780-48d0-a67d-e748ad981ca6",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "2a0c3486-bf17-46a0-a7ca-29d07d93f8ac",
+      "teamBId": "8f263ae6-e1cc-48a2-baf0-33d1e4526213",
       "teamA": "Ecuador",
       "teamB": "Curazao",
       "matchDate": "2026-06-21T00:00:00.000Z",
@@ -394,11 +1005,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-20T05:31:17.393Z",
-      "updatedAt": "2026-06-21T01:55:43.678Z"
+      "updatedAt": "2026-07-10T22:50:05.615Z"
     },
     {
       "id": "4a1d68e6-96a1-4b27-886f-8f9433e388f6",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "2fe0bb9c-c5a3-40dc-b327-e247a65e0863",
+      "teamBId": "9bab0d33-1149-463b-ab44-9b5ddbcba50b",
       "teamA": "Túnez",
       "teamB": "Japón",
       "matchDate": "2026-06-21T04:00:00.000Z",
@@ -407,11 +1020,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-20T05:32:00.752Z",
-      "updatedAt": "2026-06-21T06:23:22.465Z"
+      "updatedAt": "2026-07-10T22:49:54.570Z"
     },
     {
       "id": "a639cd23-09dc-4573-8c48-45c6bf4d84fd",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "9711c2fc-0ebe-4c3e-be2c-8d3b97c73999",
+      "teamBId": "8c4fc0c3-d12d-4e92-944e-7d411e99d019",
       "teamA": "España",
       "teamB": "Arabia Saudita",
       "matchDate": "2026-06-21T16:00:00.000Z",
@@ -420,11 +1035,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-21T05:13:34.982Z",
-      "updatedAt": "2026-06-22T03:05:56.392Z"
+      "updatedAt": "2026-07-10T22:49:57.080Z"
     },
     {
       "id": "0d0fed38-fedd-476a-ae58-bf127d660c09",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "063607d9-841a-4355-84b3-a385783fc225",
+      "teamBId": "b75bcdf6-a975-4992-8dfe-e85ea3934c4c",
       "teamA": "Bélgica",
       "teamB": "Irán",
       "matchDate": "2026-06-21T19:00:00.000Z",
@@ -433,11 +1050,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-21T05:14:17.482Z",
-      "updatedAt": "2026-06-22T03:06:12.051Z"
+      "updatedAt": "2026-07-10T22:49:58.084Z"
     },
     {
       "id": "a0e78618-c60b-409b-91ec-75852a4347fc",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "b13b2cc0-f112-4f4a-ac56-baaeeea36532",
+      "teamBId": "7f8f3515-aebd-4bbd-9f2f-2cc7837fa837",
       "teamA": "Uruguay",
       "teamB": "Cabo Verde",
       "matchDate": "2026-06-21T22:00:00.000Z",
@@ -446,11 +1065,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-21T05:14:40.250Z",
-      "updatedAt": "2026-06-22T03:06:25.677Z"
+      "updatedAt": "2026-07-10T22:49:59.088Z"
     },
     {
       "id": "3871df77-f329-47d0-a915-88fc6c304e15",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "8c6508e9-80a3-4430-89bc-c8e4a570591f",
+      "teamBId": "5c0c3cbf-2832-45a4-8017-62151fbde324",
       "teamA": "Nueva Zelanda",
       "teamB": "Egipto",
       "matchDate": "2026-06-22T01:00:00.000Z",
@@ -459,11 +1080,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-21T05:15:03.800Z",
-      "updatedAt": "2026-06-22T03:06:37.510Z"
+      "updatedAt": "2026-07-10T22:50:00.092Z"
     },
     {
       "id": "847b8ae5-6058-46e9-863e-da42b6aadb07",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "baea7dbf-5c38-4399-b590-4f25387041a2",
+      "teamBId": "150f33f2-e5eb-48e4-a796-3a88f7f917e0",
       "teamA": "Argentina",
       "teamB": "Austria",
       "matchDate": "2026-06-22T17:00:00.000Z",
@@ -472,11 +1095,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-22T03:09:52.622Z",
-      "updatedAt": "2026-06-22T19:02:46.364Z"
+      "updatedAt": "2026-07-10T22:50:04.110Z"
     },
     {
       "id": "042edc1e-a79f-4dcc-bb1c-66f946fc1c53",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "23acb586-9794-459e-a0f2-8aad31bfe891",
+      "teamBId": "03e4e71e-9a7c-4fff-b983-9fca0395d4fb",
       "teamA": "Francia",
       "teamB": "Irak",
       "matchDate": "2026-06-22T21:00:00.000Z",
@@ -485,11 +1110,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-22T03:10:21.697Z",
-      "updatedAt": "2026-06-23T00:49:01.861Z"
+      "updatedAt": "2026-07-10T22:50:06.618Z"
     },
     {
       "id": "bf59b5b4-9e56-4b51-9f3c-e40b2eb09d17",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "3e412a70-0fd7-42b6-b22c-fa946cc4ba74",
+      "teamBId": "c3b33fa6-471f-4ec7-8ebb-65730d6b39fe",
       "teamA": "Noruega",
       "teamB": "Senegal",
       "matchDate": "2026-06-23T00:00:00.000Z",
@@ -498,11 +1125,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-22T03:10:51.811Z",
-      "updatedAt": "2026-06-23T02:57:11.527Z"
+      "updatedAt": "2026-07-10T22:50:07.623Z"
     },
     {
       "id": "d4c55963-bf72-4e36-8a0d-6e6619b68988",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "fb62dec3-4d50-45cb-a81d-bfbbe4822cb8",
+      "teamBId": "25f3f955-4342-4730-a7ff-f42c722e8152",
       "teamA": "Jordania",
       "teamB": "Argelia",
       "matchDate": "2026-06-23T03:00:00.000Z",
@@ -511,11 +1140,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-22T03:11:13.629Z",
-      "updatedAt": "2026-06-23T05:00:31.559Z"
+      "updatedAt": "2026-07-10T22:50:08.125Z"
     },
     {
       "id": "ce02621b-7e7b-4499-946f-414c08ba8b93",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "a95ac104-ac29-4ff3-9360-2f09de0cf109",
+      "teamBId": "1b274b0a-4141-4832-9ce2-520355c72b24",
       "teamA": "Portugal",
       "teamB": "Uzbekistan",
       "matchDate": "2026-06-23T17:00:00.000Z",
@@ -524,11 +1155,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-23T12:44:06.107Z",
-      "updatedAt": "2026-06-23T19:01:05.470Z"
+      "updatedAt": "2026-07-10T22:50:09.128Z"
     },
     {
       "id": "13572dd0-2a20-4669-ab75-8a6bfee62fee",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "2d2fd332-41d2-460b-b75b-7f7251bbbd0f",
+      "teamBId": "1965f7f7-112b-41e5-9915-4d22949851ff",
       "teamA": "Inglaterra",
       "teamB": "Ghana",
       "matchDate": "2026-06-23T20:00:00.000Z",
@@ -537,11 +1170,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-23T12:44:41.963Z",
-      "updatedAt": "2026-06-24T01:22:18.670Z"
+      "updatedAt": "2026-07-10T22:50:10.133Z"
     },
     {
       "id": "d6fd6c66-3487-4a45-aac6-82ad6c080259",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "1be98291-d55d-46ac-b276-2bb3e3b51da6",
+      "teamBId": "85ca6afc-39fa-4165-8c0f-c13c9025e436",
       "teamA": "Panamá",
       "teamB": "Croacia",
       "matchDate": "2026-06-23T23:00:00.000Z",
@@ -550,11 +1185,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-23T12:45:26.063Z",
-      "updatedAt": "2026-06-24T01:22:32.543Z"
+      "updatedAt": "2026-07-10T22:50:10.639Z"
     },
     {
       "id": "dc26577c-28fb-41d9-ae78-c3d89ecccde1",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "d98082e4-932e-4c74-a29d-98373bf6f3e3",
+      "teamBId": "4777d02e-3b1b-4901-83b2-59ede1c89575",
       "teamA": "Colombia",
       "teamB": "Congo",
       "matchDate": "2026-06-24T02:00:00.000Z",
@@ -563,11 +1200,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-23T12:45:43.823Z",
-      "updatedAt": "2026-06-24T18:46:21.727Z"
+      "updatedAt": "2026-07-10T22:50:04.612Z"
     },
     {
       "id": "226b14c3-5e9f-44b1-a888-06f803c783ac",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "09387fcf-619e-48eb-83ea-268c23f99b26",
+      "teamBId": "d7ae91db-6e96-4030-a603-d92d1d184bec",
       "teamA": "Bosnia",
       "teamB": "Catar",
       "matchDate": "2026-06-24T19:00:00.000Z",
@@ -576,11 +1215,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-24T01:32:45.445Z",
-      "updatedAt": "2026-06-24T20:59:43.434Z"
+      "updatedAt": "2026-07-10T22:50:08.626Z"
     },
     {
       "id": "11414050-a348-4e23-93b1-e2ba06eed4a9",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "a24ca4e2-4afd-4b60-a1f4-7baa1097c0d1",
+      "teamBId": "81ffb623-68d4-43d7-b5fd-df37e68b114d",
       "teamA": "Suiza",
       "teamB": "Canadá",
       "matchDate": "2026-06-24T19:00:00.000Z",
@@ -589,11 +1230,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-24T01:33:08.342Z",
-      "updatedAt": "2026-06-24T20:59:18.375Z"
+      "updatedAt": "2026-07-10T22:50:07.120Z"
     },
     {
       "id": "adc28849-24b6-4215-9d0a-efea4c3821fe",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "e29ba491-392c-4299-88b7-d51b3eec39ca",
+      "teamBId": "d3a15fa9-1df3-419a-8ec3-1a9f10a89277",
       "teamA": "Marruecos",
       "teamB": "Haití",
       "matchDate": "2026-06-24T22:00:00.000Z",
@@ -602,11 +1245,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-24T01:33:32.421Z",
-      "updatedAt": "2026-06-25T00:01:05.872Z"
+      "updatedAt": "2026-07-10T22:50:11.141Z"
     },
     {
       "id": "e4bff8f2-d901-4a42-a9e4-0ded5f758d72",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "059677a2-c2ee-4893-a104-c34ad60c9f5d",
+      "teamBId": "44925936-5bf4-4291-8114-9c483b27e98e",
       "teamA": "Escocia",
       "teamB": "Brasil",
       "matchDate": "2026-06-24T22:00:00.000Z",
@@ -615,11 +1260,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-24T01:33:44.118Z",
-      "updatedAt": "2026-06-25T00:01:56.943Z"
+      "updatedAt": "2026-07-10T22:50:11.643Z"
     },
     {
       "id": "995c82ae-8d80-4fd1-b453-9e065b1ec55e",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "97e13bdb-79c3-4aeb-bec7-e1d0f92907bd",
+      "teamBId": "36becd8c-61b2-4b30-a06e-c1f819b6fc75",
       "teamA": "Chequia",
       "teamB": "México",
       "matchDate": "2026-06-25T01:00:00.000Z",
@@ -628,11 +1275,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-24T01:34:13.281Z",
-      "updatedAt": "2026-06-25T02:57:34.719Z"
+      "updatedAt": "2026-07-10T22:50:03.107Z"
     },
     {
       "id": "74601d9b-cae7-4076-8f4d-1871fe37b5d6",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "54e029a1-1670-4f68-ab54-3b276af7c9bb",
+      "teamBId": "5078271f-e037-4911-b864-fe3f793f8d54",
       "teamA": "Sudáfrica",
       "teamB": "Corea del Sur",
       "matchDate": "2026-06-25T01:00:00.000Z",
@@ -641,24 +1290,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-24T01:34:29.047Z",
-      "updatedAt": "2026-06-25T02:57:52.150Z"
-    },
-    {
-      "id": "f258ea8a-4573-42b3-88d7-ac9b4a769d3b",
-      "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
-      "teamA": "Ecuador",
-      "teamB": "Alemania",
-      "matchDate": "2026-06-25T20:00:00.000Z",
-      "teamAScore": 2,
-      "teamBScore": 1,
-      "status": "FINISHED",
-      "isActive": true,
-      "createdAt": "2026-06-25T02:51:22.764Z",
-      "updatedAt": "2026-06-25T22:00:18.103Z"
+      "updatedAt": "2026-07-10T22:50:06.117Z"
     },
     {
       "id": "a2c84dbd-4974-4c62-95f0-0bfb722cd587",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "8f263ae6-e1cc-48a2-baf0-33d1e4526213",
+      "teamBId": "be214be7-aa72-49b2-bf10-4fff5be5e5b5",
       "teamA": "Curazao",
       "teamB": "Costa de Marfil",
       "matchDate": "2026-06-25T20:00:00.000Z",
@@ -667,11 +1305,28 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-25T02:51:00.228Z",
-      "updatedAt": "2026-06-25T22:00:03.869Z"
+      "updatedAt": "2026-07-10T22:50:09.631Z"
+    },
+    {
+      "id": "f258ea8a-4573-42b3-88d7-ac9b4a769d3b",
+      "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "2a0c3486-bf17-46a0-a7ca-29d07d93f8ac",
+      "teamBId": "abde7543-c3c5-4ca9-965a-345cb20b3131",
+      "teamA": "Ecuador",
+      "teamB": "Alemania",
+      "matchDate": "2026-06-25T20:00:00.000Z",
+      "teamAScore": 2,
+      "teamBScore": 1,
+      "status": "FINISHED",
+      "isActive": true,
+      "createdAt": "2026-06-25T02:51:22.764Z",
+      "updatedAt": "2026-07-10T22:50:12.146Z"
     },
     {
       "id": "7c495d9f-9306-4994-9c8d-a5811dde3afa",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "9bab0d33-1149-463b-ab44-9b5ddbcba50b",
+      "teamBId": "893a0d23-1088-4ff6-a503-83799a4adfba",
       "teamA": "Japón",
       "teamB": "Suecia",
       "matchDate": "2026-06-25T23:00:00.000Z",
@@ -680,11 +1335,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-25T02:51:43.461Z",
-      "updatedAt": "2026-06-26T02:34:54.709Z"
+      "updatedAt": "2026-07-10T22:50:13.652Z"
     },
     {
       "id": "21413211-7a18-4a8b-bc73-6de0496e978f",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "2fe0bb9c-c5a3-40dc-b327-e247a65e0863",
+      "teamBId": "c5cf45e4-e0e6-47f0-a315-d5bb006a1898",
       "teamA": "Túnez",
       "teamB": "Países Bajos",
       "matchDate": "2026-06-25T23:00:00.000Z",
@@ -693,11 +1350,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-25T02:52:00.224Z",
-      "updatedAt": "2026-06-26T02:35:16.761Z"
+      "updatedAt": "2026-07-10T22:50:14.152Z"
     },
     {
       "id": "5235896e-c850-4fee-886a-b31d493cacd5",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "27940613-5dec-4a04-a254-665c1d7333cf",
+      "teamBId": "610cb3e4-4333-4380-9d02-660410b52f83",
       "teamA": "Paraguay",
       "teamB": "Australia",
       "matchDate": "2026-06-26T02:00:00.000Z",
@@ -706,11 +1365,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-25T02:52:58.472Z",
-      "updatedAt": "2026-06-26T20:36:23.660Z"
+      "updatedAt": "2026-07-10T22:50:14.653Z"
     },
     {
       "id": "f67783e8-055c-4a29-aa42-d33179e88232",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "b93ce5a1-f99e-44d5-a933-7698d9b13560",
+      "teamBId": "18e62a1a-181c-422a-a5d1-f801e961675c",
       "teamA": "Turquía",
       "teamB": "Estados Unidos",
       "matchDate": "2026-06-26T02:00:00.000Z",
@@ -719,24 +1380,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-25T02:53:15.940Z",
-      "updatedAt": "2026-06-26T20:36:40.527Z"
-    },
-    {
-      "id": "e4d91b3a-13b4-4181-a120-854f2d363f71",
-      "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
-      "teamA": "Senegal",
-      "teamB": "Irak",
-      "matchDate": "2026-06-26T19:00:00.000Z",
-      "teamAScore": 5,
-      "teamBScore": 0,
-      "status": "FINISHED",
-      "isActive": true,
-      "createdAt": "2026-06-26T02:36:20.393Z",
-      "updatedAt": "2026-06-26T21:48:31.512Z"
+      "updatedAt": "2026-07-10T22:50:15.153Z"
     },
     {
       "id": "bbc62f81-b64f-4dde-8f12-ce0fcaa5aeb3",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "3e412a70-0fd7-42b6-b22c-fa946cc4ba74",
+      "teamBId": "23acb586-9794-459e-a0f2-8aad31bfe891",
       "teamA": "Noruega",
       "teamB": "Francia",
       "matchDate": "2026-06-26T19:00:00.000Z",
@@ -745,24 +1395,28 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-26T02:35:58.545Z",
-      "updatedAt": "2026-06-26T21:48:43.063Z"
+      "updatedAt": "2026-07-10T22:50:16.157Z"
     },
     {
-      "id": "57f09e54-5494-40d5-98ac-f34dd073a5e0",
+      "id": "e4d91b3a-13b4-4181-a120-854f2d363f71",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
-      "teamA": "Uruguay",
-      "teamB": "España",
-      "matchDate": "2026-06-27T00:00:00.000Z",
-      "teamAScore": 0,
-      "teamBScore": 1,
+      "teamAId": "c3b33fa6-471f-4ec7-8ebb-65730d6b39fe",
+      "teamBId": "03e4e71e-9a7c-4fff-b983-9fca0395d4fb",
+      "teamA": "Senegal",
+      "teamB": "Irak",
+      "matchDate": "2026-06-26T19:00:00.000Z",
+      "teamAScore": 5,
+      "teamBScore": 0,
       "status": "FINISHED",
       "isActive": true,
-      "createdAt": "2026-06-26T02:37:44.926Z",
-      "updatedAt": "2026-06-27T05:25:48.675Z"
+      "createdAt": "2026-06-26T02:36:20.393Z",
+      "updatedAt": "2026-07-10T22:50:15.655Z"
     },
     {
       "id": "e6de37d7-7e0f-42b2-abe0-aa93aa4536ab",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "7f8f3515-aebd-4bbd-9f2f-2cc7837fa837",
+      "teamBId": "8c4fc0c3-d12d-4e92-944e-7d411e99d019",
       "teamA": "Cabo Verde",
       "teamB": "Arabia Saudi",
       "matchDate": "2026-06-27T00:00:00.000Z",
@@ -771,11 +1425,28 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-26T02:37:22.091Z",
-      "updatedAt": "2026-06-27T05:25:32.894Z"
+      "updatedAt": "2026-07-10T22:50:16.665Z"
+    },
+    {
+      "id": "57f09e54-5494-40d5-98ac-f34dd073a5e0",
+      "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "b13b2cc0-f112-4f4a-ac56-baaeeea36532",
+      "teamBId": "9711c2fc-0ebe-4c3e-be2c-8d3b97c73999",
+      "teamA": "Uruguay",
+      "teamB": "España",
+      "matchDate": "2026-06-27T00:00:00.000Z",
+      "teamAScore": 0,
+      "teamBScore": 1,
+      "status": "FINISHED",
+      "isActive": true,
+      "createdAt": "2026-06-26T02:37:44.926Z",
+      "updatedAt": "2026-07-10T22:50:17.166Z"
     },
     {
       "id": "d708c0c2-d5c9-47b7-bf52-3d8262c7876d",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "5c0c3cbf-2832-45a4-8017-62151fbde324",
+      "teamBId": "b75bcdf6-a975-4992-8dfe-e85ea3934c4c",
       "teamA": "Egipto",
       "teamB": "Irán",
       "matchDate": "2026-06-27T03:00:00.000Z",
@@ -784,11 +1455,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-26T02:38:51.100Z",
-      "updatedAt": "2026-06-27T05:26:15.989Z"
+      "updatedAt": "2026-07-10T22:50:12.651Z"
     },
     {
       "id": "6e9be2d1-9dbc-41d5-9aac-62d3d50b2f82",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "8c6508e9-80a3-4430-89bc-c8e4a570591f",
+      "teamBId": "063607d9-841a-4355-84b3-a385783fc225",
       "teamA": "Nueva Zelanda",
       "teamB": "Bélgica",
       "matchDate": "2026-06-27T03:00:00.000Z",
@@ -797,24 +1470,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-26T02:39:22.435Z",
-      "updatedAt": "2026-06-27T05:26:28.641Z"
-    },
-    {
-      "id": "377e1469-21d9-4802-ac0f-5291bb00a1a0",
-      "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
-      "teamA": "Panamá",
-      "teamB": "Inglaterra",
-      "matchDate": "2026-06-27T21:00:00.000Z",
-      "teamAScore": 0,
-      "teamBScore": 2,
-      "status": "FINISHED",
-      "isActive": true,
-      "createdAt": "2026-06-27T05:30:23.883Z",
-      "updatedAt": "2026-06-28T06:37:50.396Z"
+      "updatedAt": "2026-07-10T22:50:13.152Z"
     },
     {
       "id": "e4ebe39f-ffdb-4143-abf5-bcc93cc9ea1b",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "85ca6afc-39fa-4165-8c0f-c13c9025e436",
+      "teamBId": "1965f7f7-112b-41e5-9915-4d22949851ff",
       "teamA": "Croacia",
       "teamB": "Ghana",
       "matchDate": "2026-06-27T21:00:00.000Z",
@@ -823,11 +1485,28 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-27T05:30:07.921Z",
-      "updatedAt": "2026-06-28T06:37:34.098Z"
+      "updatedAt": "2026-07-10T22:50:20.176Z"
+    },
+    {
+      "id": "377e1469-21d9-4802-ac0f-5291bb00a1a0",
+      "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "1be98291-d55d-46ac-b276-2bb3e3b51da6",
+      "teamBId": "2d2fd332-41d2-460b-b75b-7f7251bbbd0f",
+      "teamA": "Panamá",
+      "teamB": "Inglaterra",
+      "matchDate": "2026-06-27T21:00:00.000Z",
+      "teamAScore": 0,
+      "teamBScore": 2,
+      "status": "FINISHED",
+      "isActive": true,
+      "createdAt": "2026-06-27T05:30:23.883Z",
+      "updatedAt": "2026-07-10T22:50:17.668Z"
     },
     {
       "id": "dc5ff735-ff67-473c-a826-22ab1dbaafc0",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "d98082e4-932e-4c74-a29d-98373bf6f3e3",
+      "teamBId": "a95ac104-ac29-4ff3-9360-2f09de0cf109",
       "teamA": "Colombia",
       "teamB": "Portugal",
       "matchDate": "2026-06-27T23:30:00.000Z",
@@ -836,11 +1515,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-27T05:30:59.588Z",
-      "updatedAt": "2026-06-28T06:38:54.499Z"
+      "updatedAt": "2026-07-10T22:50:19.171Z"
     },
     {
       "id": "4d2461eb-bc56-48d1-9f39-883b9b022ca8",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "4777d02e-3b1b-4901-83b2-59ede1c89575",
+      "teamBId": "1b274b0a-4141-4832-9ce2-520355c72b24",
       "teamA": "Congo",
       "teamB": "Uzbekistan",
       "matchDate": "2026-06-27T23:30:00.000Z",
@@ -849,24 +1530,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-27T05:31:16.689Z",
-      "updatedAt": "2026-06-28T06:39:16.880Z"
-    },
-    {
-      "id": "50c05dd5-49c2-4f47-9ae1-2f93dba2396a",
-      "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
-      "teamA": "Jordania",
-      "teamB": "Argentina",
-      "matchDate": "2026-06-28T02:00:00.000Z",
-      "teamAScore": 1,
-      "teamBScore": 3,
-      "status": "FINISHED",
-      "isActive": true,
-      "createdAt": "2026-06-27T05:31:58.005Z",
-      "updatedAt": "2026-06-28T06:38:19.211Z"
+      "updatedAt": "2026-07-10T22:50:18.670Z"
     },
     {
       "id": "1f8aff0c-4111-4812-962c-f949bdb7df85",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "25f3f955-4342-4730-a7ff-f42c722e8152",
+      "teamBId": "150f33f2-e5eb-48e4-a796-3a88f7f917e0",
       "teamA": "Argelia",
       "teamB": "Austria",
       "matchDate": "2026-06-28T02:00:00.000Z",
@@ -875,11 +1545,28 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-27T05:31:38.823Z",
-      "updatedAt": "2026-06-28T06:38:40.840Z"
+      "updatedAt": "2026-07-10T22:50:19.673Z"
+    },
+    {
+      "id": "50c05dd5-49c2-4f47-9ae1-2f93dba2396a",
+      "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "fb62dec3-4d50-45cb-a81d-bfbbe4822cb8",
+      "teamBId": "baea7dbf-5c38-4399-b590-4f25387041a2",
+      "teamA": "Jordania",
+      "teamB": "Argentina",
+      "matchDate": "2026-06-28T02:00:00.000Z",
+      "teamAScore": 1,
+      "teamBScore": 3,
+      "status": "FINISHED",
+      "isActive": true,
+      "createdAt": "2026-06-27T05:31:58.005Z",
+      "updatedAt": "2026-07-10T22:50:18.169Z"
     },
     {
       "id": "760a0bf6-9889-4223-b8e6-5639fcb23de4",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "54e029a1-1670-4f68-ab54-3b276af7c9bb",
+      "teamBId": "81ffb623-68d4-43d7-b5fd-df37e68b114d",
       "teamA": "Sudáfrica",
       "teamB": "Canadá",
       "matchDate": "2026-06-28T19:00:00.000Z",
@@ -888,11 +1575,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-28T06:40:09.806Z",
-      "updatedAt": "2026-06-29T02:30:23.579Z"
+      "updatedAt": "2026-07-10T22:50:20.677Z"
     },
     {
       "id": "7611efaf-6450-4485-8c95-f1a7ff00b93a",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "44925936-5bf4-4291-8114-9c483b27e98e",
+      "teamBId": "9bab0d33-1149-463b-ab44-9b5ddbcba50b",
       "teamA": "Brasil",
       "teamB": "Japón",
       "matchDate": "2026-06-29T17:00:00.000Z",
@@ -901,11 +1590,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-29T02:42:41.602Z",
-      "updatedAt": "2026-06-29T19:04:09.181Z"
+      "updatedAt": "2026-07-10T22:50:21.178Z"
     },
     {
       "id": "f5a3d294-ac5e-4278-a20d-8f5f432581cd",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "abde7543-c3c5-4ca9-965a-345cb20b3131",
+      "teamBId": "27940613-5dec-4a04-a254-665c1d7333cf",
       "teamA": "Alemania",
       "teamB": "Paraguay",
       "matchDate": "2026-06-29T20:30:00.000Z",
@@ -914,11 +1605,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-29T02:43:05.053Z",
-      "updatedAt": "2026-06-29T22:32:00.389Z"
+      "updatedAt": "2026-07-10T22:50:21.679Z"
     },
     {
       "id": "fedce37c-c2a3-4093-85db-9b62d3d728db",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "c5cf45e4-e0e6-47f0-a315-d5bb006a1898",
+      "teamBId": "e29ba491-392c-4299-88b7-d51b3eec39ca",
       "teamA": "Países Bajos",
       "teamB": "Marruecos",
       "matchDate": "2026-06-30T01:00:00.000Z",
@@ -927,11 +1620,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-29T02:43:48.945Z",
-      "updatedAt": "2026-06-30T02:59:36.423Z"
+      "updatedAt": "2026-07-10T22:50:22.682Z"
     },
     {
       "id": "f8f6ab71-2c71-4988-af54-76657ba686d0",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "be214be7-aa72-49b2-bf10-4fff5be5e5b5",
+      "teamBId": "3e412a70-0fd7-42b6-b22c-fa946cc4ba74",
       "teamA": "Costa de Marfil",
       "teamB": "Noruega",
       "matchDate": "2026-06-30T17:00:00.000Z",
@@ -940,11 +1635,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-30T02:18:23.951Z",
-      "updatedAt": "2026-06-30T18:59:59.112Z"
+      "updatedAt": "2026-07-10T22:50:22.181Z"
     },
     {
       "id": "a96c068e-6c50-4fa6-82bb-3c4ba6caa1c4",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "23acb586-9794-459e-a0f2-8aad31bfe891",
+      "teamBId": "893a0d23-1088-4ff6-a503-83799a4adfba",
       "teamA": "Francia",
       "teamB": "Suecia",
       "matchDate": "2026-06-30T21:00:00.000Z",
@@ -953,11 +1650,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-30T02:18:59.905Z",
-      "updatedAt": "2026-06-30T23:29:58.178Z"
+      "updatedAt": "2026-07-10T22:50:23.183Z"
     },
     {
       "id": "74f91056-4ccf-411e-955c-fbc740c43ee3",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "36becd8c-61b2-4b30-a06e-c1f819b6fc75",
+      "teamBId": "2a0c3486-bf17-46a0-a7ca-29d07d93f8ac",
       "teamA": "México",
       "teamB": "Ecuador",
       "matchDate": "2026-07-01T01:00:00.000Z",
@@ -966,11 +1665,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-06-30T02:19:20.521Z",
-      "updatedAt": "2026-07-01T04:07:09.875Z"
+      "updatedAt": "2026-07-10T22:50:23.685Z"
     },
     {
       "id": "b6b38078-dece-49e5-a4fe-8891e93db086",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "2d2fd332-41d2-460b-b75b-7f7251bbbd0f",
+      "teamBId": "4777d02e-3b1b-4901-83b2-59ede1c89575",
       "teamA": "Inglaterra",
       "teamB": "Congo",
       "matchDate": "2026-07-01T16:00:00.000Z",
@@ -979,11 +1680,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-07-01T02:39:55.942Z",
-      "updatedAt": "2026-07-01T18:06:33.270Z"
+      "updatedAt": "2026-07-10T22:50:24.695Z"
     },
     {
       "id": "a1e0bda7-3880-4b2d-8934-918fa1af85dc",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "063607d9-841a-4355-84b3-a385783fc225",
+      "teamBId": "c3b33fa6-471f-4ec7-8ebb-65730d6b39fe",
       "teamA": "Bélgica",
       "teamB": "Senegal",
       "matchDate": "2026-07-01T20:00:00.000Z",
@@ -992,11 +1695,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-07-01T02:40:20.544Z",
-      "updatedAt": "2026-07-01T22:01:06.502Z"
+      "updatedAt": "2026-07-10T22:50:25.198Z"
     },
     {
       "id": "d341cbbc-30cd-4153-952f-a38ef342863e",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "18e62a1a-181c-422a-a5d1-f801e961675c",
+      "teamBId": "09387fcf-619e-48eb-83ea-268c23f99b26",
       "teamA": "Estados Unidos",
       "teamB": "Bosnia",
       "matchDate": "2026-07-02T00:00:00.000Z",
@@ -1005,24 +1710,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-07-01T02:40:45.936Z",
-      "updatedAt": "2026-07-02T02:08:23.809Z"
-    },
-    {
-      "id": "7c82ffd9-d84e-4b59-9d02-cc2d005eb6e1",
-      "roomId": "377dd8dc-19e4-43a5-850e-20765b354cce",
-      "teamA": "bolivia",
-      "teamB": "chile",
-      "matchDate": "2026-07-02T00:00:00.000Z",
-      "teamAScore": 1,
-      "teamBScore": 1,
-      "status": "FINISHED",
-      "isActive": true,
-      "createdAt": "2026-07-01T21:20:11.482Z",
-      "updatedAt": "2026-07-01T21:37:02.507Z"
+      "updatedAt": "2026-07-10T22:50:26.202Z"
     },
     {
       "id": "0c55f8bc-7523-400f-930f-ef8863f2cd0c",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "9711c2fc-0ebe-4c3e-be2c-8d3b97c73999",
+      "teamBId": "150f33f2-e5eb-48e4-a796-3a88f7f917e0",
       "teamA": "España",
       "teamB": "Austria",
       "matchDate": "2026-07-02T19:00:00.000Z",
@@ -1031,11 +1725,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-07-02T12:42:37.536Z",
-      "updatedAt": "2026-07-02T20:58:51.843Z"
+      "updatedAt": "2026-07-10T22:50:26.703Z"
     },
     {
       "id": "412ffa3e-2324-499f-94f3-9a9e762c395f",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "a95ac104-ac29-4ff3-9360-2f09de0cf109",
+      "teamBId": "85ca6afc-39fa-4165-8c0f-c13c9025e436",
       "teamA": "Portugal",
       "teamB": "Croacia",
       "matchDate": "2026-07-02T23:00:00.000Z",
@@ -1044,11 +1740,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-07-02T12:44:02.461Z",
-      "updatedAt": "2026-07-03T00:59:38.023Z"
+      "updatedAt": "2026-07-10T22:50:27.206Z"
     },
     {
       "id": "226b2564-7134-44bc-8c8d-17236c49b4f8",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "a24ca4e2-4afd-4b60-a1f4-7baa1097c0d1",
+      "teamBId": "25f3f955-4342-4730-a7ff-f42c722e8152",
       "teamA": "Suiza",
       "teamB": "Algeria",
       "matchDate": "2026-07-03T03:00:00.000Z",
@@ -1057,11 +1755,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-07-02T12:44:21.580Z",
-      "updatedAt": "2026-07-03T10:56:45.357Z"
+      "updatedAt": "2026-07-10T22:50:29.213Z"
     },
     {
       "id": "49d54768-d313-43a4-961c-7c8ae435d795",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "610cb3e4-4333-4380-9d02-660410b52f83",
+      "teamBId": "5c0c3cbf-2832-45a4-8017-62151fbde324",
       "teamA": "Australia",
       "teamB": "Egipto",
       "matchDate": "2026-07-03T18:00:00.000Z",
@@ -1070,11 +1770,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-07-03T03:43:17.810Z",
-      "updatedAt": "2026-07-04T03:05:33.049Z"
+      "updatedAt": "2026-07-10T22:50:30.217Z"
     },
     {
       "id": "f49e8878-0c02-49b1-bdb0-f55054f711ee",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "baea7dbf-5c38-4399-b590-4f25387041a2",
+      "teamBId": "7f8f3515-aebd-4bbd-9f2f-2cc7837fa837",
       "teamA": "Argentina",
       "teamB": "Cabo Verde",
       "matchDate": "2026-07-03T22:00:00.000Z",
@@ -1083,11 +1785,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-07-03T03:43:50.318Z",
-      "updatedAt": "2026-07-04T03:05:42.640Z"
+      "updatedAt": "2026-07-10T22:50:30.718Z"
     },
     {
       "id": "786aec7a-428b-4b6d-b5f8-168eb6580c2b",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "d98082e4-932e-4c74-a29d-98373bf6f3e3",
+      "teamBId": "1965f7f7-112b-41e5-9915-4d22949851ff",
       "teamA": "Colombia",
       "teamB": "Ghana",
       "matchDate": "2026-07-04T01:30:00.000Z",
@@ -1096,11 +1800,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-07-03T03:44:18.635Z",
-      "updatedAt": "2026-07-04T03:31:43.306Z"
+      "updatedAt": "2026-07-10T22:50:31.221Z"
     },
     {
       "id": "2ab5e192-5e7a-47f7-956c-2302f2285a6b",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "81ffb623-68d4-43d7-b5fd-df37e68b114d",
+      "teamBId": "e29ba491-392c-4299-88b7-d51b3eec39ca",
       "teamA": "Canadá",
       "teamB": "Marruecos",
       "matchDate": "2026-07-04T17:00:00.000Z",
@@ -1109,11 +1815,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-07-04T06:09:05.037Z",
-      "updatedAt": "2026-07-04T19:05:22.535Z"
+      "updatedAt": "2026-07-10T22:50:31.722Z"
     },
     {
       "id": "2b6cb275-b67b-45f4-b39d-50337ce61543",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "27940613-5dec-4a04-a254-665c1d7333cf",
+      "teamBId": "23acb586-9794-459e-a0f2-8aad31bfe891",
       "teamA": "Paraguay",
       "teamB": "Francia",
       "matchDate": "2026-07-04T21:00:00.000Z",
@@ -1122,11 +1830,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-07-04T06:09:20.782Z",
-      "updatedAt": "2026-07-05T03:47:24.617Z"
+      "updatedAt": "2026-07-10T22:50:32.225Z"
     },
     {
       "id": "9eeb4315-004e-4267-8b89-ba6ae1586aee",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "44925936-5bf4-4291-8114-9c483b27e98e",
+      "teamBId": "3e412a70-0fd7-42b6-b22c-fa946cc4ba74",
       "teamA": "Brasil",
       "teamB": "Noruega",
       "matchDate": "2026-07-05T20:00:00.000Z",
@@ -1135,11 +1845,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-07-05T03:48:39.062Z",
-      "updatedAt": "2026-07-05T23:20:05.779Z"
+      "updatedAt": "2026-07-10T22:50:32.727Z"
     },
     {
       "id": "bf67afd9-3ee1-4763-aa4c-a654fef650bc",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "36becd8c-61b2-4b30-a06e-c1f819b6fc75",
+      "teamBId": "2d2fd332-41d2-460b-b75b-7f7251bbbd0f",
       "teamA": "México",
       "teamB": "Inglaterra",
       "matchDate": "2026-07-06T00:00:00.000Z",
@@ -1148,11 +1860,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-07-05T03:49:02.663Z",
-      "updatedAt": "2026-07-06T12:47:20.813Z"
+      "updatedAt": "2026-07-10T22:50:33.229Z"
     },
     {
       "id": "d781e1ee-1f45-430e-9f43-a208b43d733f",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "a95ac104-ac29-4ff3-9360-2f09de0cf109",
+      "teamBId": "9711c2fc-0ebe-4c3e-be2c-8d3b97c73999",
       "teamA": "Portugal",
       "teamB": "España",
       "matchDate": "2026-07-06T19:00:00.000Z",
@@ -1161,11 +1875,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-07-06T12:48:00.599Z",
-      "updatedAt": "2026-07-06T23:13:50.712Z"
+      "updatedAt": "2026-07-10T22:50:24.186Z"
     },
     {
       "id": "a3c83e78-fa49-4318-af05-d564af0cc903",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "18e62a1a-181c-422a-a5d1-f801e961675c",
+      "teamBId": "063607d9-841a-4355-84b3-a385783fc225",
       "teamA": "Estados Unidos",
       "teamB": "Bélgica",
       "matchDate": "2026-07-07T00:00:00.000Z",
@@ -1174,11 +1890,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-07-06T12:48:20.030Z",
-      "updatedAt": "2026-07-07T12:45:25.262Z"
+      "updatedAt": "2026-07-10T22:50:25.700Z"
     },
     {
       "id": "ada312f4-e256-4e87-99cb-30a8bc0a889c",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "baea7dbf-5c38-4399-b590-4f25387041a2",
+      "teamBId": "5c0c3cbf-2832-45a4-8017-62151fbde324",
       "teamA": "Argentina",
       "teamB": "Egipto",
       "matchDate": "2026-07-07T16:00:00.000Z",
@@ -1187,11 +1905,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-07-07T12:48:16.434Z",
-      "updatedAt": "2026-07-07T18:48:14.963Z"
+      "updatedAt": "2026-07-10T22:50:27.707Z"
     },
     {
       "id": "427c34a2-994f-4c61-8846-219270ade33e",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "a24ca4e2-4afd-4b60-a1f4-7baa1097c0d1",
+      "teamBId": "d98082e4-932e-4c74-a29d-98373bf6f3e3",
       "teamA": "Suiza",
       "teamB": "Colombia",
       "matchDate": "2026-07-07T20:00:00.000Z",
@@ -1200,11 +1920,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-07-07T12:48:44.068Z",
-      "updatedAt": "2026-07-07T22:12:21.688Z"
+      "updatedAt": "2026-07-10T22:50:28.210Z"
     },
     {
       "id": "c3da012c-61c8-4516-9293-ea95a16fbd01",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "23acb586-9794-459e-a0f2-8aad31bfe891",
+      "teamBId": "e29ba491-392c-4299-88b7-d51b3eec39ca",
       "teamA": "Francia",
       "teamB": "Marruecos",
       "matchDate": "2026-07-09T20:00:00.000Z",
@@ -1213,11 +1935,13 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-07-08T22:36:19.128Z",
-      "updatedAt": "2026-07-09T22:05:07.588Z"
+      "updatedAt": "2026-07-10T22:50:28.711Z"
     },
     {
       "id": "6597de0c-74db-4508-8b1a-b05ea48392d7",
       "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "9711c2fc-0ebe-4c3e-be2c-8d3b97c73999",
+      "teamBId": "063607d9-841a-4355-84b3-a385783fc225",
       "teamA": "España",
       "teamB": "Bélgica",
       "matchDate": "2026-07-10T19:00:00.000Z",
@@ -1226,7 +1950,97 @@ export const realisticSeedData = {
       "status": "FINISHED",
       "isActive": true,
       "createdAt": "2026-07-10T12:59:09.643Z",
-      "updatedAt": "2026-07-10T21:06:07.912Z"
+      "updatedAt": "2026-07-10T22:50:29.715Z"
+    },
+    {
+      "id": "98a1b353-3d0f-4e8f-b958-10c885a1c511",
+      "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "3e412a70-0fd7-42b6-b22c-fa946cc4ba74",
+      "teamBId": "2d2fd332-41d2-460b-b75b-7f7251bbbd0f",
+      "teamA": "Noruega",
+      "teamB": "Inglaterra",
+      "matchDate": "2026-07-11T21:00:00.000Z",
+      "teamAScore": 1,
+      "teamBScore": 1,
+      "status": "FINISHED",
+      "isActive": true,
+      "createdAt": "2026-07-10T22:57:09.001Z",
+      "updatedAt": "2026-07-12T05:01:55.170Z"
+    },
+    {
+      "id": "951bbd6a-e2d2-4c9b-96b8-7f6af5a328c5",
+      "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "baea7dbf-5c38-4399-b590-4f25387041a2",
+      "teamBId": "a24ca4e2-4afd-4b60-a1f4-7baa1097c0d1",
+      "teamA": "Argentina",
+      "teamB": "Suiza",
+      "matchDate": "2026-07-12T01:00:00.000Z",
+      "teamAScore": 1,
+      "teamBScore": 1,
+      "status": "FINISHED",
+      "isActive": true,
+      "createdAt": "2026-07-10T22:57:35.938Z",
+      "updatedAt": "2026-07-12T05:02:19.882Z"
+    },
+    {
+      "id": "33e2ebd5-e6dd-4410-8598-c53689e25e26",
+      "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "23acb586-9794-459e-a0f2-8aad31bfe891",
+      "teamBId": "9711c2fc-0ebe-4c3e-be2c-8d3b97c73999",
+      "teamA": "Francia",
+      "teamB": "España",
+      "matchDate": "2026-07-14T19:00:00.000Z",
+      "teamAScore": 0,
+      "teamBScore": 2,
+      "status": "FINISHED",
+      "isActive": true,
+      "createdAt": "2026-07-13T20:00:04.413Z",
+      "updatedAt": "2026-07-14T21:09:56.870Z"
+    },
+    {
+      "id": "f04c54ee-a5e7-4747-8b34-ea58e4fc5bf7",
+      "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "2d2fd332-41d2-460b-b75b-7f7251bbbd0f",
+      "teamBId": "baea7dbf-5c38-4399-b590-4f25387041a2",
+      "teamA": "Inglaterra",
+      "teamB": "Argentina",
+      "matchDate": "2026-07-15T19:00:00.000Z",
+      "teamAScore": 1,
+      "teamBScore": 2,
+      "status": "FINISHED",
+      "isActive": true,
+      "createdAt": "2026-07-13T20:00:43.533Z",
+      "updatedAt": "2026-07-15T21:46:51.544Z"
+    },
+    {
+      "id": "4e9db058-0e21-495a-877e-60bca42b90a1",
+      "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "23acb586-9794-459e-a0f2-8aad31bfe891",
+      "teamBId": "2d2fd332-41d2-460b-b75b-7f7251bbbd0f",
+      "teamA": "Francia",
+      "teamB": "Inglaterra",
+      "matchDate": "2026-07-18T21:00:00.000Z",
+      "teamAScore": 4,
+      "teamBScore": 6,
+      "status": "FINISHED",
+      "isActive": true,
+      "createdAt": "2026-07-17T19:14:12.323Z",
+      "updatedAt": "2026-07-19T04:12:33.164Z"
+    },
+    {
+      "id": "d3d3c456-ac9a-487d-8d8f-8bc512616458",
+      "roomId": "22063d3e-96e4-4a64-bcbb-e1c25c5c79a8",
+      "teamAId": "9711c2fc-0ebe-4c3e-be2c-8d3b97c73999",
+      "teamBId": "baea7dbf-5c38-4399-b590-4f25387041a2",
+      "teamA": "España",
+      "teamB": "Argentina",
+      "matchDate": "2026-07-19T19:00:00.000Z",
+      "teamAScore": 0,
+      "teamBScore": 0,
+      "status": "FINISHED",
+      "isActive": true,
+      "createdAt": "2026-07-17T19:14:34.666Z",
+      "updatedAt": "2026-07-19T23:49:02.113Z"
     }
   ],
   "predictions": [
@@ -3387,17 +4201,6 @@ export const realisticSeedData = {
       "updatedAt": "2026-07-01T22:01:06.813Z"
     },
     {
-      "id": "fcd23e89-c660-40a7-9a1b-1c3379223aa7",
-      "userId": "c97ab333-7b11-4c4c-b125-7e4754438fe4",
-      "matchId": "7c82ffd9-d84e-4b59-9d02-cc2d005eb6e1",
-      "predictedTeamAScore": 1,
-      "predictedTeamBScore": 1,
-      "points": 3,
-      "isCalculated": true,
-      "createdAt": "2026-07-01T21:36:39.105Z",
-      "updatedAt": "2026-07-01T21:37:02.797Z"
-    },
-    {
       "id": "371668c8-8ae1-4f8a-b83d-0089b7459b18",
       "userId": "c97ab333-7b11-4c4c-b125-7e4754438fe4",
       "matchId": "d341cbbc-30cd-4153-952f-a38ef342863e",
@@ -3891,6 +4694,138 @@ export const realisticSeedData = {
       "isCalculated": true,
       "createdAt": "2026-07-10T18:50:50.784Z",
       "updatedAt": "2026-07-10T21:06:08.192Z"
+    },
+    {
+      "id": "34dc2179-6697-4068-82e4-5ed4ec1c98c3",
+      "userId": "250cf34a-6f84-420b-8c0e-0013fb6d581f",
+      "matchId": "98a1b353-3d0f-4e8f-b958-10c885a1c511",
+      "predictedTeamAScore": 1,
+      "predictedTeamBScore": 3,
+      "points": 0,
+      "isCalculated": true,
+      "createdAt": "2026-07-11T16:16:37.343Z",
+      "updatedAt": "2026-07-12T05:01:55.454Z"
+    },
+    {
+      "id": "49448929-2b7c-4c50-8756-ea2c5c72bb6d",
+      "userId": "250cf34a-6f84-420b-8c0e-0013fb6d581f",
+      "matchId": "951bbd6a-e2d2-4c9b-96b8-7f6af5a328c5",
+      "predictedTeamAScore": 1,
+      "predictedTeamBScore": 0,
+      "points": 0,
+      "isCalculated": true,
+      "createdAt": "2026-07-11T16:16:55.826Z",
+      "updatedAt": "2026-07-12T05:02:20.170Z"
+    },
+    {
+      "id": "ae842839-3195-441d-8693-9265a3a51980",
+      "userId": "c97ab333-7b11-4c4c-b125-7e4754438fe4",
+      "matchId": "98a1b353-3d0f-4e8f-b958-10c885a1c511",
+      "predictedTeamAScore": 1,
+      "predictedTeamBScore": 2,
+      "points": 0,
+      "isCalculated": true,
+      "createdAt": "2026-07-11T20:37:33.850Z",
+      "updatedAt": "2026-07-12T05:01:55.454Z"
+    },
+    {
+      "id": "c8dbcc78-47ac-4100-8a8d-55913a182788",
+      "userId": "c97ab333-7b11-4c4c-b125-7e4754438fe4",
+      "matchId": "951bbd6a-e2d2-4c9b-96b8-7f6af5a328c5",
+      "predictedTeamAScore": 2,
+      "predictedTeamBScore": 0,
+      "points": 0,
+      "isCalculated": true,
+      "createdAt": "2026-07-11T20:37:53.142Z",
+      "updatedAt": "2026-07-12T05:02:20.170Z"
+    },
+    {
+      "id": "33dd4f19-c701-4ba5-89ad-e589bb40d45c",
+      "userId": "250cf34a-6f84-420b-8c0e-0013fb6d581f",
+      "matchId": "33e2ebd5-e6dd-4410-8598-c53689e25e26",
+      "predictedTeamAScore": 3,
+      "predictedTeamBScore": 1,
+      "points": 0,
+      "isCalculated": true,
+      "createdAt": "2026-07-14T16:42:13.255Z",
+      "updatedAt": "2026-07-14T21:09:57.167Z"
+    },
+    {
+      "id": "00b603db-5960-4d37-b53a-f93e2cd7e577",
+      "userId": "c97ab333-7b11-4c4c-b125-7e4754438fe4",
+      "matchId": "33e2ebd5-e6dd-4410-8598-c53689e25e26",
+      "predictedTeamAScore": 0,
+      "predictedTeamBScore": 1,
+      "points": 1,
+      "isCalculated": true,
+      "createdAt": "2026-07-14T18:12:31.012Z",
+      "updatedAt": "2026-07-14T21:09:57.167Z"
+    },
+    {
+      "id": "cc7d586c-6bea-492e-bc26-3390e1c1b0bf",
+      "userId": "250cf34a-6f84-420b-8c0e-0013fb6d581f",
+      "matchId": "f04c54ee-a5e7-4747-8b34-ea58e4fc5bf7",
+      "predictedTeamAScore": 1,
+      "predictedTeamBScore": 2,
+      "points": 3,
+      "isCalculated": true,
+      "createdAt": "2026-07-15T14:32:22.964Z",
+      "updatedAt": "2026-07-15T21:46:51.840Z"
+    },
+    {
+      "id": "6b77b269-6d62-436d-9f5e-aeb28398a7da",
+      "userId": "c97ab333-7b11-4c4c-b125-7e4754438fe4",
+      "matchId": "f04c54ee-a5e7-4747-8b34-ea58e4fc5bf7",
+      "predictedTeamAScore": 1,
+      "predictedTeamBScore": 1,
+      "points": 0,
+      "isCalculated": true,
+      "createdAt": "2026-07-15T17:35:33.566Z",
+      "updatedAt": "2026-07-15T21:46:51.840Z"
+    },
+    {
+      "id": "aaa437c7-d2b7-4e99-bde8-1aae23eef718",
+      "userId": "250cf34a-6f84-420b-8c0e-0013fb6d581f",
+      "matchId": "4e9db058-0e21-495a-877e-60bca42b90a1",
+      "predictedTeamAScore": 2,
+      "predictedTeamBScore": 0,
+      "points": 0,
+      "isCalculated": true,
+      "createdAt": "2026-07-18T17:39:02.070Z",
+      "updatedAt": "2026-07-19T04:12:33.437Z"
+    },
+    {
+      "id": "6b9c429f-7b89-4a0c-9b41-14804aa03188",
+      "userId": "250cf34a-6f84-420b-8c0e-0013fb6d581f",
+      "matchId": "d3d3c456-ac9a-487d-8d8f-8bc512616458",
+      "predictedTeamAScore": 2,
+      "predictedTeamBScore": 2,
+      "points": 1,
+      "isCalculated": true,
+      "createdAt": "2026-07-18T17:39:14.299Z",
+      "updatedAt": "2026-07-19T23:49:02.360Z"
+    },
+    {
+      "id": "2789b0dd-359f-48d5-a608-a539b231e11f",
+      "userId": "c97ab333-7b11-4c4c-b125-7e4754438fe4",
+      "matchId": "4e9db058-0e21-495a-877e-60bca42b90a1",
+      "predictedTeamAScore": 2,
+      "predictedTeamBScore": 0,
+      "points": 0,
+      "isCalculated": true,
+      "createdAt": "2026-07-18T20:49:19.248Z",
+      "updatedAt": "2026-07-19T04:12:33.437Z"
+    },
+    {
+      "id": "80ed1865-cedd-4651-8ee6-c60bdb8730c0",
+      "userId": "c97ab333-7b11-4c4c-b125-7e4754438fe4",
+      "matchId": "d3d3c456-ac9a-487d-8d8f-8bc512616458",
+      "predictedTeamAScore": 1,
+      "predictedTeamBScore": 2,
+      "points": 0,
+      "isCalculated": true,
+      "createdAt": "2026-07-19T18:39:43.039Z",
+      "updatedAt": "2026-07-19T23:49:02.360Z"
     }
   ]
 } as const;

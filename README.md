@@ -106,12 +106,14 @@ cd backend
 yarn seed
 ```
 
-El seed crea:
+El seed carga un snapshot de demostracion basado en la data actual de Supabase:
 
 - 4 usuarios iniciales
 - 1 sala: `apuestillas mundialcillo`
 - membresias de los 4 usuarios en esa sala
-- 3 partidos de ejemplo
+- 48 equipos con banderas y metadata
+- 92 partidos terminados
+- 253 pronosticos con puntajes calculados
 
 Credenciales utiles para pruebas locales:
 

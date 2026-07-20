@@ -1,7 +1,5 @@
 import { NestFactory } from '@nestjs/core';
 import { DataSource, Repository } from 'typeorm';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
 import { AppModule } from '../../app.module';
 import { hashPassword } from '../../auth/password.util';
 import { UserRole } from '../../common/enums/user-role.enum';
@@ -14,109 +12,6 @@ import { Team } from '../../teams/entities/team.entity';
 import { User } from '../../users/entities/user.entity';
 import { realisticSeedData } from './realistic-seed-data';
 
-type WorldCupTeam = {
-  id: string;
-  name_en: string;
-  flag?: string;
-  fifa_code?: string;
-  iso2?: string;
-  groups?: string;
-};
-
-const TEAM_DISPLAY_NAMES: Record<string, string> = {
-  Mexico: 'México',
-  'South Africa': 'Sudáfrica',
-  'South Korea': 'Corea del Sur',
-  'Czech Republic': 'República Checa',
-  Canada: 'Canadá',
-  'Bosnia and Herzegovina': 'Bosnia y Herzegovina',
-  Qatar: 'Qatar',
-  Switzerland: 'Suiza',
-  Brazil: 'Brasil',
-  Morocco: 'Marruecos',
-  Haiti: 'Haití',
-  Scotland: 'Escocia',
-  'United States': 'Estados Unidos',
-  Paraguay: 'Paraguay',
-  Australia: 'Australia',
-  Turkey: 'Turquía',
-  Germany: 'Alemania',
-  Curaçao: 'Curazao',
-  'Ivory Coast': 'Costa de Marfil',
-  Ecuador: 'Ecuador',
-  Netherlands: 'Países Bajos',
-  Japan: 'Japón',
-  Sweden: 'Suecia',
-  Tunisia: 'Túnez',
-  Belgium: 'Bélgica',
-  Egypt: 'Egipto',
-  Iran: 'Irán',
-  'New Zealand': 'Nueva Zelanda',
-  Spain: 'España',
-  'Cape Verde': 'Cabo Verde',
-  'Saudi Arabia': 'Arabia Saudita',
-  Uruguay: 'Uruguay',
-  France: 'Francia',
-  Senegal: 'Senegal',
-  Iraq: 'Irak',
-  Norway: 'Noruega',
-  Argentina: 'Argentina',
-  Algeria: 'Argelia',
-  Austria: 'Austria',
-  Jordan: 'Jordania',
-  Portugal: 'Portugal',
-  'Democratic Republic of the Congo': 'Congo',
-  Uzbekistan: 'Uzbekistán',
-  Colombia: 'Colombia',
-  England: 'Inglaterra',
-  Croatia: 'Croacia',
-  Ghana: 'Ghana',
-  Panama: 'Panamá',
-};
-
-const TEAM_ALIASES: Record<string, string[]> = {
-  'Bosnia and Herzegovina': ['Bosnia', 'Bosnia Herzegovina', 'Bosnia y Herzegovina'],
-  'Cape Verde': ['Cabo Verde'],
-  'Czech Republic': ['Czechia', 'Chequia', 'República Checa'],
-  'Democratic Republic of the Congo': ['Congo', 'DR Congo', 'RD Congo'],
-  'Ivory Coast': ['Costa de Marfil'],
-  Netherlands: ['Holanda', 'Países Bajos'],
-  Qatar: ['Catar'],
-  'Saudi Arabia': ['Arabia Saudita', 'Arabia Saudi'],
-  'South Africa': ['Sudáfrica'],
-  'South Korea': ['Corea del Sur'],
-  'United States': ['Estados Unidos', 'USA', 'EEUU'],
-};
-
-function resolveTeamsPath(): string {
-  return path.resolve(
-    process.env.WORLDCUP2026_TEAMS_JSON ??
-      path.join(process.cwd(), '..', '..', 'worldcup2026', 'football.teams.json'),
-  );
-}
-
-function normalizeTeamName(value: string): string {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/&/g, ' and ')
-    .replace(/[^a-zA-Z0-9]+/g, ' ')
-    .trim()
-    .toLowerCase();
-}
-
-function addLookupValue(
-  lookup: Map<string, Team>,
-  value: string | null | undefined,
-  team: Team,
-) {
-  if (!value) {
-    return;
-  }
-
-  lookup.set(normalizeTeamName(value), team);
-}
-
 async function clearSeedData(dataSource: DataSource) {
   for (const entity of [Prediction, RoomUser, Match, Room, User, Team]) {
     await dataSource.getRepository(entity).createQueryBuilder().delete().execute();
@@ -124,37 +19,22 @@ async function clearSeedData(dataSource: DataSource) {
 }
 
 async function seedTeams(teamRepository: Repository<Team>): Promise<Team[]> {
-  const rawTeams = JSON.parse(fs.readFileSync(resolveTeamsPath(), 'utf8')) as WorldCupTeam[];
-  const teams = rawTeams.map((rawTeam) =>
+  const teams = realisticSeedData.teams.map((seedTeam) =>
     teamRepository.create({
-      externalId: rawTeam.id,
-      name: TEAM_DISPLAY_NAMES[rawTeam.name_en] ?? rawTeam.name_en,
-      nameEn: rawTeam.name_en,
-      fifaCode: rawTeam.fifa_code ?? null,
-      iso2: rawTeam.iso2 ?? null,
-      group: rawTeam.groups ?? null,
-      flagUrl: rawTeam.flag ?? null,
+      id: seedTeam.id,
+      externalId: seedTeam.externalId,
+      name: seedTeam.name,
+      nameEn: seedTeam.nameEn,
+      fifaCode: seedTeam.fifaCode,
+      iso2: seedTeam.iso2,
+      group: seedTeam.group,
+      flagUrl: seedTeam.flagUrl,
+      createdAt: new Date(seedTeam.createdAt),
+      updatedAt: new Date(seedTeam.updatedAt),
     }),
   );
 
   return teamRepository.save(teams);
-}
-
-function buildTeamLookup(teams: Team[]): Map<string, Team> {
-  const lookup = new Map<string, Team>();
-
-  for (const team of teams) {
-    addLookupValue(lookup, team.name, team);
-    addLookupValue(lookup, team.nameEn, team);
-    addLookupValue(lookup, team.fifaCode, team);
-    addLookupValue(lookup, team.iso2, team);
-
-    for (const alias of TEAM_ALIASES[team.nameEn] ?? []) {
-      addLookupValue(lookup, alias, team);
-    }
-  }
-
-  return lookup;
 }
 
 async function runSeed() {
@@ -210,17 +90,13 @@ async function runSeed() {
     await roomUserRepository.save(roomUsers);
 
     const teams = await seedTeams(teamRepository);
-    const teamLookup = buildTeamLookup(teams);
 
     const matches = realisticSeedData.matches.map((seedMatch) => {
-      const teamAInfo = teamLookup.get(normalizeTeamName(seedMatch.teamA));
-      const teamBInfo = teamLookup.get(normalizeTeamName(seedMatch.teamB));
-
       return matchRepository.create({
         id: seedMatch.id,
         roomId: seedMatch.roomId,
-        teamAId: teamAInfo?.id ?? null,
-        teamBId: teamBInfo?.id ?? null,
+        teamAId: seedMatch.teamAId,
+        teamBId: seedMatch.teamBId,
         teamA: seedMatch.teamA,
         teamB: seedMatch.teamB,
         matchDate: new Date(seedMatch.matchDate),
